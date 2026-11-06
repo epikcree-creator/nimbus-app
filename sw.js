@@ -35,16 +35,13 @@ self.addEventListener("activate", function (e) {
 self.addEventListener("fetch", function (e) {
   var req = e.request;
   if (req.method !== "GET") return;
-  // Never cache live desk JSON
   if (req.url.indexOf("state.json") !== -1 || req.url.indexOf("/d/") !== -1) {
     e.respondWith(fetch(req));
     return;
   }
   e.respondWith(
     caches.match(req).then(function (hit) {
-      return hit || fetch(req).then(function (res) {
-        return res;
-      });
+      return hit || fetch(req).then(function (res) { return res; });
     })
   );
 });
