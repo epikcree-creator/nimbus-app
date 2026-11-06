@@ -1,13 +1,13 @@
 {
   "name": "Nimbus",
   "short_name": "Nimbus",
-  "description": "Nimbus trading desk — PAPER mode",
+  "description": "Nimbus trading desk \u2014 paper first",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#0b0714",
+  "theme_color": "#0b0714",
   "icons": [
     {
       "src": "icons/icon-192.png",
