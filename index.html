@@ -2,41 +2,142 @@
 <html lang="sv">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#000000" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <meta name="theme-color" content="#0b0714" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Nimbus" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
   <link rel="stylesheet" href="app.css" />
   <title>Nimbus</title>
-  <!-- cache-bust: 2026-11-06T16:40 -->
 </head>
 <body>
-  <main id="app">
-    <header class="top">
-      <img class="logo" src="icons/icon-192.png" alt="Nimbus" width="40" height="40" />
-      <div>
-        <h1>Nimbus</h1>
-        <p class="tag" id="mode-tag">PAPER</p>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+
+  <main id="app" class="shell">
+    <section class="col col-wallet" aria-label="Wallet">
+      <header class="col-head">
+        <div>
+          <h1 class="col-title">Wallet</h1>
+          <p class="col-sub">Trading wallet · Solana</p>
+        </div>
+        <div class="col-actions">
+          <button type="button" class="icon-btn" id="btn-gear" aria-label="Settings" title="Settings via Telegram">⚙</button>
+          <img class="avatar" src="icons/icon-192.png" alt="" width="32" height="32" />
+        </div>
+      </header>
+
+      <div class="wallet-card" id="wallet-card">
+        <div class="wallet-card-top">
+          <div class="wallet-brand">
+            <img src="icons/icon-192.png" alt="" width="22" height="22" />
+            <span>Nimbus Wallet</span>
+          </div>
+          <div class="wallet-pills">
+            <span class="pill">SOL</span>
+            <span class="pill" id="mode-pill">SIM</span>
+          </div>
+        </div>
+        <p class="avail-label">Available to trade</p>
+        <div class="balance" id="balance" data-value="0">$0.00</div>
+        <div class="wallet-card-bot">
+          <span class="status-pill" id="status-pill">Bot idle</span>
+          <span class="wm" id="wm">····</span>
+        </div>
       </div>
-    </header>
-    <section id="empty" class="empty" hidden>
-      <p>Ingen data än – väntar på desken</p>
-      <p class="hint">Öppna länken från Telegram med data-URL i fragmentet.</p>
+
+      <div class="card add-funds" id="add-funds">
+        <div class="af-row">
+          <span class="af-label">Amount</span>
+          <div class="af-amount"><span id="af-display">$100</span></div>
+        </div>
+        <div class="af-pills" id="af-pills">
+          <button type="button" class="amt" data-amt="25">$25</button>
+          <button type="button" class="amt" data-amt="50">$50</button>
+          <button type="button" class="amt selected" data-amt="100">$100</button>
+          <button type="button" class="amt" data-amt="500">$500</button>
+        </div>
+        <div class="af-source" id="af-source">
+          <span class="src-left">Paper bankroll</span>
+          <span class="src-right" id="af-source-right">via Telegram</span>
+        </div>
+        <a class="af-btn" id="af-btn" href="https://t.me/NimbusMobileBot?text=%2Fbankroll%20100" target="_blank" rel="noopener">Sätt paper-saldo $100</a>
+      </div>
+
+      <div class="tokens-wrap">
+        <h2 class="sec-title">Tokens</h2>
+        <div class="tokens-grid" id="tokens-grid">
+          <p class="empty-hint">Väntar på desken</p>
+        </div>
+      </div>
     </section>
-    <section id="desk" class="desk" hidden>
-      <div id="status-line" class="status"></div>
-      <canvas id="chart" width="380" height="160" aria-label="Equity chart"></canvas>
-      <h2 class="sec">Agenter</h2>
-      <ul id="heartbeats" class="list"></ul>
-      <h2 class="sec">Positioner</h2>
-      <ul id="positions" class="list"></ul>
+
+    <section class="col col-agents" aria-label="Agents">
+      <header class="col-head agents-head">
+        <div class="brand-row">
+          <img class="brand-logo" src="icons/icon-192.png" alt="" width="28" height="28" />
+          <div>
+            <h1 class="col-title">Nimbus</h1>
+            <p class="col-sub" id="agents-sub">5 agents · paper run</p>
+          </div>
+        </div>
+        <div class="agents-meta">
+          <span class="multi-pill" id="multi-pill">since deposit <b>1.00x</b></span>
+          <label class="auto-trade" title="Display only — mode from desk">
+            <span>Auto-trade</span>
+            <span class="toggle" id="auto-toggle" aria-hidden="true"><i></i></span>
+          </label>
+        </div>
+      </header>
+
+      <div class="agents-list" id="agents-list"></div>
+
+      <div class="closed-wrap card">
+        <div class="closed-head">
+          <div class="closed-title">
+            Closed <span class="count-orb" id="closed-count">0</span>
+          </div>
+          <span class="to-wallet">↑ TO WALLET</span>
+        </div>
+        <div class="closed-list" id="closed-list">
+          <p class="empty-hint">Inga stängda trades än</p>
+        </div>
+      </div>
+
+      <div class="goal-wrap card">
+        <div class="goal-head">
+          <span class="goal-label">GOAL <b id="goal-target">10x</b></span>
+          <div class="goal-filters" id="goal-filters">
+            <button type="button" data-f="1h">1h</button>
+            <button type="button" data-f="1d">1d</button>
+            <button type="button" data-f="1w">1w</button>
+            <button type="button" data-f="1m">1m</button>
+            <button type="button" class="on" data-f="ALL">ALL</button>
+          </div>
+          <span class="goal-pct" id="goal-pct">0%</span>
+        </div>
+        <div class="goal-track" id="goal-track">
+          <div class="goal-fill" id="goal-fill"></div>
+          <div class="goal-dots">
+            <span class="dot" data-m="2" style="left:20%"><i>2x</i></span>
+            <span class="dot" data-m="5" style="left:50%"><i>5x</i></span>
+            <span class="dot" data-m="10" style="left:100%"><i>10x</i></span>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
+
+  <section id="boot-empty" class="boot-empty" hidden>
+    <img src="icons/icon-192.png" alt="Nimbus" width="64" height="64" />
+    <h1>Nimbus</h1>
+    <p>Väntar på desken</p>
+    <p class="hint">Öppna länken från Telegram (@NimbusMobileBot) så appen kopplas.</p>
+  </section>
+
   <script src="chart.js"></script>
   <script src="app.js"></script>
 </body>
