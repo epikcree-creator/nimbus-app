@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="app.css?v=4" />
   <title>Nimbus</title>
 </head>
 <body>
@@ -22,7 +22,7 @@
       <header class="col-head">
         <div>
           <h1 class="col-title">Wallet</h1>
-          <p class="col-sub">Trading wallet · Solana</p>
+          <p class="col-sub">Trading-plånbok · Solana</p>
         </div>
         <div class="col-actions">
           <button type="button" class="icon-btn" id="btn-gear" aria-label="Settings" title="Settings via Telegram">⚙</button>
@@ -41,7 +41,7 @@
             <span class="pill" id="mode-pill">SIM</span>
           </div>
         </div>
-        <p class="avail-label">Available to trade</p>
+        <p class="avail-label">Tillgängligt att handla</p>
         <div class="balance" id="balance" data-value="0">$0.00</div>
         <div class="wallet-card-bot">
           <span class="status-pill" id="status-pill">Bot idle</span>
@@ -61,7 +61,7 @@
           <button type="button" class="amt" data-amt="500">$500</button>
         </div>
         <div class="af-source" id="af-source">
-          <span class="src-left">Paper bankroll</span>
+          <span class="src-left">Paper-saldo</span>
           <span class="src-right" id="af-source-right">via Telegram</span>
         </div>
         <a class="af-btn" id="af-btn" href="https://t.me/NimbusMobileBot?text=%2Fbankroll%20100" target="_blank" rel="noopener">Sätt paper-saldo $100</a>
@@ -81,11 +81,11 @@
           <img class="brand-logo" src="icons/icon-192.png" alt="" width="28" height="28" />
           <div>
             <h1 class="col-title">Nimbus</h1>
-            <p class="col-sub" id="agents-sub">5 agents · paper run</p>
+            <p class="col-sub" id="agents-sub">5 agenter · paper</p>
           </div>
         </div>
         <div class="agents-meta">
-          <span class="multi-pill" id="multi-pill">since deposit <b>1.00x</b></span>
+          <span class="multi-pill" id="multi-pill">sedan start <b>1.00x</b></span>
           <label class="auto-trade" title="Display only — mode from desk">
             <span>Auto-trade</span>
             <span class="toggle" id="auto-toggle" aria-hidden="true"><i></i></span>
@@ -98,9 +98,9 @@
       <div class="closed-wrap card">
         <div class="closed-head">
           <div class="closed-title">
-            Closed <span class="count-orb" id="closed-count">0</span>
+            Aktivitet <span class="count-orb" id="closed-count">0</span>
           </div>
-          <span class="to-wallet">↑ TO WALLET</span>
+          <span class="to-wallet">↑ TILL WALLET</span>
         </div>
         <div class="closed-list" id="closed-list">
           <p class="empty-hint">Inga stängda trades än</p>
@@ -138,7 +138,7 @@
     <p class="hint">Öppna länken från Telegram (@NimbusMobileBot) så appen kopplas.</p>
   </section>
 
-  <script src="chart.js"></script>
-  <script src="app.js"></script>
+  <script src="chart.js?v=4"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>

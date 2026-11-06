@@ -6,11 +6,11 @@
   var SIGNUP_URL = "https://fomo.family/r/savipww";
   var CHAIN_ID = { solana: 1399811149, robinhood: 4663, base: 8453, bnb: 56 };
   var AGENTS = [
-    { id: "scanner", name: "Scanner", sub: "migrations · PumpPortal", color: "#ff7a1a", icon: "𝒮" },
-    { id: "auditor", name: "Auditor", sub: "8 layers · RugCheck", color: "#9b6bff", icon: "𝒜" },
-    { id: "analyst", name: "Analyst", sub: "Jev · noul", color: "#2ee6c7", icon: "𝒥" },
-    { id: "executor", name: "Executor", sub: "paper fills", color: "#4da3ff", icon: "ℰ" },
-    { id: "risk", name: "Risk", sub: "stops · sizing", color: "#ff5ab8", icon: "ℛ" }
+    { id: "scanner", name: "Scanner", sub: "Graduationer · PumpPortal", color: "#64d2ff", icon: "𝒮" },
+    { id: "auditor", name: "Auditor", sub: "8 lager · RugCheck", color: "#9b6bff", icon: "𝒜" },
+    { id: "analyst", name: "Analyst", sub: "Jev · noul-frågor", color: "#ffd60a", icon: "𝒥" },
+    { id: "executor", name: "Executor", sub: "Paper-fyllningar", color: "#00d35a", icon: "ℰ" },
+    { id: "risk", name: "Risk", sub: "Stopp · trailing", color: "#ff6b9a", icon: "ℛ" }
   ];
   var selectedAmt = 100;
   var lastClosedSig = "";
@@ -87,10 +87,10 @@
     var t = Date.parse(iso);
     if (!t) return String(iso);
     var s = Math.max(0, Math.round((Date.now() - t) / 1000));
-    if (s < 20) return "Updated just now";
-    if (s < 60) return "Updated " + s + "s ago";
-    if (s < 3600) return "Updated " + Math.floor(s / 60) + "m ago";
-    return "Updated " + Math.floor(s / 3600) + "h ago";
+    if (s < 20) return "Uppdaterad nyss";
+    if (s < 60) return "Uppdaterad " + s + "s sedan";
+    if (s < 3600) return "Uppdaterad " + Math.floor(s / 60) + "m sedan";
+    return "Uppdaterad " + Math.floor(s / 3600) + "h sedan";
   }
 
   /* ---- odometer balance ---- */
@@ -262,13 +262,20 @@
       card.className = "agent-card";
       var status = hb[a.id] != null ? hb[a.id] : "not started";
       var ok = hbOk(status);
+      var ag = (state.agents && (state.agents[a.id] || state.agents[a.id.toLowerCase()])) || null;
       var line = latestCoinLine(state, a.id);
+      if (!line && ag && ag.decisions && ag.decisions[0]) {
+        var d0 = ag.decisions[0];
+        line = { symbol: d0.title || "?", mint: d0.mint, text: (d0.title || "?") + " · " + (d0.reason || d0.verdict || "") };
+      }
       var stats = agentStats(state, a.id);
+      if (ag && ag.today_count != null && !stats.closed) stats.closed = ag.today_count;
       var mid = document.createElement("div");
       mid.className = "agent-mid";
+      var statusSv = ok ? "live" : (status === "not started" ? "ej startad" : String(status).slice(0, 28));
       mid.innerHTML =
         "<div class='agent-name'>" + a.name + "</div>" +
-        "<div class='agent-sub'>" + a.sub + (ok ? " · live" : " · " + String(status).slice(0, 28)) + "</div>";
+        "<div class='agent-sub'>" + a.sub + " · " + statusSv + "</div>";
       var coinEl = document.createElement("div");
       coinEl.className = "agent-coin";
       if (line) {
@@ -279,7 +286,7 @@
         link.textContent = line.text;
         coinEl.appendChild(link);
       } else {
-        coinEl.textContent = ok ? "scanning…" : "idle";
+        coinEl.textContent = ok ? "lyssnar…" : "vilande";
       }
       mid.appendChild(coinEl);
       var canvas = document.createElement("canvas");
@@ -306,11 +313,11 @@
       right.appendChild(pctEl);
       var usd = document.createElement("div");
       usd.className = "agent-usd";
-      usd.textContent = stats.closed ? (fmtUsd(stats.pnl) + " · " + stats.closed + " closed") : (ok ? "watching" : "not started");
+      usd.textContent = stats.closed ? (fmtUsd(stats.pnl) + " · " + stats.closed + " st") : (ok ? "övervakar" : "ej startad");
       right.appendChild(usd);
       var tags = document.createElement("div");
       tags.className = "agent-tags";
-      tags.innerHTML = "<span class='tag'>" + (ok ? "OK" : "IDLE") + "</span>";
+      tags.innerHTML = "<span class='tag'>" + (ok ? "OK" : "VILA") + "</span>";
       right.appendChild(tags);
 
       var ico = document.createElement("div");
@@ -398,8 +405,13 @@
     // Prefer coins (have scan+reason); merge layers from audits by mint
     var byMint = {};
     audits.forEach(function (a) { if (a.mint) byMint[a.mint] = a; });
-    var list = coins.length ? coins : audits.map(function (a) {
+    var list = coins.length ? coins.slice() : audits.map(function (a) {
       return { mint: a.mint, symbol: a.symbol, scan: a.audit_pass ? "PASS" : "REJECT", audit_pass: a.audit_pass, layers: a.layers };
+    });
+    list.sort(function (a, b) {
+      var al = (a.layers && a.layers.length) ? 0 : 1;
+      var bl = (b.layers && b.layers.length) ? 0 : 1;
+      return al - bl;
     });
     if (!list.length) {
       wrap.innerHTML = "";
@@ -412,8 +424,11 @@
       var layers = c.layers || (byMint[c.mint] && byMint[c.mint].layers) || [];
       var pass = !!c.audit_pass || c.scan === "PASS";
       var pill = pass ? "PASS" : "REJECT";
+      var reason = c.reason ? String(c.reason).split(";")[0].trim() : "";
+      if (reason.length > 36) reason = reason.slice(0, 34) + "…";
       html += "<a class='audit-row' href='" + coinUrl(c.mint, "solana") + "' target='_blank' rel='noopener'>" +
-        "<div class='audit-sym'>$" + (c.symbol || "?") + "</div>" +
+        "<div class='audit-sym'>$" + (c.symbol || "?") +
+        (reason ? "<div class='audit-reason'>" + reason + "</div>" : "") + "</div>" +
         "<span class='scan-pill " + (pass ? "pass" : "rej") + "'>" + pill + "</span>" +
         layerDots(layers) +
         "</a>";
@@ -425,12 +440,26 @@
   function renderClosed(state) {
     var list = $("closed-list");
     var trades = state.trades || state.closed || [];
+    if (!trades.length && Array.isArray(state.activity)) {
+      trades = state.activity.filter(function (a) {
+        return a && (a.kind === "sold" || a.kind === "stopped" || a.kind === "bought" || a.kind === "rejected");
+      }).map(function (a) {
+        return {
+          symbol: a.title,
+          mint: a.mint,
+          agent: a.agent,
+          pnl_usd: null,
+          held: (a.subtitle || "") + (a.value ? " · " + a.value : ""),
+          kind: a.kind
+        };
+      });
+    }
     $("closed-count").textContent = String(trades.length);
     list.innerHTML = "";
     if (!trades.length) {
       var p = document.createElement("p");
       p.className = "empty-hint";
-      p.textContent = "Inga stängda trades än";
+      p.textContent = "Ingen aktivitet än i natt";
       list.appendChild(p);
       return;
     }
@@ -465,10 +494,9 @@
   function renderGoal(state) {
     var equity = Number(state.equity_usd) || 0;
     var deposit = Number(state.deposit_usd || state.bankroll_usd || 0);
-    if (!deposit && equity > 0) deposit = equity; // at rest 1.00x
-    if (!deposit) deposit = 100; // display scale only when empty paper
-    var mult = deposit > 0 ? (equity / deposit) : 1;
-    if (!equity && !Number(state.deposit_usd || state.bankroll_usd || 0)) mult = 1;
+    if (!deposit && Array.isArray(state.equity) && state.equity.length) deposit = Number(state.equity[0]) || 0;
+    if (!deposit && equity > 0) deposit = equity;
+    var mult = (deposit > 0 && equity > 0) ? (equity / deposit) : 1;
     $("multi-pill").innerHTML = "since deposit <b>" + mult.toFixed(2) + "x</b>";
     var pct = Math.max(0, Math.min(100, (mult / 10) * 100));
     $("goal-fill").style.width = pct + "%";
@@ -487,7 +515,7 @@
   function renderHeader(state) {
     var mode = String((state && state.mode) || "PAPER").toUpperCase();
     $("mode-pill").textContent = mode === "LIVE" ? "LIVE" : "SIM";
-    $("agents-sub").textContent = "5 agents · " + (mode === "LIVE" ? "live run" : "paper run");
+    $("agents-sub").textContent = "5 agenter · " + (mode === "LIVE" ? "live" : "paper");
     var on = mode === "LIVE" || mode === "PAPER"; // auto-trade reflects desk running
     var hb = (state && state.heartbeats) || {};
     var anyOk = Object.keys(hb).some(function (k) { return hbOk(hb[k]); });
@@ -502,7 +530,7 @@
     var delta = equity - (deposit || 0);
     if (!anyOk && equity === 0) {
       pill.className = "status-pill";
-      pill.textContent = "Bot idle";
+      pill.textContent = "Bot vilande";
     } else {
       pill.className = "status-pill good";
       var deltaHtml = (delta >= 0 ? "+$" : "-$") + Math.abs(delta).toFixed(2);
@@ -568,7 +596,7 @@
       ".layer-dots{display:flex;gap:3px;justify-content:flex-end;flex-wrap:wrap}" +
       ".layer-dots i{width:8px;height:8px;border-radius:50%;display:inline-block}" +
       ".layer-dots i.y{background:var(--green)}" +
-      ".layer-dots i.n{background:#4a4058}";
+      ".layer-dots i.n{background:#4a4058}.audit-reason{font-size:0.62rem;font-weight:500;color:rgba(235,235,245,0.55);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}";
     document.head.appendChild(s);
   })();
 
