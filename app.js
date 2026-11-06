@@ -182,16 +182,29 @@
   }
 
   /* ---- agents ---- */
-  function seriesFromEquity(equity, seed) {
-    if (Array.isArray(equity) && equity.length > 2) return equity.map(Number);
-    var base = Array.isArray(equity) && equity.length ? Number(equity[equity.length - 1]) : 0;
-    var out = [];
-    var v = base || (20 + (seed % 40));
-    for (var i = 0; i < 20; i++) {
-      v += Math.sin((i + seed) * 0.4) * (2 + (seed % 3)) + ((i % 4) - 1.5) * 0.4;
-      out.push(v);
+  function realSeriesForAgent(state, agentId) {
+    // Prefer per-agent series if desk publishes them; never invent curves.
+    var agents = state.agents;
+    if (agents && typeof agents === "object") {
+      var a = agents[agentId] || agents[agentId.toLowerCase()] || null;
+      if (a && Array.isArray(a.equity) && a.equity.length >= 2) return a.equity.map(Number);
+      if (a && Array.isArray(a.pnl) && a.pnl.length >= 2) return a.pnl.map(Number);
+      if (a && Array.isArray(a.series) && a.series.length >= 2) return a.series.map(Number);
     }
-    return out;
+    if (state.agent_equity && Array.isArray(state.agent_equity[agentId]) && state.agent_equity[agentId].length >= 2) {
+      return state.agent_equity[agentId].map(Number);
+    }
+    if (state.agent_pnl && Array.isArray(state.agent_pnl[agentId]) && state.agent_pnl[agentId].length >= 2) {
+      return state.agent_pnl[agentId].map(Number);
+    }
+    // Shared desk equity only when it has a real history (2+ distinct samples meaningfully)
+    if (Array.isArray(state.equity) && state.equity.length >= 2) {
+      var nums = state.equity.map(Number);
+      var min = Math.min.apply(null, nums);
+      var max = Math.max.apply(null, nums);
+      if (max !== min) return nums;
+    }
+    return null;
   }
 
   function latestCoinLine(state, agentId) {
@@ -311,9 +324,10 @@
       root.appendChild(card);
 
       requestAnimationFrame(function () {
-        if (window.NimbusChart) {
-          window.NimbusChart.spark(canvas, seriesFromEquity(state.equity, idx * 7 + 3), a.color);
-        }
+        if (!window.NimbusChart) return;
+        var series = realSeriesForAgent(state, a.id);
+        if (series) window.NimbusChart.spark(canvas, series, a.color);
+        else window.NimbusChart.idle(canvas, "rgba(255,255,255,0.18)");
       });
     });
   }
@@ -322,34 +336,12 @@
   function renderTokens(state) {
     var grid = $("tokens-grid");
     grid.innerHTML = "";
-    var positions = state.positions || [];
-    var tokens = state.tokens || [];
-    var rows = positions.length ? positions : tokens;
+    var rows = state.positions || [];
     if (!rows.length) {
-      // Fall back: show recent audited coins as "watched" tokens
-      var coins = state.coins || [];
-      if (!coins.length) {
-        var p = document.createElement("p");
-        p.className = "empty-hint";
-        p.textContent = "Inga öppna positioner";
-        grid.appendChild(p);
-        return;
-      }
-      coins.slice(0, 6).forEach(function (c) {
-        var a = document.createElement("a");
-        a.className = "token-row";
-        a.href = coinUrl(c.mint, "solana");
-        a.target = "_blank";
-        a.rel = "noopener";
-        var pass = !!c.audit_pass || c.scan === "PASS";
-        a.innerHTML =
-          "<div class='token-ico'>" + icoLetter(c.symbol) + "</div>" +
-          "<div><div class='token-name'>$" + (c.symbol || "?") + "</div>" +
-          "<div class='token-amt'>" + shortMint(c.mint) + "</div></div>" +
-          "<div><div class='token-val'>" + (c.scan || (pass ? "PASS" : "REJECT")) + "</div>" +
-          "<div class='token-chg " + (pass ? "pos" : "neg") + "'>" + (pass ? "PASS" : "REJECT") + "</div></div>";
-        grid.appendChild(a);
-      });
+      var p = document.createElement("p");
+      p.className = "empty-hint";
+      p.textContent = "Inga innehav än";
+      grid.appendChild(p);
       return;
     }
     rows.slice(0, 8).forEach(function (t) {
