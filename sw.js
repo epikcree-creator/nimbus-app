@@ -1,5 +1,5 @@
 /* Nimbus service worker — cache shell for Android installability */
-var CACHE = "nimbus-shell-v1";
+var CACHE = "nimbus-shell-v2";
 var SHELL = [
   "./",
   "./index.html",
