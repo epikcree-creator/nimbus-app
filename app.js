@@ -26,7 +26,6 @@
     if (frag.t) {
       try { localStorage.setItem(LS_TOKEN, frag.t); } catch (e) {}
     }
-    // Clear fragment so APP_TOKEN is not left in the address bar / history
     if (frag.d || frag.t) {
       try {
         history.replaceState(null, "", location.pathname + location.search);
@@ -53,19 +52,48 @@
     $("desk").hidden = false;
   }
 
+  function fmtUsd(n) {
+    var x = Number(n);
+    if (!isFinite(x)) return "—";
+    return "$" + x.toFixed(2);
+  }
+
   function renderState(state) {
     showDesk();
     var mode = (state && state.mode) || "PAPER";
     $("mode-tag").textContent = mode;
+
+    var equityNow = state && (state.equity_usd != null
+      ? state.equity_usd
+      : (Array.isArray(state.equity) && state.equity.length ? state.equity[state.equity.length - 1] : 0));
     var line = $("status-line");
-    if (state && state.updated_at) {
-      line.textContent = "Uppdaterad " + state.updated_at;
-    } else {
-      line.textContent = "Live från desken";
+    var parts = ["Equity " + fmtUsd(equityNow)];
+    if (state && state.updated_at) parts.push("uppdaterad " + state.updated_at);
+    line.textContent = parts.join(" · ");
+
+    var series = (state && state.equity) || [];
+    if (window.NimbusChart) {
+      window.NimbusChart.draw($("chart"), series);
     }
-    if (window.NimbusChart && state && state.equity) {
-      window.NimbusChart.draw($("chart"), state.equity);
+
+    var hbEl = $("heartbeats");
+    if (hbEl) {
+      hbEl.innerHTML = "";
+      var hb = (state && state.heartbeats) || {};
+      var names = Object.keys(hb);
+      if (!names.length) {
+        var emptyHb = document.createElement("li");
+        emptyHb.textContent = "Inga agent-heartbeats ännu";
+        hbEl.appendChild(emptyHb);
+      } else {
+        names.forEach(function (name) {
+          var li = document.createElement("li");
+          li.textContent = name + ": " + hb[name];
+          hbEl.appendChild(li);
+        });
+      }
     }
+
     var ul = $("positions");
     ul.innerHTML = "";
     var positions = (state && state.positions) || [];
