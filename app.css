@@ -1,0 +1,45 @@
+:root {
+  color-scheme: dark;
+  --bg: #000000;
+  --fg: #f2f2f2;
+  --muted: #888888;
+  --accent: #7b5cff;
+  --card: #111111;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+  min-height: 100%;
+}
+#app { padding: 20px 16px 40px; max-width: 480px; margin: 0 auto; }
+.top { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+.logo { border-radius: 10px; background: #0a0a0a; }
+h1 { margin: 0; font-size: 1.35rem; font-weight: 600; letter-spacing: 0.02em; }
+.tag { margin: 2px 0 0; color: var(--accent); font-size: 0.8rem; font-weight: 600; }
+.empty {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 28px 20px;
+  text-align: center;
+}
+.empty p { margin: 0 0 8px; font-size: 1.05rem; }
+.hint { color: var(--muted); font-size: 0.85rem !important; }
+.desk { display: flex; flex-direction: column; gap: 16px; }
+.status { color: var(--muted); font-size: 0.85rem; }
+#chart {
+  width: 100%;
+  height: auto;
+  background: var(--card);
+  border-radius: 16px;
+}
+.list { list-style: none; margin: 0; padding: 0; }
+.list li {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+[hidden] { display: none !important; }

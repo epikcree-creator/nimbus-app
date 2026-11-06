@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-title" content="Nimbus" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="app.css" />
+  <title>Nimbus</title>
+</head>
+<body>
+  <main id="app">
+    <header class="top">
+      <img class="logo" src="icons/icon-192.png" alt="Nimbus" width="40" height="40" />
+      <div>
+        <h1>Nimbus</h1>
+        <p class="tag" id="mode-tag">PAPER</p>
+      </div>
+    </header>
+    <section id="empty" class="empty" hidden>
+      <p>Ingen data än – väntar på desken</p>
+      <p class="hint">Öppna länken från Telegram med data-URL i fragmentet.</p>
+    </section>
+    <section id="desk" class="desk" hidden>
+      <div id="status-line" class="status"></div>
+      <canvas id="chart" width="380" height="160" aria-label="Equity chart"></canvas>
+      <ul id="positions" class="list"></ul>
+    </section>
+  </main>
+  <script src="chart.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
