@@ -11,7 +11,8 @@ window.NimbusChart = {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     var w = cssW, h = cssH;
     ctx.clearRect(0, 0, w, h);
-    var pts = (series && series.length) ? series.slice() : this._noise(24);
+    if (!series || series.length < 2) { this.idle(canvas, color); return; }
+    var pts = series.slice();
     var min = Math.min.apply(null, pts);
     var max = Math.max.apply(null, pts);
     var span = (max - min) || 1;
@@ -59,6 +60,28 @@ window.NimbusChart = {
       ctx.fillStyle = col;
       ctx.fill();
     });
+  },
+
+  idle: function (canvas, color) {
+    if (!canvas || !canvas.getContext) return;
+    var ctx = canvas.getContext("2d");
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var cssW = canvas.clientWidth || 160;
+    var cssH = canvas.clientHeight || 36;
+    canvas.width = Math.max(1, Math.floor(cssW * dpr));
+    canvas.height = Math.max(1, Math.floor(cssH * dpr));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var w = cssW, h = cssH;
+    ctx.clearRect(0, 0, w, h);
+    var y = Math.floor(h * 0.55);
+    ctx.beginPath();
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = color || "rgba(255,255,255,0.18)";
+    ctx.lineWidth = 1.2;
+    ctx.moveTo(4, y);
+    ctx.lineTo(w - 4, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
   },
   draw: function (canvas, series) {
     this.spark(canvas, series, "#9b6bff");
