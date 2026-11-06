@@ -17,6 +17,39 @@
   var goalFilter = "ALL";
   var seeded = false;
 
+
+  function svReason(raw) {
+    if (raw == null || raw === "") return "";
+    var r = String(raw);
+    // Python None / null / undefined strings
+    r = r.replace(/\bNone\b/g, "ingen data");
+    r = r.replace(/\bnull\b/gi, "ingen data");
+    r = r.replace(/\bundefined\b/gi, "ingen data");
+    r = r.replace(/^REJECT\s*[:·-]?\s*/i, "");
+    r = r.replace(/^PASS\s*[:·-]?\s*/i, "");
+    r = r.replace(/^KILL\s*[:·-]?\s*/i, "");
+    r = r.replace(/liquidity\s+ingen data\s*<\s*[\d.]+/gi, "likviditet: ingen data");
+    r = r.replace(/liquidity\s+ingen data/gi, "likviditet: ingen data");
+    r = r.replace(/liq\s+unknown/gi, "likviditet: ingen data");
+    r = r.replace(/\btop\s*10\s*hold\b/gi, "topp 10 äger");
+    r = r.replace(/\btop10\s+/gi, "topp 10 ");
+    r = r.replace(/topp\s*10\s+([\d.]+)\s*%\s*>\s*[\d.]+/gi, function(_, p) {
+      return "topp 10 äger " + Math.round(parseFloat(p)) + "%";
+    });
+    r = r.replace(/likviditet\s+\$?([\d.]+)\s*<\s*\$?[\d.]+/gi, function(_, v) {
+      var n = parseFloat(v);
+      return n >= 1000 ? ("likviditet $" + (n/1000).toFixed(1) + "K") : ("likviditet $" + Math.round(n));
+    });
+    r = r.replace(/\bliquidity\b/gi, "likviditet");
+    r = r.replace(/liq\s*\$/gi, "likviditet $");
+    r = r.replace(/\bin 1h\b/gi, "på 1h");
+    r = r.replace(/never qualified/gi, "kvalificerades aldrig");
+    r = r.replace(/copycat of/gi, "kopia av");
+    r = r.replace(/proof\s*inject/gi, "TESTDATA");
+    r = r.replace(/likviditet:\s*ingen data\s*[·:<]?\s*[\d.]*/gi, "likviditet: ingen data");
+    return r.replace(/^\s*[;·]+|[;·]+\s*$/g, "").trim();
+  }
+
   function coinUrl(address, chain) {
     chain = chain || "solana";
     if (!address || !(chain in CHAIN_ID)) return SIGNUP_URL;
@@ -222,7 +255,7 @@
     }
     if (agentId === "scanner" || agentId === "auditor") {
       var scan = c.scan || (c.audit_pass ? "PASS" : "REJECT");
-      var reason = c.reason ? String(c.reason).split(";")[0].trim() : "";
+      var reason = c.reason ? svReason(String(c.reason).split(";")[0].trim()) : "";
       if (reason.length > 42) reason = reason.slice(0, 40) + "…";
       return {
         symbol: c.symbol || "?",
@@ -266,7 +299,7 @@
       var line = latestCoinLine(state, a.id);
       if (!line && ag && ag.decisions && ag.decisions[0]) {
         var d0 = ag.decisions[0];
-        line = { symbol: d0.title || "?", mint: d0.mint, text: (d0.title || "?") + " · " + (d0.reason || d0.verdict || "") };
+        line = { symbol: d0.title || "?", mint: d0.mint, text: (d0.title || "?") + " · " + svReason(d0.reason || d0.verdict || "") };
       }
       var stats = agentStats(state, a.id);
       if (ag && ag.today_count != null && !stats.closed) stats.closed = ag.today_count;
@@ -424,7 +457,7 @@
       var layers = c.layers || (byMint[c.mint] && byMint[c.mint].layers) || [];
       var pass = !!c.audit_pass || c.scan === "PASS";
       var pill = pass ? "PASS" : "REJECT";
-      var reason = c.reason ? String(c.reason).split(";")[0].trim() : "";
+      var reason = c.reason ? svReason(String(c.reason).split(";")[0].trim()) : "";
       if (reason.length > 36) reason = reason.slice(0, 34) + "…";
       html += "<a class='audit-row' href='" + coinUrl(c.mint, "solana") + "' target='_blank' rel='noopener'>" +
         "<div class='audit-sym'>$" + (c.symbol || "?") +
