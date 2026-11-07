@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="app.css?v=5" />
+  <link rel="stylesheet" href="app.css?v=8" />
   <title>Nimbus</title>
 </head>
 <body>
@@ -25,7 +25,7 @@
           <p class="col-sub">Trading-plånbok · Solana</p>
         </div>
         <div class="col-actions">
-          <button type="button" class="icon-btn" id="btn-gear" aria-label="Settings" title="Settings via Telegram">⚙</button>
+          <button type="button" class="icon-btn" id="btn-gear" aria-label="Kontoinställningar" title="Kontoinställningar">⚙</button>
           <img class="avatar" src="icons/icon-192.png" alt="" width="32" height="32" />
         </div>
       </header>
@@ -38,13 +38,14 @@
           </div>
           <div class="wallet-pills">
             <span class="pill">SOL</span>
-            <span class="pill" id="mode-pill">SIM</span>
+            <span class="pill" id="mode-pill">PAPPER</span>
           </div>
         </div>
         <p class="avail-label">Tillgängligt att handla</p>
         <div class="balance" id="balance" data-value="0">$0.00</div>
         <div class="wallet-card-bot">
           <span class="status-pill" id="status-pill">Bot idle</span>
+          <span class="pill" id="money-status">Papperspengar</span>
           <span class="wm" id="wm">····</span>
         </div>
       </div>
@@ -81,7 +82,7 @@
           <img class="brand-logo" src="icons/icon-192.png" alt="" width="28" height="28" />
           <div>
             <h1 class="col-title">Nimbus</h1>
-            <p class="col-sub" id="agents-sub">5 agenter · paper</p>
+            <p class="col-sub" id="agents-sub">5 agenter · papperspengar</p>
           </div>
         </div>
         <div class="agents-meta">
@@ -138,7 +139,45 @@
     <p class="hint">Öppna länken från Telegram (@NimbusMobileBot) så appen kopplas.</p>
   </section>
 
-  <script src="chart.js?v=5"></script>
-  <script src="app.js?v=5"></script>
+  <div id="account-sheet" class="account-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="account-title" data-write="blocked">
+    <div class="account-backdrop" id="account-backdrop"></div>
+    <div class="account-panel">
+      <header class="account-head">
+        <div>
+          <h2 id="account-title">Konto</h2>
+          <p class="account-sub">Inställningar · reglage och exakt tal</p>
+        </div>
+        <button type="button" class="icon-btn account-close" id="account-close">Stäng</button>
+      </header>
+      <p id="account-source" class="account-source"></p>
+      <section class="money-choice" aria-labelledby="money-choice-title">
+        <h3 id="money-choice-title">Pengar</h3>
+        <p id="money-desk" class="setting-note">Desken: papperspengar</p>
+        <div class="choice-row" role="group" aria-label="Pengar">
+          <button type="button" id="money-paper" class="choice on" aria-pressed="true">Papperspengar</button>
+          <button type="button" id="money-live" class="choice money-gated" aria-pressed="false" aria-describedby="money-reasons">Riktiga pengar</button>
+        </div>
+        <p id="money-note" class="setting-note">Papperspengar är på. Inga positioner stängs av det här valet.</p>
+        <ul id="money-reasons" class="money-reasons" hidden></ul>
+      </section>
+      <p id="account-write-note" class="write-gap"></p>
+      <form id="owner-auth" class="owner-auth" hidden>
+        <p>Logga in med Supabase-ägaren. Inget konto skapas här.</p>
+        <label>E-post <input id="owner-email" type="email" autocomplete="username" required></label>
+        <label>Lösenord <input id="owner-password" type="password" autocomplete="current-password" required></label>
+        <button type="submit" id="owner-login">Logga in</button>
+      </form>
+      <div id="ticket-banner" class="ticket-banner" role="status"></div>
+      <div id="account-fields"></div>
+      <h3 class="sec-title">Ändringslogg</h3>
+      <div id="account-log"></div>
+      <button type="button" id="account-save" class="account-save">Spara ändringar</button>
+      <p id="account-save-result" class="save-result" role="status"></p>
+    </div>
+  </div>
+
+  <script src="settings.js?v=8"></script>
+  <script src="chart.js?v=8"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>

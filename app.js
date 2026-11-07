@@ -192,6 +192,701 @@
     }
   }
 
+  var accountBuilt = false;
+  var accountDirty = {};
+  var accountCatalog = null;
+  var shownState = null;
+  var moneyReasonsOpen = false;
+
+  function openPositionCount(state) {
+    var rows = state && state.positions;
+    return Array.isArray(rows) ? rows.length : 0;
+  }
+
+  function currentMoney(state, action) {
+    var stored = "";
+    try { stored = localStorage.getItem("nimbus_money_choice") || ""; } catch (e) { stored = ""; }
+    var result = window.NimbusSettings.moneyChoice({
+      publishedMode: String((state && state.mode) || "PAPER"),
+      stored: stored,
+      action: action || "show",
+      openPositions: openPositionCount(state)
+    });
+    try { localStorage.setItem("nimbus_money_choice", result.persist); } catch (e2) {}
+    return result;
+  }
+
+  function paintMoney(result) {
+    var published = result.publishedMode;
+    var pill = $("mode-pill");
+    if (pill) {
+      pill.textContent = published === "LIVE" ? "LIVE" : "PAPPER";
+      pill.setAttribute("title", result.message);
+    }
+    var sub = $("agents-sub");
+    if (sub) {
+      sub.textContent = published === "LIVE"
+        ? "5 agenter · desken visar LIVE · appen handlar inte live"
+        : "5 agenter · papperspengar";
+    }
+    var status = $("money-status");
+    if (status) status.textContent = published === "LIVE" ? "Appen: papperspengar" : "Papperspengar";
+    var paperBtn = $("money-paper");
+    var liveBtn = $("money-live");
+    if (paperBtn) {
+      paperBtn.classList.add("on");
+      paperBtn.setAttribute("aria-pressed", "true");
+    }
+    if (liveBtn) {
+      liveBtn.classList.remove("on");
+      liveBtn.setAttribute("aria-pressed", "false");
+    }
+    var desk = $("money-desk");
+    if (desk) desk.textContent = published === "LIVE" ? "Desken: LIVE" : "Desken: papperspengar";
+    var note = $("money-note");
+    var list = $("money-reasons");
+    if (result.status === "unavailable") {
+      moneyReasonsOpen = true;
+      if (note) note.textContent = result.message;
+      if (list) {
+        list.hidden = false;
+        list.textContent = "";
+        result.reasons.forEach(function (reason) {
+          var item = document.createElement("li");
+          item.textContent = reason;
+          list.appendChild(item);
+        });
+      }
+      return;
+    }
+    if (!moneyReasonsOpen && note) note.textContent = result.message;
+    if (!moneyReasonsOpen && list) {
+      list.hidden = true;
+      list.textContent = "";
+    }
+  }
+
+  function chooseMoney(action) {
+    if (action === "select-paper") moneyReasonsOpen = false;
+    paintMoney(currentMoney(shownState, action));
+  }
+
+  function isLocalPreview() {
+    var host = location.hostname;
+    var local = host === "127.0.0.1" || host === "localhost";
+    return local && location.search.indexOf("preview=1") !== -1;
+  }
+
+  function previewState() {
+    return {
+      mode: "PAPER",
+      updated_at: new Date().toISOString(),
+      equity: [200, 200],
+      equity_usd: 200,
+      deposit_usd: 200,
+      bankroll_usd: 200,
+      paper_start_stack: 200,
+      live_stack: 200,
+      positions: [],
+      coins: [],
+      heartbeats: { scanner: "ok", auditor: "ok", analyst: "ok", executor: "ok", risk: "ok" },
+      activity: [],
+      audits: [],
+      agents: {},
+      account: { mode: "PAPER", stack: 200, fomo_handle: "exempel", signup_url: SIGNUP_URL },
+      settings: {
+        mode: "PAPER",
+        paper_start_stack: 200,
+        live_stack: 200,
+        stack_pct: 8,
+        min_ticket_usd: 47.5,
+        below_min: "bump",
+        analyst_mode: "jev",
+        fomo_handle: "exempel",
+        stop_pct: 6,
+        notifier: "telegram",
+        report_time: "08:00",
+        auditor_enabled: true,
+        push_rejects: false,
+        rpc_published: false
+      },
+      change_log: [],
+      settings_write: { direct: false }
+    };
+  }
+
+  function loadCatalog(cb) {
+    if (accountCatalog) { cb(accountCatalog); return; }
+    if (window.__NIMBUS_CATALOG__) {
+      accountCatalog = window.__NIMBUS_CATALOG__;
+      cb(accountCatalog);
+      return;
+    }
+    fetch("./settings_catalog.json", { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("catalog"); return r.json(); })
+      .then(function (j) { accountCatalog = j; cb(j); })
+      .catch(function () { cb(null); });
+  }
+
+  function fieldValueFromState(field, state) {
+    var settings = (state && state.settings) || {};
+    if (Object.prototype.hasOwnProperty.call(settings, field.key) && settings[field.key] != null) {
+      return settings[field.key];
+    }
+    return field.default;
+  }
+
+  function readControl(field) {
+    var root = document.querySelector('[data-setting="' + field.key + '"]');
+    if (!root) return field.default;
+    if (field.kind === "number") {
+      var num = root.querySelector("input.exact");
+      return num ? num.value : field.default;
+    }
+    if (field.kind === "bool") {
+      var on = root.querySelector(".bool-btn.on");
+      return on ? on.getAttribute("data-value") === "true" : field.default;
+    }
+    if (field.kind === "enum") {
+      var choice = root.querySelector(".choice.on");
+      return choice ? choice.getAttribute("data-value") : field.default;
+    }
+    if (field.kind === "time" || field.kind === "text") {
+      var text = root.querySelector("input");
+      return text ? text.value : field.default;
+    }
+    return fieldValueFromState(field, window.__nimbusLastState);
+  }
+
+  function setFieldError(field, message) {
+    var root = document.querySelector('[data-setting="' + field.key + '"]');
+    if (!root) return;
+    var err = root.querySelector(".setting-error");
+    if (err) err.textContent = message || "";
+    var input = root.querySelector("input.exact, input[type='text']");
+    if (input) {
+      if (message) input.setAttribute("aria-invalid", "true");
+      else input.removeAttribute("aria-invalid");
+    }
+  }
+
+  function collectDraft() {
+    var values = {};
+    var errors = [];
+    var focusKey = null;
+    (accountCatalog.fields || []).forEach(function (field) {
+      if (field.kind === "secret") return;
+      var raw = accountDirty[field.key] ? readControl(field) : fieldValueFromState(field, window.__nimbusLastState);
+      if (field.kind === "readonly") {
+        values[field.key] = fieldValueFromState(field, window.__nimbusLastState);
+        return;
+      }
+      var checked = window.NimbusSettings.validateField(field, raw);
+      if (!checked.ok) {
+        errors.push(checked.message);
+        setFieldError(field, checked.message);
+        values[field.key] = fieldValueFromState(field, window.__nimbusLastState);
+        return;
+      }
+      setFieldError(field, "");
+      values[field.key] = checked.value == null ? raw : checked.value;
+      if (accountDirty[field.key]) focusKey = field.key;
+    });
+    return { values: values, errors: errors, focusKey: focusKey };
+  }
+
+  function renderTicketBanner() {
+    var box = $("ticket-banner");
+    if (!box || !accountCatalog || !window.NimbusSettings) return;
+    var pack = collectDraft();
+    var mode = String(pack.values.mode || "PAPER").toUpperCase();
+    var stack = mode === "LIVE" ? Number(pack.values.live_stack) : Number(pack.values.paper_start_stack);
+    var check = window.NimbusSettings.ticketCheck(
+      stack, pack.values.stack_pct, pack.values.min_ticket_usd, pack.values.below_min
+    );
+    box.className = "ticket-banner " + (check.level || "ok");
+    var formula = "Minsta stack = $" + Number(pack.values.min_ticket_usd).toFixed(2) +
+      " / (" + pack.values.stack_pct + " / 100) = $" + Number(check.min_stack).toFixed(2);
+    var msg = check.message_sv || "Stacken räcker för en vanlig biljett.";
+    if (accountDirty.live_stack && mode !== "LIVE") {
+      var live = window.NimbusSettings.ticketCheck(
+        pack.values.live_stack, pack.values.stack_pct, pack.values.min_ticket_usd, pack.values.below_min
+      );
+      if (live.message_sv) msg += " Sparad LIVE-siffra: " + live.message_sv;
+    }
+    box.innerHTML = "";
+    var strong = document.createElement("div");
+    strong.textContent = msg;
+    var sub = document.createElement("span");
+    sub.className = "ticket-formula";
+    sub.textContent = formula;
+    box.appendChild(strong);
+    box.appendChild(sub);
+  }
+
+  function renderChangeLog(state) {
+    var root = $("account-log");
+    if (!root) return;
+    var rows = (state && state.change_log) || [];
+    root.innerHTML = "";
+    if (!rows.length) {
+      var empty = document.createElement("p");
+      empty.className = "empty-hint";
+      empty.textContent = "Inga ändringar publicerade än.";
+      root.appendChild(empty);
+      return;
+    }
+    rows.slice(0, 20).forEach(function (row) {
+      if (!row || row.key === "rpc_url") return;
+      var el = document.createElement("div");
+      el.className = "log-row";
+      var title = document.createElement("div");
+      var b = document.createElement("b");
+      b.textContent = row.key || "";
+      title.appendChild(b);
+      title.appendChild(document.createTextNode(" " + (row.old == null ? "—" : row.old) + " → " + (row.new == null ? "—" : row.new)));
+      var meta = document.createElement("div");
+      meta.className = "log-meta";
+      meta.textContent = (row.ts || "") + (row.who ? " · " + row.who : "");
+      el.appendChild(title);
+      el.appendChild(meta);
+      root.appendChild(el);
+    });
+  }
+
+  function applyControlValue(field, value) {
+    var root = document.querySelector('[data-setting="' + field.key + '"]');
+    if (!root || accountDirty[field.key]) return;
+    if (field.kind === "number") {
+      var num = root.querySelector("input.exact");
+      var slider = root.querySelector('input[type="range"]');
+      if (num && document.activeElement !== num) num.value = value;
+      if (slider && value != null && value !== "" && !isNaN(Number(value))) {
+        var n = Number(value);
+        if (n >= Number(field.min) && n <= Number(field.max)) slider.value = String(n);
+      }
+      return;
+    }
+    if (field.kind === "bool") {
+      var on = value === true || value === "true" || value === 1 || value === "1";
+      root.querySelectorAll(".bool-btn").forEach(function (btn) {
+        btn.classList.toggle("on", (btn.getAttribute("data-value") === "true") === on);
+      });
+      return;
+    }
+    if (field.kind === "enum") {
+      root.querySelectorAll(".choice").forEach(function (btn) {
+        btn.classList.toggle("on", btn.getAttribute("data-value") === String(value));
+      });
+      return;
+    }
+    if (field.kind === "readonly") {
+      var pill = root.querySelector(".readonly-pill");
+      if (pill) pill.textContent = String(value || "PAPER");
+      return;
+    }
+    var input = root.querySelector("input");
+    if (input && document.activeElement !== input) input.value = value == null ? "" : value;
+  }
+
+  function buildAccountForm() {
+    var host = $("account-fields");
+    if (!host || !accountCatalog || accountBuilt) return;
+    host.innerHTML = "";
+    var byGroup = {};
+    (accountCatalog.groups || []).forEach(function (g) { byGroup[g.id] = g; });
+    var current = null;
+    (accountCatalog.fields || []).forEach(function (field) {
+      if (!current || current.id !== field.group) {
+        current = byGroup[field.group] || { id: field.group, label: field.group };
+        var section = document.createElement("section");
+        section.className = "set-group";
+        var h = document.createElement("h3");
+        h.textContent = current.label;
+        section.appendChild(h);
+        host.appendChild(section);
+        current.el = section;
+      }
+      var card = document.createElement("div");
+      card.className = "setting";
+      card.setAttribute("data-setting", field.key);
+      var label = document.createElement("div");
+      label.className = "setting-label";
+      var name = document.createElement("span");
+      name.textContent = field.label;
+      label.appendChild(name);
+      if (field.unit) {
+        var unit = document.createElement("span");
+        unit.className = "setting-unit";
+        unit.textContent = field.unit;
+        label.appendChild(unit);
+      }
+      card.appendChild(label);
+      if (field.kind === "secret") {
+        var secret = document.createElement("p");
+        secret.className = "secret-note";
+        secret.textContent = field.note || "Publiceras inte.";
+        card.appendChild(secret);
+        current.el.appendChild(card);
+        return;
+      }
+      if (field.kind === "readonly") {
+        var pill = document.createElement("div");
+        pill.className = "readonly-pill";
+        pill.textContent = "PAPER";
+        card.appendChild(pill);
+      } else if (field.kind === "number") {
+        var controls = document.createElement("div");
+        controls.className = "setting-controls";
+        var slider = document.createElement("input");
+        slider.type = "range";
+        slider.min = String(field.min);
+        slider.max = String(field.max);
+        slider.step = String(field.step || 1);
+        slider.setAttribute("aria-label", field.label);
+        var num = document.createElement("input");
+        num.type = "text";
+        num.className = "exact";
+        num.inputMode = "decimal";
+        num.setAttribute("aria-label", field.label + " exakt");
+        slider.addEventListener("input", function () {
+          accountDirty[field.key] = true;
+          num.value = slider.value;
+          setFieldError(field, "");
+          renderTicketBanner();
+        });
+        num.addEventListener("input", function () {
+          accountDirty[field.key] = true;
+          var checked = window.NimbusSettings.validateField(field, num.value);
+          setFieldError(field, checked.ok ? "" : checked.message);
+          if (checked.ok) slider.value = String(checked.value);
+          renderTicketBanner();
+        });
+        controls.appendChild(slider);
+        controls.appendChild(num);
+        card.appendChild(controls);
+        var hint = document.createElement("p");
+        hint.className = "setting-hint";
+        hint.textContent = "Tillåtet " + window.NimbusSettings.fmtBound(field.min) + "–" + window.NimbusSettings.fmtBound(field.max);
+        card.appendChild(hint);
+      } else if (field.kind === "bool") {
+        var bools = document.createElement("div");
+        bools.className = "bool-row";
+        [["true", "På"], ["false", "Av"]].forEach(function (pair) {
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "bool-btn";
+          btn.setAttribute("data-value", pair[0]);
+          btn.textContent = pair[1];
+          btn.addEventListener("click", function () {
+            accountDirty[field.key] = true;
+            bools.querySelectorAll(".bool-btn").forEach(function (b) { b.classList.toggle("on", b === btn); });
+            setFieldError(field, "");
+            renderTicketBanner();
+          });
+          bools.appendChild(btn);
+        });
+        card.appendChild(bools);
+      } else if (field.kind === "enum") {
+        var choices = document.createElement("div");
+        choices.className = "choice-row";
+        (field.options || []).forEach(function (opt) {
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "choice";
+          btn.setAttribute("data-value", opt.value);
+          btn.textContent = opt.label;
+          btn.addEventListener("click", function () {
+            accountDirty[field.key] = true;
+            choices.querySelectorAll(".choice").forEach(function (b) { b.classList.toggle("on", b === btn); });
+            setFieldError(field, "");
+            renderTicketBanner();
+          });
+          choices.appendChild(btn);
+        });
+        card.appendChild(choices);
+      } else {
+        var text = document.createElement("input");
+        text.type = field.kind === "time" ? "text" : "text";
+        text.inputMode = field.kind === "time" ? "numeric" : "text";
+        text.placeholder = field.kind === "time" ? "08:00" : "";
+        text.setAttribute("aria-label", field.label);
+        text.addEventListener("input", function () {
+          accountDirty[field.key] = true;
+          var checked = window.NimbusSettings.validateField(field, text.value);
+          setFieldError(field, checked.ok ? "" : checked.message);
+          renderTicketBanner();
+        });
+        card.appendChild(text);
+      }
+      if (field.note && field.kind !== "secret") {
+        var note = document.createElement("p");
+        note.className = "setting-note";
+        note.textContent = field.note;
+        card.appendChild(note);
+      }
+      var err = document.createElement("p");
+      err.className = "setting-error";
+      card.appendChild(err);
+      current.el.appendChild(card);
+    });
+    var note = $("account-write-note");
+    if (note) {
+      note.textContent = (accountCatalog.write && accountCatalog.write.reason_sv) || window.NimbusSettings.WRITE_REASON_SV;
+    }
+    accountBuilt = true;
+  }
+
+  function renderAccount(state) {
+    var source = $("account-source");
+    if (source) {
+      var published = state && state.settings && state.settings.paper_start_stack != null;
+      source.textContent = published
+        ? "Värden från desken. RPC publiceras inte."
+        : "Visar standardvärden tills desken publicerar inställningar. Inget skrivs över.";
+    }
+    loadCatalog(function (cat) {
+      if (!cat) return;
+      buildAccountForm();
+      (cat.fields || []).forEach(function (field) {
+        if (field.kind === "secret") return;
+        applyControlValue(field, fieldValueFromState(field, state));
+      });
+      renderTicketBanner();
+      renderChangeLog(state);
+      syncOwnerForm(state);
+      applySettingsAcks(state);
+    });
+  }
+
+  function readOwnerSession() {
+    try {
+      var raw = sessionStorage.getItem("nimbus_owner_session");
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      if (!parsed || !parsed.access_token || !parsed.user_id) return null;
+      return parsed;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function writeOwnerSession(session) {
+    try { sessionStorage.setItem("nimbus_owner_session", JSON.stringify(session)); } catch (e) {}
+  }
+
+  function clearOwnerSession() {
+    try { sessionStorage.removeItem("nimbus_owner_session"); } catch (e) {}
+  }
+
+  function transportOf(state) {
+    return (state && state.settings_transport) || { ready: false, auth: "supabase_user" };
+  }
+
+  function syncOwnerForm(state) {
+    var form = $("owner-auth");
+    if (!form) return;
+    var transport = transportOf(state || window.__nimbusLastState);
+    form.hidden = !(transport.ready && !readOwnerSession());
+  }
+
+  var pendingAcks = {};
+
+  function applySettingsAcks(state) {
+    var rows = (state && state.settings_acks) || [];
+    var box = $("account-save-result");
+    rows.forEach(function (row) {
+      if (!row || !pendingAcks[row.id]) return;
+      var key = pendingAcks[row.id];
+      if (row.status === "applied") {
+        delete accountDirty[key];
+        delete pendingAcks[row.id];
+        if (box) {
+          box.dataset.state = "applied";
+          box.textContent = row.message_sv || "Sparat på desken.";
+        }
+      } else if (row.status === "rejected") {
+        delete pendingAcks[row.id];
+        if (box) {
+          box.dataset.state = "rejected";
+          box.textContent = row.message_sv || "Nekad.";
+        }
+      }
+    });
+  }
+
+  function dirtyEntries() {
+    var out = [];
+    (accountCatalog.fields || []).forEach(function (field) {
+      if (!accountDirty[field.key] || field.kind === "secret" || field.kind === "readonly") return;
+      var checked = window.NimbusSettings.validateField(field, readControl(field));
+      if (!checked.ok) return;
+      var value = checked.value;
+      if (field.kind === "bool") value = value ? "true" : "false";
+      else value = String(value);
+      out.push({ key: field.key, value: value });
+    });
+    return out;
+  }
+
+  function submitEntries(transport, session, entries, box) {
+    var url = window.NimbusSettings.settingsRequestUrl(transport.supabase_url);
+    if (!url || !window.NimbusSettings.publishableKeyAllowed(transport.publishable_key)) {
+      box.dataset.state = "blocked";
+      box.textContent = "Kanalen är inte säker att använda.";
+      return;
+    }
+    var chain = Promise.resolve();
+    entries.forEach(function (entry) {
+      chain = chain.then(function () {
+        var built = window.NimbusSettings.buildSettingsRequest({
+          key: entry.key,
+          value: entry.value,
+          accessToken: session.access_token,
+          userId: session.user_id,
+          id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : "",
+          nonce: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ""
+        });
+        if (!built.ok) {
+          box.dataset.state = "blocked";
+          box.textContent = built.message;
+          throw new Error("local");
+        }
+        pendingAcks[built.row.id] = entry.key;
+        return fetch(url, {
+          method: "POST",
+          headers: {
+            "apikey": transport.publishable_key,
+            "Authorization": "Bearer " + session.access_token,
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal"
+          },
+          body: JSON.stringify(built.row)
+        }).then(function (response) {
+          if (response.status === 401) {
+            clearOwnerSession();
+            syncOwnerForm(window.__nimbusLastState);
+            box.dataset.state = "auth";
+            box.textContent = "Ägarinloggning krävs.";
+            return;
+          }
+          if (!response.ok) {
+            delete pendingAcks[built.row.id];
+            box.dataset.state = "rejected";
+            box.textContent = "Inte sparat. Åtkomst nekad.";
+          }
+        });
+      });
+    });
+    chain.catch(function () {});
+  }
+
+  function loginOwner(event) {
+    event.preventDefault();
+    var box = $("account-save-result");
+    var transport = transportOf(window.__nimbusLastState);
+    var url = window.NimbusSettings.authTokenUrl(transport.supabase_url);
+    var emailEl = $("owner-email");
+    var passwordEl = $("owner-password");
+    var email = emailEl ? emailEl.value : "";
+    var password = passwordEl ? passwordEl.value : "";
+    if (passwordEl) passwordEl.value = "";
+    if (!url || !transport.publishable_key) {
+      if (box) {
+        box.dataset.state = "blocked";
+        box.textContent = window.NimbusSettings.WRITE_REASON_SV;
+      }
+      return;
+    }
+    fetch(url + "?grant_type=password", {
+      method: "POST",
+      headers: { "apikey": transport.publishable_key, "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email, password: password })
+    }).then(function (response) {
+      return response.json().then(function (body) {
+        return { ok: response.ok, body: body || {} };
+      });
+    }).then(function (result) {
+      var user = result.body.user || {};
+      if (!result.ok || !result.body.access_token || !user.id) {
+        if (box) {
+          box.dataset.state = "auth";
+          box.textContent = "Inloggningen misslyckades.";
+        }
+        return;
+      }
+      writeOwnerSession({
+        access_token: result.body.access_token,
+        refresh_token: result.body.refresh_token || "",
+        user_id: user.id
+      });
+      syncOwnerForm(window.__nimbusLastState);
+      if (box) {
+        box.dataset.state = "auth";
+        box.textContent = "Inloggad. Spara skickar ändringen till desken.";
+      }
+    }).catch(function () {
+      if (box) {
+        box.dataset.state = "auth";
+        box.textContent = "Inloggningen misslyckades.";
+      }
+    });
+  }
+
+  function openAccount() {
+    var sheet = $("account-sheet");
+    if (!sheet) return;
+    sheet.hidden = false;
+    document.body.classList.add("account-open");
+    renderAccount(window.__nimbusLastState || null);
+    var close = $("account-close");
+    if (close) close.focus();
+  }
+
+  function closeAccount() {
+    var sheet = $("account-sheet");
+    if (sheet) sheet.hidden = true;
+    document.body.classList.remove("account-open");
+  }
+
+  function attemptAccountSave() {
+    var box = $("account-save-result");
+    if (!box || !window.NimbusSettings) return;
+    var pack = accountCatalog ? collectDraft() : { errors: [] };
+    if (pack.errors && pack.errors.length) {
+      box.dataset.state = "invalid";
+      box.textContent = pack.errors[0];
+      return;
+    }
+    var reason = (accountCatalog && accountCatalog.write && accountCatalog.write.reason_sv) || window.NimbusSettings.WRITE_REASON_SV;
+    var transport = transportOf(window.__nimbusLastState);
+    if (!transport.ready) {
+      box.dataset.state = "blocked";
+      box.textContent = reason;
+      return;
+    }
+    if (!readOwnerSession()) {
+      syncOwnerForm(window.__nimbusLastState);
+      box.dataset.state = "auth";
+      box.textContent = "Ägarinloggning krävs.";
+      return;
+    }
+    var entries = dirtyEntries();
+    if (!entries.length) {
+      box.dataset.state = "blocked";
+      box.textContent = "Ingen ändring att spara.";
+      return;
+    }
+    if (entries.length > 20) {
+      box.dataset.state = "blocked";
+      box.textContent = "Högst 20 ändringar åt gången.";
+      return;
+    }
+    box.dataset.state = "pending";
+    box.textContent = "Skickat. Väntar på desken.";
+    submitEntries(transport, readOwnerSession(), entries, box);
+  }
+
   function wireControls() {
     document.querySelectorAll("#af-pills .amt").forEach(function (b) {
       b.addEventListener("click", function () {
@@ -201,8 +896,21 @@
       });
     });
     var gear = $("btn-gear");
-    if (gear) gear.addEventListener("click", function () {
-      window.open("https://t.me/NimbusMobileBot?text=" + encodeURIComponent("/settings"), "_blank", "noopener");
+    if (gear) gear.addEventListener("click", function () { openAccount(); });
+    var closeBtn = $("account-close");
+    if (closeBtn) closeBtn.addEventListener("click", closeAccount);
+    var backdrop = $("account-backdrop");
+    if (backdrop) backdrop.addEventListener("click", closeAccount);
+    var saveBtn = $("account-save");
+    if (saveBtn) saveBtn.addEventListener("click", attemptAccountSave);
+    var moneyPaper = $("money-paper");
+    if (moneyPaper) moneyPaper.addEventListener("click", function () { chooseMoney("select-paper"); });
+    var moneyLive = $("money-live");
+    if (moneyLive) moneyLive.addEventListener("click", function () { chooseMoney("select-live"); });
+    var authForm = $("owner-auth");
+    if (authForm) authForm.addEventListener("submit", loginOwner);
+    document.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape") closeAccount();
     });
     document.querySelectorAll("#goal-filters button").forEach(function (b) {
       b.addEventListener("click", function () {
@@ -547,8 +1255,7 @@
 
   function renderHeader(state) {
     var mode = String((state && state.mode) || "PAPER").toUpperCase();
-    $("mode-pill").textContent = mode === "LIVE" ? "LIVE" : "SIM";
-    $("agents-sub").textContent = "5 agenter · " + (mode === "LIVE" ? "live" : "paper");
+    paintMoney(currentMoney(state, "show"));
     var on = mode === "LIVE" || mode === "PAPER"; // auto-trade reflects desk running
     var hb = (state && state.heartbeats) || {};
     var anyOk = Object.keys(hb).some(function (k) { return hbOk(hb[k]); });
@@ -583,6 +1290,7 @@
 
   function renderState(state) {
     if (!state) { showBootEmpty(true); return; }
+    shownState = state;
     showBootEmpty(false);
     renderHeader(state);
     renderAgents(state);
@@ -590,6 +1298,8 @@
     renderAudited(state);
     renderClosed(state);
     renderGoal(state);
+    window.__nimbusLastState = state;
+    renderAccount(state);
   }
 
   function fetchJson(url) {
@@ -633,12 +1343,14 @@
     document.head.appendChild(s);
   })();
 
-  if ("serviceWorker" in navigator) {
+  if ("serviceWorker" in navigator && !isLocalPreview()) {
     navigator.serviceWorker.register("./sw.js").catch(function () {});
   }
 
+  if (isLocalPreview()) window.__NIMBUS_MOCK_STATE__ = previewState();
   wireControls();
   var cfg = loadConfig();
   poll(cfg);
   setInterval(function () { poll(cfg); }, POLL_MS);
+  if (isLocalPreview() && location.search.indexOf("account=1") !== -1) openAccount();
 })();
