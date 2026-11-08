@@ -577,3 +577,57 @@ body.account-open { overflow: hidden; }
   .account-panel { width: 100%; border-left: 0; padding: 14px 12px 28px; }
   .setting-controls { grid-template-columns: minmax(0, 1fr) 5.6rem; }
 }
+
+.discovery {
+  background: #e7f4fb;
+  color: #0c2340;
+  border-radius: 24px;
+  padding: 14px;
+  border: 1px solid rgba(12, 35, 64, 0.08);
+}
+.discovery-head { display: flex; gap: 10px; align-items: center; }
+.discovery-head img { width: 44px; height: 44px; border-radius: 12px; object-fit: cover; background: #e7f4fb; }
+.discovery h2, .discovery h3 { margin: 0; letter-spacing: -0.03em; }
+.discovery-head p, .discovery-card small, .discovery-review p { color: #1c3d66; }
+.discovery-card {
+  margin-top: 12px;
+  background: #fff;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 10px 28px rgba(12, 35, 64, 0.12);
+}
+.discovery-art {
+  height: 120px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, #f7fcff, #d7f1ff);
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: #0b4fd0;
+}
+.discovery-card .pad { padding: 12px 14px 14px; }
+.discovery-card .who { font-weight: 750; }
+.discovery-meta { display: flex; justify-content: space-between; gap: 8px; font-size: 0.82rem; margin-top: 6px; }
+.discovery-stale { color: #8a4b00; font-size: 0.75rem; font-weight: 700; }
+.discovery-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.discovery-actions button { min-height: 46px; border-radius: 14px; font-weight: 780; }
+.discovery-skip { background: #fff; color: #e23b55; border: 2px solid #e23b55; }
+.discovery-buy { background: #12b85a; color: #04210f; border: 0; }
+.discovery-safe {
+  background: rgba(18, 184, 90, 0.12);
+  border: 1px solid rgba(18, 184, 90, 0.45);
+  border-radius: 14px;
+  padding: 10px;
+  font-weight: 750;
+}
+.discovery-review a { color: #0b4fd0; font-weight: 700; word-break: break-all; }
+.discovery-reset {
+  margin-top: 10px;
+  width: 100%;
+  min-height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(12, 35, 64, 0.2);
+  background: transparent;
+  color: #0c2340;
+  font-weight: 700;
+}

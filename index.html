@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="app.css?v=8" />
+  <link rel="stylesheet" href="app.css?v=10" />
   <title>Nimbus</title>
 </head>
 <body>
@@ -49,6 +49,25 @@
           <span class="wm" id="wm">····</span>
         </div>
       </div>
+
+      <section class="discovery" id="discovery" aria-label="Följda köp">
+        <div class="discovery-head">
+          <img src="icons/nimbus-logo.jpg" alt="Nimbus" width="44" height="44" />
+          <div>
+            <h2>Följda köp</h2>
+            <p id="discovery-note">Inte ansluten. Inga följda köp är importerade.</p>
+          </div>
+        </div>
+        <div id="discovery-cards"></div>
+        <section id="discovery-review" class="discovery-review" hidden>
+          <h3 id="discovery-review-title">Köp</h3>
+          <p id="discovery-review-copy"></p>
+          <p class="discovery-safe" id="discovery-safe">Inget köp är gjort. Ingen order skickas och ingen plånbok öppnas.</p>
+          <p id="discovery-link"></p>
+          <button type="button" id="discovery-back">Tillbaka</button>
+        </section>
+        <button type="button" id="discovery-reset" class="discovery-reset">Visa överhoppade igen</button>
+      </section>
 
       <div class="card add-funds" id="add-funds">
         <div class="af-row">
@@ -176,8 +195,9 @@
     </div>
   </div>
 
-  <script src="settings.js?v=8"></script>
-  <script src="chart.js?v=8"></script>
-  <script src="app.js?v=8"></script>
+  <script src="settings.js?v=10"></script>
+  <script src="discovery.js?v=10"></script>
+  <script src="chart.js?v=10"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>

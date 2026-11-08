@@ -1,12 +1,14 @@
 /* Nimbus service worker — cache shell for Android installability */
-var CACHE = "nimbus-shell-v8";
+var CACHE = "nimbus-shell-v10";
 var SHELL = [
   "./",
   "./index.html",
   "./app.css",
   "./app.js",
   "./settings.js",
+  "./discovery.js",
   "./settings_catalog.json",
+  "./icons/nimbus-logo.jpg",
   "./chart.js",
   "./manifest.json",
   "./icons/icon-192.png",

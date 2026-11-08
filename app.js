@@ -907,6 +907,16 @@
     if (moneyPaper) moneyPaper.addEventListener("click", function () { chooseMoney("select-paper"); });
     var moneyLive = $("money-live");
     if (moneyLive) moneyLive.addEventListener("click", function () { chooseMoney("select-live"); });
+    var discoveryBack = $("discovery-back");
+    if (discoveryBack) discoveryBack.addEventListener("click", function () {
+      var panel = $("discovery-review");
+      if (panel) panel.hidden = true;
+    });
+    var discoveryReset = $("discovery-reset");
+    if (discoveryReset) discoveryReset.addEventListener("click", function () {
+      try { localStorage.removeItem("nimbus_discovery_skips"); } catch (e) {}
+      renderDiscovery(window.__nimbusLastState);
+    });
     var authForm = $("owner-auth");
     if (authForm) authForm.addEventListener("submit", loginOwner);
     document.addEventListener("keydown", function (ev) {
@@ -1288,11 +1298,143 @@
     if (app) app.hidden = !!show;
   }
 
+  function discoverySkips() {
+    try {
+      var raw = JSON.parse(localStorage.getItem("nimbus_discovery_skips") || "[]");
+      return Array.isArray(raw) ? raw : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function stockholmLine(iso) {
+    var when = new Date(iso);
+    if (!iso || isNaN(when.getTime())) return String(iso || "");
+    var local = new Intl.DateTimeFormat("sv-SE", {
+      timeZone: "Europe/Stockholm",
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit"
+    }).format(when);
+    return local + " · " + iso;
+  }
+
+  function sourceLine(event) {
+    if (event && event.source_at_tz === "unknown") {
+      var text = String(event.source_at || "").replace("T", " ").slice(0, 16);
+      var age = event.source_age_label ? " · " + event.source_age_label + " sedan vid kontroll" : "";
+      return "FOMO " + text + " (tidszon ej angiven)" + age;
+    }
+    return stockholmLine(event && event.source_at);
+  }
+
+  function renderDiscovery(state) {
+    var note = $("discovery-note");
+    var host = $("discovery-cards");
+    var review = $("discovery-review");
+    if (!host || !window.NimbusDiscovery) return;
+    if (review) review.hidden = true;
+    var feed = (state && state.discovery) || { status: "not_connected", collector: "not_implemented", events: [], note_sv: "Inte ansluten." };
+    if (note) {
+      var noteText = feed.note_sv || "Inte ansluten.";
+      if (feed.last_checked_at) noteText += " Senast kontrollerad " + stockholmLine(feed.last_checked_at).split(" · ")[0] + " (Stockholm).";
+      note.textContent = noteText;
+    }
+    host.innerHTML = "";
+    var events = window.NimbusDiscovery.visibleEvents(feed.events || [], discoverySkips());
+    if (!events.length) {
+      var empty = document.createElement("p");
+      empty.className = "empty-hint";
+      empty.textContent = feed.status === "not_connected"
+        ? "Inga följda köp. Det här är inte scanners papperstrades."
+        : "Inga köp kvar att visa.";
+      host.appendChild(empty);
+      return;
+    }
+    events.forEach(function (event) {
+      var card = document.createElement("article");
+      card.className = "discovery-card";
+      card.setAttribute("data-trade", event.trade_id);
+      var art = document.createElement("div");
+      art.className = "discovery-art";
+      art.textContent = window.NimbusDiscovery.letter(event);
+      var pad = document.createElement("div");
+      pad.className = "pad";
+      var symbol = document.createElement("strong");
+      symbol.textContent = event.symbol || (event.mint || "").slice(0, 4);
+      var who = document.createElement("div");
+      who.className = "who";
+      who.textContent = event.profile;
+      var meta = document.createElement("div");
+      meta.className = "discovery-meta";
+      var amount = document.createElement("span");
+      amount.textContent = "$" + Number(event.amount_usd).toFixed(2);
+      var when = document.createElement("span");
+      when.textContent = sourceLine(event);
+      meta.appendChild(amount);
+      meta.appendChild(when);
+      pad.appendChild(symbol);
+      pad.appendChild(who);
+      pad.appendChild(meta);
+      if (event.trade_stale) {
+        var stale = document.createElement("div");
+        stale.className = "discovery-stale";
+        stale.textContent = "Gammalt köp · observerad " + stockholmLine(event.observed_at);
+        pad.appendChild(stale);
+      }
+      var actions = document.createElement("div");
+      actions.className = "discovery-actions";
+      var skip = document.createElement("button");
+      skip.type = "button";
+      skip.className = "discovery-skip";
+      skip.textContent = "Hoppa över";
+      skip.addEventListener("click", function () {
+        var ids = discoverySkips();
+        if (ids.indexOf(event.trade_id) < 0) ids.push(event.trade_id);
+        try { localStorage.setItem("nimbus_discovery_skips", JSON.stringify(ids)); } catch (e) {}
+        renderDiscovery(window.__nimbusLastState);
+      });
+      var buy = document.createElement("button");
+      buy.type = "button";
+      buy.className = "discovery-buy";
+      buy.textContent = "Köp";
+      buy.addEventListener("click", function () {
+        var decision = window.NimbusDiscovery.reviewOf(event);
+        if (decision.navigate || decision.order || decision.purchased) return;
+        var title = $("discovery-review-title");
+        var copy = $("discovery-review-copy");
+        var link = $("discovery-link");
+        if (title) title.textContent = "Köp " + (event.symbol || (event.mint || "").slice(0, 4));
+        if (copy) copy.textContent = event.profile + " · $" + Number(event.amount_usd).toFixed(2) + " · " + sourceLine(event) + " · ingen order skickas";
+        if (link) {
+          link.textContent = "";
+          if (decision.tokenUrl) {
+            var anchor = document.createElement("a");
+            anchor.href = decision.tokenUrl;
+            anchor.target = "_blank";
+            anchor.rel = "noopener";
+            anchor.textContent = decision.tokenUrl;
+            link.appendChild(anchor);
+          }
+        }
+        if (review) review.hidden = false;
+      });
+      actions.appendChild(skip);
+      actions.appendChild(buy);
+      pad.appendChild(actions);
+      card.appendChild(art);
+      card.appendChild(pad);
+      host.appendChild(card);
+    });
+  }
+
   function renderState(state) {
     if (!state) { showBootEmpty(true); return; }
     shownState = state;
     showBootEmpty(false);
     renderHeader(state);
+    renderDiscovery(state);
     renderAgents(state);
     renderTokens(state);
     renderAudited(state);
@@ -1347,7 +1489,10 @@
     navigator.serviceWorker.register("./sw.js").catch(function () {});
   }
 
-  if (isLocalPreview()) window.__NIMBUS_MOCK_STATE__ = previewState();
+  if (isLocalPreview()) {
+    window.__NIMBUS_MOCK_STATE__ = previewState();
+    window.__nimbusApplyState = renderState;
+  }
   wireControls();
   var cfg = loadConfig();
   poll(cfg);
