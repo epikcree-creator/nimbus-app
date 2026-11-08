@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-  <meta name="theme-color" content="#0b0714" />
+  <meta name="theme-color" content="#e7f6ef" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -11,18 +11,19 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="app.css?v=10" />
+  <link rel="stylesheet" href="app.css?v=11" />
   <title>Nimbus</title>
 </head>
 <body>
   <div id="toasts" class="toasts" aria-live="polite"></div>
+  <p id="demo-banner" class="demo-banner" hidden>DEMO / SIMULERING · inte live-resultat</p>
 
   <main id="app" class="shell">
     <section class="col col-wallet" aria-label="Wallet">
       <header class="col-head">
         <div>
-          <h1 class="col-title">Wallet</h1>
-          <p class="col-sub">Trading-plånbok · Solana</p>
+          <h1 class="col-title">Nimbus</h1>
+          <p class="col-sub">Manuellt · inga automatiska köp</p>
         </div>
         <div class="col-actions">
           <button type="button" class="icon-btn" id="btn-gear" aria-label="Kontoinställningar" title="Kontoinställningar">⚙</button>
@@ -37,7 +38,7 @@
             <span>Nimbus Wallet</span>
           </div>
           <div class="wallet-pills">
-            <span class="pill">SOL</span>
+            <span class="manual-pill">MANUELL</span>
             <span class="pill" id="mode-pill">PAPPER</span>
           </div>
         </div>
@@ -48,6 +49,12 @@
           <span class="pill" id="money-status">Papperspengar</span>
           <span class="wm" id="wm">····</span>
         </div>
+        <div class="stat-row" aria-label="Endast siffror från desken">
+          <span>SKANNADE <b id="stat-scanned">–</b></span>
+          <span>ÖPPNA <b id="stat-open">–</b></span>
+          <span>VINST <b id="stat-win">saknas</b></span>
+          <span>RESULTAT <b id="stat-pnl">saknas</b></span>
+        </div>
       </div>
 
       <section class="discovery" id="discovery" aria-label="Följda köp">
@@ -56,6 +63,7 @@
           <div>
             <h2>Följda köp</h2>
             <p id="discovery-note">Inte ansluten. Inga följda köp är importerade.</p>
+          <p id="rugdesk-note">Ruggfilter: exempelbelopp är inte godkända. Grok är avstängt.</p>
           </div>
         </div>
         <div id="discovery-cards"></div>
@@ -195,9 +203,9 @@
     </div>
   </div>
 
-  <script src="settings.js?v=10"></script>
-  <script src="discovery.js?v=10"></script>
-  <script src="chart.js?v=10"></script>
-  <script src="app.js?v=10"></script>
+  <script src="settings.js?v=11"></script>
+  <script src="discovery.js?v=11"></script>
+  <script src="chart.js?v=11"></script>
+  <script src="app.js?v=11"></script>
 </body>
 </html>

@@ -1289,6 +1289,25 @@
     var path = (loadConfig().dataBase || "");
     var wm = path.slice(-4) || "····";
     $("wm").textContent = "···· " + wm;
+    var scanned = $("stat-scanned");
+    var opened = $("stat-open");
+    var win = $("stat-win");
+    var pnl = $("stat-pnl");
+    if (scanned) scanned.textContent = String(((state && state.coins) || []).length);
+    if (opened) opened.textContent = String(((state && state.positions) || []).length);
+    var closed = ((state && (state.trades || state.closed)) || []).filter(function (row) {
+      return row && row.pnl_usd != null && !isNaN(Number(row.pnl_usd));
+    });
+    if (win) win.textContent = closed.length ? String(closed.filter(function (row) { return Number(row.pnl_usd) > 0; }).length) + "/" + closed.length : "saknas";
+    if (pnl) {
+      if (!closed.length) pnl.textContent = "saknas";
+      else {
+        var sum = closed.reduce(function (acc, row) { return acc + Number(row.pnl_usd); }, 0);
+        pnl.textContent = (sum >= 0 ? "+" : "") + sum.toFixed(2);
+      }
+    }
+    var demo = $("demo-banner");
+    if (demo) demo.hidden = !(isLocalPreview() || (state && state.demo_fixture));
   }
 
   function showBootEmpty(show) {
@@ -1341,6 +1360,11 @@
       if (feed.last_checked_at) noteText += " Senast kontrollerad " + stockholmLine(feed.last_checked_at).split(" · ")[0] + " (Stockholm).";
       note.textContent = noteText;
     }
+    var rug = $("rugdesk-note");
+    if (rug) {
+      var box = (state && state.rugdesk) || {};
+      rug.textContent = box.note_sv || "Ruggfilter: exempelbelopp är inte godkända. Grok är avstängt.";
+    }
     host.innerHTML = "";
     var events = window.NimbusDiscovery.visibleEvents(feed.events || [], discoverySkips());
     if (!events.length) {
@@ -1388,7 +1412,7 @@
       var skip = document.createElement("button");
       skip.type = "button";
       skip.className = "discovery-skip";
-      skip.textContent = "Hoppa över";
+      skip.textContent = "Avstå";
       skip.addEventListener("click", function () {
         var ids = discoverySkips();
         if (ids.indexOf(event.trade_id) < 0) ids.push(event.trade_id);

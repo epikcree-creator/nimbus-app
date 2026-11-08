@@ -1,24 +1,24 @@
 :root {
-  color-scheme: dark;
-  --bg: #0b0714;
-  --bg2: #120c1e;
-  --card: #161022;
-  --card2: #1c152c;
-  --fg: #f5f3fa;
-  --muted: #8a829c;
-  --orange: #ff7a1a;
-  --orange2: #ff4d2e;
-  --green: #3dff6a;
-  --green2: #1fbf55;
-  --red: #ff4d6a;
-  --purple: #9b6bff;
-  --teal: #2ee6c7;
-  --blue: #4da3ff;
-  --pink: #ff5ab8;
-  --border: rgba(255,255,255,0.07);
-  --radius: 20px;
-  --radius-sm: 14px;
-  --glow: 0 0 40px rgba(255,122,26,0.18);
+  color-scheme: light;
+  --bg: #e7f6ef;
+  --bg2: #f4fbf7;
+  --card: #ffffff;
+  --card2: #f3fbf6;
+  --fg: #163024;
+  --muted: #5d7568;
+  --orange: #ff8a3d;
+  --orange2: #ffb088;
+  --green: #12a15a;
+  --green2: #0d7a42;
+  --red: #e23b55;
+  --purple: #7eb6ff;
+  --teal: #7ee0c8;
+  --blue: #8ec5ff;
+  --pink: #ffb3c7;
+  --border: rgba(22, 48, 36, 0.08);
+  --radius: 22px;
+  --radius-sm: 16px;
+  --glow: 0 12px 32px rgba(22, 48, 36, 0.08);
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, system-ui, sans-serif;
 }
 * { box-sizing: border-box; }
@@ -32,10 +32,11 @@ html, body {
 }
 body {
   background:
-    radial-gradient(900px 420px at 85% -10%, rgba(255,70,90,0.18), transparent 55%),
-    radial-gradient(700px 400px at 10% 0%, rgba(120,60,255,0.14), transparent 50%),
-    var(--bg);
+    radial-gradient(680px 320px at 100% -8%, rgba(255, 196, 170, 0.55), transparent 58%),
+    radial-gradient(520px 280px at 0% 0%, rgba(170, 214, 255, 0.55), transparent 55%),
+    linear-gradient(180deg, #f3fff8, var(--bg) 40%, #e5f8ef);
   min-height: 100dvh;
+  font-weight: 560;
 }
 [hidden] { display: none !important; }
 a { color: inherit; text-decoration: none; }
@@ -77,9 +78,10 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 /* Wallet card */
 .wallet-card {
   position: relative;
-  border-radius: 22px;
+  border-radius: 28px;
   padding: 16px 16px 14px;
-  background: linear-gradient(135deg, #ff8a1a 0%, #ff3b2e 42%, #7a2cff 100%);
+  background: #fff;
+  color: var(--fg);
   box-shadow: var(--glow);
   overflow: hidden;
   min-height: 168px;
@@ -630,4 +632,40 @@ body.account-open { overflow: hidden; }
   background: transparent;
   color: #0c2340;
   font-weight: 700;
+}
+.demo-banner {
+  margin: 10px 14px 0;
+  text-align: center;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  font-size: 0.72rem;
+  color: #6a3b00;
+  background: #fff4d6;
+  border: 1px solid #e7c27a;
+  border-radius: 999px;
+  padding: 6px 10px;
+}
+.manual-pill {
+  background: var(--orange);
+  color: #3a1600;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.stat-row { display: flex; gap: 6px; margin-top: 8px; }
+.stat-row span {
+  flex: 1;
+  background: var(--card2);
+  border-radius: 999px;
+  text-align: center;
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.03em;
+  padding: 6px 2px;
+  color: var(--muted);
+}
+.stat-row b { display: block; color: var(--fg); font-size: 0.78rem; }
+@media (prefers-reduced-motion: reduce) {
+  .balance .digit span, .goal-fill, .toast, .discovery-card { transition: none !important; animation: none !important; }
 }
