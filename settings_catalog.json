@@ -524,6 +524,34 @@
       "note": ""
     },
     {
+      "key": "max_buy_pct_of_capital",
+      "group": "executor",
+      "label": "Max andel per köp",
+      "unit": "%",
+      "kind": "number",
+      "min": 1.0,
+      "max": 100.0,
+      "step": 1,
+      "decimals": 1,
+      "integer": false,
+      "default": 25.0,
+      "note": "Andel av aktuellt kapital per köp. Standard 25 % ($50 vid $200)."
+    },
+    {
+      "key": "max_open_positions",
+      "group": "executor",
+      "label": "Max öppna positioner",
+      "unit": "st",
+      "kind": "number",
+      "min": 1.0,
+      "max": 50.0,
+      "step": 1,
+      "decimals": 0,
+      "integer": true,
+      "default": 5,
+      "note": "Blockerar Köp när taket är nått."
+    },
+    {
       "key": "risk_poll_s",
       "group": "risk",
       "label": "Pollintervall",
