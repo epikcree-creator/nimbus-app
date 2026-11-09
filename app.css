@@ -876,3 +876,79 @@ body.account-open { overflow: hidden; }
 .suggestion-meta{display:flex;flex-wrap:wrap;gap:8px;font-size:0.68rem;color:#3A6488}
 .suggestion-meta .missing{color:#A05A00;font-style:italic}
 .suggestion-osakert{font-size:0.68rem;color:#A05A00;margin:0}
+
+/* ---- Kill switch banner ---- */
+.kill-banner {
+  margin: 10px 14px 0;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #3A1020;
+  border: 1px solid #FF6B84;
+  color: #FFE4EA;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.kill-banner[hidden] { display: none !important; }
+.kill-banner strong { display: block; font-size: 0.95rem; }
+.kill-banner p { margin: 4px 0 0; font-size: 0.78rem; line-height: 1.35; }
+.kill-banner-note { opacity: 0.85; }
+.kill-unlock {
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: #FF6B84;
+  color: #1A050A;
+  font-weight: 700;
+  font-size: 0.78rem;
+}
+.kill-dialog {
+  border: 0;
+  border-radius: 18px;
+  padding: 18px;
+  width: min(92vw, 360px);
+  box-shadow: 0 20px 50px rgba(0,0,0,.35);
+}
+.kill-dialog::backdrop { background: rgba(10,20,35,.55); }
+.kill-dialog h3 { margin: 0 0 8px; }
+.kill-dialog input {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #C9D7E8;
+  font-size: 1rem;
+}
+.kill-dialog-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+.kill-dialog-actions .ghost { background: transparent; border: 1px solid #C9D7E8; border-radius: 999px; padding: 8px 12px; }
+.kill-dialog-actions #kill-unlock-confirm { background: var(--buy); color: #fff; border: 0; border-radius: 999px; padding: 8px 14px; font-weight: 700; }
+
+/* ---- Journal ---- */
+.journal-panel { padding: 0 14px 24px; }
+.journal-head h2 { margin: 8px 0 4px; font-size: 1.05rem; }
+.journal-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 12px;
+  margin: 8px 0;
+}
+.journal-card .j-top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.journal-card .j-action { font-weight: 800; font-size: 0.8rem; }
+.journal-card .j-action.kop { color: var(--buy); }
+.journal-card .j-action.avsta { color: #C45B2B; }
+.journal-card .j-action.stoppad { color: #FF6B84; }
+.journal-card .j-meta { font-size: 0.72rem; color: #3A6488; margin-top: 4px; }
+.journal-card .j-reason { font-size: 0.78rem; margin-top: 6px; line-height: 1.35; }
+.journal-card .j-lesson {
+  margin-top: 8px;
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  font-size: 0.78rem;
+  background: #fff;
+}
+.discovery-buy:disabled { opacity: 0.45; box-shadow: none; }
