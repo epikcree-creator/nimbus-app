@@ -2639,7 +2639,14 @@
       cd.textContent = showCd ? formatCountdown(box.countdown_seconds) : (status === "finished" || status === "aborted" ? "Klar" : "—");
       cd.dataset.endsAt = showCd && box.ends_at ? box.ends_at : "";
     }
-    if (wins) wins.textContent = String(box.wins || 0) + "/" + String(box.win_target_count || 10);
+    if (wins) {
+      if (box.wins_label_sv) {
+        // Strip leading "Vinster " — the HTML span already says Vinster.
+        wins.textContent = String(box.wins_label_sv).replace(/^Vinster\s+/i, "");
+      } else {
+        wins.textContent = String(box.wins || 0) + " (mål ≥" + String(box.win_target_count || 10) + ")";
+      }
+    }
     if (pnl) {
       var v = Number(box.realized_pnl_usd);
       pnl.textContent = isFinite(v) ? ((v >= 0 ? "+$" : "-$") + Math.abs(v).toFixed(2)) : "saknas";
@@ -2691,7 +2698,11 @@
         var pnlP = row.pnl_pct;
         chip("PnL $", pnlU == null ? null : ((pnlU >= 0 ? "+$" : "-$") + Math.abs(Number(pnlU)).toFixed(2)));
         chip("PnL %", pnlP == null ? null : ((pnlP >= 0 ? "+" : "") + Number(pnlP).toFixed(2) + "%"));
-        chip("TP", row.take_profit_price != null ? row.take_profit_price : null);
+        chip("2×", row.stake_out_price != null ? row.stake_out_price : row.take_profit_price);
+        if (row.stake_out_done) {
+          chip("5×", row.ladder_5x_price != null ? row.ladder_5x_price : null);
+          chip("20×", row.ladder_20x_price != null ? row.ladder_20x_price : null);
+        }
         chip("SL", row.stop_price != null ? row.stop_price : null);
         var reason = document.createElement("div");
         reason.className = "meta";
