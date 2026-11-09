@@ -864,3 +864,15 @@ body.account-open { overflow: hidden; }
 .stoppade-reasons{margin:8px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}
 .stoppade-reasons li{font-size:0.68rem;color:#FF6B84;line-height:1.35}
 .stoppade-open{margin-top:8px}
+
+
+/* Sniper Grok suggestions */
+.suggestions{margin-bottom:12px}
+.suggestion-card{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:18px;background:var(--card);border:1px solid var(--border);margin-bottom:10px}
+.suggestion-badge{display:inline-flex;align-items:center;gap:6px;font-size:0.68rem;font-weight:800;letter-spacing:0.02em;color:#0B3B66;background:rgba(80,160,255,0.16);border-radius:999px;padding:4px 10px;width:fit-content}
+.suggestion-rating{font-size:0.72rem;font-weight:800;color:#1F6B3A}
+.suggestion-rating.medel{color:#8A5A00}
+.suggestion-narrative{font-size:0.82rem;line-height:1.4;color:#16324A;margin:0}
+.suggestion-meta{display:flex;flex-wrap:wrap;gap:8px;font-size:0.68rem;color:#3A6488}
+.suggestion-meta .missing{color:#A05A00;font-style:italic}
+.suggestion-osakert{font-size:0.68rem;color:#A05A00;margin:0}
