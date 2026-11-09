@@ -846,11 +846,11 @@
       "kind": "number",
       "min": 0.0,
       "max": 100.0,
-      "step": 1,
+      "step": 0.1,
       "decimals": 1,
       "integer": false,
-      "default": 100.0,
-      "note": "STRICT: LP låst/bränt minst 100 %."
+      "default": 99.9,
+      "note": "STRICT: LP låst/bränt minst 99,9 %."
     },
     {
       "key": "rug_max_top10_pct",
