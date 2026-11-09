@@ -2055,12 +2055,172 @@
     });
   }
 
+
+  function renderSuggestions(state) {
+    var host = $("suggestion-cards");
+    var note = $("suggestions-note");
+    if (!host) return;
+    var box = (state && state.suggestions) || { cards: [], note_sv: "Inga färskt bedömda förslag just nu." };
+    if (note) note.textContent = box.note_sv || "Inga färskt bedömda förslag just nu.";
+    host.innerHTML = "";
+    var cards = box.cards || [];
+    if (!cards.length) {
+      var empty = document.createElement("p");
+      empty.className = "empty-hint";
+      empty.textContent = "Inga förslag att visa.";
+      host.appendChild(empty);
+      return;
+    }
+    cards.forEach(function (card) {
+      var el = document.createElement("article");
+      el.className = "suggestion-card discovery-card";
+      el.setAttribute("data-mint", card.mint || "");
+      var badge = document.createElement("span");
+      badge.className = "suggestion-badge";
+      badge.textContent = card.badge_sv || "Sniper Grok föreslår";
+      var title = document.createElement("strong");
+      title.textContent = card.symbol || (card.mint || "").slice(0, 6) || "—";
+      var rating = document.createElement("div");
+      rating.className = "suggestion-rating" + (String(card.rating || "").toLowerCase() === "medel" ? " medel" : "");
+      rating.textContent = card.rating ? ("Betyg: " + card.rating) : "Betyg saknas";
+      var narrative = document.createElement("p");
+      narrative.className = "suggestion-narrative";
+      if (card.narrative_missing || card.narrative == null || card.narrative === "") {
+        narrative.className += " missing";
+        narrative.textContent = "Narrativ saknas";
+      } else {
+        narrative.textContent = card.narrative;
+      }
+      var meta = document.createElement("div");
+      meta.className = "suggestion-meta";
+      function metaChip(label, value, missing) {
+        var span = document.createElement("span");
+        if (missing || value == null) {
+          span.className = "missing";
+          span.textContent = label + " saknas";
+        } else {
+          span.textContent = label + " " + value;
+        }
+        meta.appendChild(span);
+      }
+      metaChip("X 1h", card.mentions_1h, card.mentions_1h_missing);
+      metaChip("konton", card.unique_accounts_1h, card.unique_accounts_1h_missing);
+      if (card.bot_suspect_missing) {
+        metaChip("bot-risk", null, true);
+      } else if (card.bot_suspect) {
+        metaChip("bot-risk", "ja", false);
+      } else {
+        metaChip("bot-risk", "nej", false);
+      }
+      var osakert = document.createElement("p");
+      osakert.className = "suggestion-osakert";
+      if (card.notes_missing || card.notes == null || card.notes === "") {
+        osakert.textContent = "Osäkert: anteckning saknas";
+      } else {
+        osakert.textContent = "Osäkert: " + card.notes;
+      }
+      var choice = chosenBuyAmount(state);
+      var picker = document.createElement("div");
+      picker.className = "amt-row";
+      [5, 10, 25, 50].forEach(function (dollars) {
+        var chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "amt-chip" + (choice.amount === dollars ? " on" : "");
+        chip.textContent = "$" + dollars;
+        chip.addEventListener("click", function () {
+          rememberAmount(dollars);
+          renderSuggestions(window.__nimbusLastState);
+        });
+        picker.appendChild(chip);
+      });
+      var custom = document.createElement("input");
+      custom.className = "amt-custom";
+      custom.inputMode = "decimal";
+      custom.setAttribute("aria-label", "Eget belopp i USD");
+      custom.value = String(choice.amount);
+      custom.addEventListener("change", function () {
+        var next = Number(String(custom.value).replace(",", "."));
+        if (isFinite(next) && next > 0) rememberAmount(next);
+        renderSuggestions(window.__nimbusLastState);
+      });
+      picker.appendChild(custom);
+      var actions = document.createElement("div");
+      actions.className = "discovery-actions";
+      var skip = document.createElement("button");
+      skip.type = "button";
+      skip.className = "discovery-skip";
+      skip.textContent = "Avstå";
+      skip.addEventListener("click", function () {
+        el.remove();
+      });
+      var buy = document.createElement("button");
+      buy.type = "button";
+      buy.className = "discovery-buy";
+      buy.textContent = choice.error ? "Köp" : "Köp $" + choice.amount.toFixed(0);
+      buy.disabled = !!choice.error;
+      buy.addEventListener("click", function () {
+        var fresh = chosenBuyAmount(window.__nimbusLastState);
+        if (fresh.error) return;
+        var event = {
+          trade_id: "suggest:" + (card.mint || ""),
+          mint: card.mint,
+          symbol: card.symbol,
+          profile: "Sniper Grok",
+          amount_usd: fresh.amount,
+          token_url: card.token_url,
+          source_at: card.rated_at
+        };
+        recordPaperBuy(window.__nimbusLastState, event, fresh.amount);
+        renderTokens(window.__nimbusLastState);
+        var review = $("discovery-review");
+        var titleEl = $("discovery-review-title");
+        var copy = $("discovery-review-copy");
+        var link = $("discovery-link");
+        if (titleEl) titleEl.textContent = "Förslag · " + (card.symbol || (card.mint || "").slice(0, 4));
+        if (copy) copy.textContent = "Sniper Grok föreslår · $" + fresh.amount.toFixed(2) + " · ingen order skickas. Riktiga pengar är avstängda.";
+        if (link) {
+          link.textContent = "";
+          if (card.token_url) {
+            var a = document.createElement("a");
+            a.href = card.token_url;
+            a.target = "_blank";
+            a.rel = "noopener";
+            a.textContent = card.token_url;
+            link.appendChild(a);
+          }
+        }
+        if (review) {
+          review.hidden = false;
+          review.scrollIntoView({ block: "start" });
+        }
+      });
+      actions.appendChild(skip);
+      actions.appendChild(buy);
+      el.appendChild(badge);
+      el.appendChild(title);
+      el.appendChild(rating);
+      el.appendChild(narrative);
+      el.appendChild(meta);
+      el.appendChild(osakert);
+      el.appendChild(picker);
+      if (choice.error) {
+        var problem = document.createElement("p");
+        problem.className = "amt-error";
+        problem.textContent = choice.error;
+        el.appendChild(problem);
+      }
+      el.appendChild(actions);
+      host.appendChild(el);
+    });
+  }
+
   function renderState(state) {
     if (!state) { showBootEmpty(true); return; }
     shownState = state;
     showBootEmpty(false);
     renderHeader(state);
     renderTraders(state);
+    renderSuggestions(state);
     renderDiscovery(state);
     renderStoppade(state);
     renderTokens(state);
