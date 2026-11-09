@@ -11,8 +11,8 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="icons/favicon.png" />
-  <link rel="stylesheet" href="app.css?v=20" />
-  <script src="brand.js?v=20"></script>
+  <link rel="stylesheet" href="app.css?v=21" />
+  <script src="brand.js?v=21"></script>
   <title></title>
   <script>
     document.title = NimbusBrand.name;
@@ -90,6 +90,17 @@
 
     <section class="board-panel tab-panel" id="board-panel" data-panel="board" hidden>
       <p id="leaderboard-note" class="empty-hint">Ingen topplista. Det finns inga stängda resultat att rangordna.</p>
+    </section>
+
+    <section class="suggestions region-swipe tab-panel" id="suggestions" data-panel="traders" aria-label="Sniper Grok föreslår">
+      <div class="discovery-head">
+        <img src="icons/icon-192.png" data-app-name-alt width="44" height="44" />
+        <div>
+          <h2>Sniper Grok föreslår</h2>
+          <p id="suggestions-note">Inga färskt bedömda förslag just nu.</p>
+        </div>
+      </div>
+      <div id="suggestion-cards"></div>
     </section>
 
     <section class="discovery region-swipe tab-panel" id="discovery" data-panel="traders" aria-label="Följda köp">
@@ -217,9 +228,9 @@
     </div>
   </div>
 
-  <script src="settings.js?v=20"></script>
-  <script src="discovery.js?v=20"></script>
-  <script src="chart.js?v=20"></script>
-  <script src="app.js?v=20"></script>
+  <script src="settings.js?v=21"></script>
+  <script src="discovery.js?v=21"></script>
+  <script src="chart.js?v=21"></script>
+  <script src="app.js?v=21"></script>
 </body>
 </html>
