@@ -274,7 +274,7 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 .head-tools { display: flex; align-items: center; gap: 8px; }
 .wallet-kicker { margin: 0; color: var(--muted); font-size: 0.78rem; font-weight: 650; }
 .desk-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
-.brand-logo { width: 36px; height: 36px; object-fit: cover; }
+.brand-logo { width: 48px; height: 48px; object-fit: cover; }
 .toggle {
   width: 42px; height: 24px; border-radius: 999px;
   background: rgba(255,255,255,0.28); position: relative; display: inline-block;
