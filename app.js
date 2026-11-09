@@ -1589,9 +1589,17 @@
 
   function buyLimits(state) {
     var settings = (state && state.settings) || {};
-    var maxTrade = Number(settings.max_trade_usd);
+    var risk = (state && state.risk_limits) || {};
+    var equity = Number(state && (state.equity_usd != null ? state.equity_usd : state.bankroll_usd)) || 0;
+    var pct = Number(risk.max_buy_pct_of_capital != null ? risk.max_buy_pct_of_capital : settings.max_buy_pct_of_capital);
+    if (!isFinite(pct) || pct <= 0) pct = 25;
+    var maxTrade = Number(risk.max_buy_usd);
+    if (!isFinite(maxTrade) || maxTrade <= 0) maxTrade = equity * (pct / 100);
     if (!isFinite(maxTrade) || maxTrade <= 0) maxTrade = 50;
-    var equity = Number(state && state.equity_usd) || 0;
+    var maxOpen = Number(risk.max_open_positions != null ? risk.max_open_positions : settings.max_open_positions);
+    if (!isFinite(maxOpen) || maxOpen <= 0) maxOpen = 5;
+    var openN = Number(risk.open_positions);
+    if (!isFinite(openN)) openN = ((state && state.positions) || []).filter(function (row) { return !row.closed_at; }).length;
     var overlays = {};
     try { overlays = JSON.parse(sessionStorage.getItem("nimbus_position_overlays") || "{}"); } catch (e) {}
     var reserved = 0;
@@ -1607,7 +1615,19 @@
     });
     var realized = sessionSells().reduce(function (sum, row) { return sum + (Number(row.realized_usd) || 0); }, 0);
     var available = Math.max(0, equity + realized - reserved);
-    return { maxTrade: maxTrade, available: available, cap: Math.min(maxTrade, available) };
+    return {
+      maxTrade: maxTrade,
+      available: available,
+      cap: Math.min(maxTrade, available),
+      maxOpen: maxOpen,
+      openN: openN,
+      pct: pct
+    };
+  }
+
+  function killLocked(state) {
+    var kill = (state && state.kill_switch) || {};
+    return !!(kill.locked || kill.buys_locked);
   }
 
   function chosenBuyAmount(state) {
@@ -1615,13 +1635,43 @@
     var stored = NaN;
     try { stored = Number(sessionStorage.getItem("nimbus_buy_amount")); } catch (e) {}
     var fallback = Number(state && state.settings && state.settings.default_trade_usd);
-    if (!isFinite(fallback) || fallback <= 0) fallback = 25;
+    if (!isFinite(fallback) || fallback <= 0) fallback = Math.min(25, limits.maxTrade || 25);
     var amount = isFinite(stored) && stored > 0 ? stored : fallback;
     var error = "";
-    if (!isFinite(amount) || amount < 1) error = "Ange minst $1.";
-    else if (amount > limits.maxTrade) error = "Max per köp är $" + limits.maxTrade.toFixed(0) + ".";
+    if (killLocked(state)) error = ((state.kill_switch && state.kill_switch.reason_sv) || "Köp är låsta av kill switch.");
+    else if (limits.openN >= limits.maxOpen) error = "Max " + limits.maxOpen + " öppna positioner. Stäng en innan nytt köp.";
+    else if (!isFinite(amount) || amount < 1) error = "Ange minst $1.";
+    else if (amount > limits.maxTrade) error = "Max " + limits.pct + "% av kapitalet per köp ($" + limits.maxTrade.toFixed(2) + ").";
     else if (amount > limits.available) error = "Tillgängligt kapital är $" + limits.available.toFixed(2) + ".";
     return { amount: amount, error: error, limits: limits };
+  }
+
+  function queueDeskWrite(key, value) {
+    try {
+      var transport = transportOf(window.__nimbusLastState || {});
+      var session = null;
+      try { session = JSON.parse(localStorage.getItem("nimbus_owner_session") || "null"); } catch (e) {}
+      if (!transport || !transport.ready || !session || !session.access_token) return;
+      var box = { dataset: {}, textContent: "" };
+      submitEntries(transport, session, [{ key: key, value: value }], box);
+    } catch (e) {}
+  }
+
+  function logJournalAction(action, event, amount, reason) {
+    var payload = {
+      a: action === "Köp" ? "kop" : (action === "Avstå" ? "avsta" : action),
+      m: event && event.mint,
+      s: event && event.symbol,
+      p: event && event.profile,
+      r: reason || "",
+      u: amount || null,
+      src: "app"
+    };
+    try {
+      var raw = JSON.stringify(payload);
+      if (raw.length > 200) raw = JSON.stringify({ a: payload.a, m: payload.m, s: payload.s, u: payload.u, src: "app" });
+      queueDeskWrite("journal_event", raw);
+    } catch (e) {}
   }
 
   function rememberAmount(amount) {
@@ -1923,6 +1973,7 @@
       skip.className = "discovery-skip";
       skip.textContent = "Avstå";
       skip.addEventListener("click", function () {
+        logJournalAction("Avstå", event, null, "Avstå från följt köp");
         var ids = discoverySkips();
         if (ids.indexOf(event.trade_id) < 0) ids.push(event.trade_id);
         try { localStorage.setItem("nimbus_discovery_skips", JSON.stringify(ids)); } catch (e) {}
@@ -1938,6 +1989,7 @@
         if (decision.navigate || decision.order || decision.purchased) return;
         var fresh = chosenBuyAmount(window.__nimbusLastState);
         if (fresh.error) return;
+        logJournalAction("Köp", event, fresh.amount, "Följt köp (paper)");
         var intent = recordPaperBuy(window.__nimbusLastState, event, fresh.amount);
         renderTokens(window.__nimbusLastState);
         var title = $("discovery-review-title");
@@ -2151,6 +2203,7 @@
       skip.className = "discovery-skip";
       skip.textContent = "Avstå";
       skip.addEventListener("click", function () {
+        logJournalAction("Avstå", { mint: card.mint, symbol: card.symbol, profile: "Sniper Grok" }, null, "Avstå suggestion");
         el.remove();
       });
       var buy = document.createElement("button");
@@ -2170,6 +2223,7 @@
           token_url: card.token_url,
           source_at: card.rated_at
         };
+        logJournalAction("Köp", event, fresh.amount, "Sniper Grok föreslår (paper)");
         recordPaperBuy(window.__nimbusLastState, event, fresh.amount);
         renderTokens(window.__nimbusLastState);
         var review = $("discovery-review");
@@ -2214,15 +2268,115 @@
     });
   }
 
+
+  function renderKillBanner(state) {
+    var banner = $("kill-banner");
+    var reason = $("kill-banner-reason");
+    if (!banner) return;
+    var kill = (state && state.kill_switch) || {};
+    var on = !!(kill.locked || kill.buys_locked);
+    banner.hidden = !on;
+    if (reason) reason.textContent = kill.reason_sv || (on ? "Köp är låsta." : "");
+  }
+
+  function renderJournal(state) {
+    var host = $("journal-list");
+    var note = $("journal-note");
+    if (!host) return;
+    var box = (state && state.journal) || {};
+    var rows = box.entries || [];
+    host.innerHTML = "";
+    if (note) note.textContent = rows.length ? (rows.length + " rader") : (box.note_sv || "Ingen journaldata.");
+    rows.forEach(function (row) {
+      var el = document.createElement("article");
+      el.className = "journal-card";
+      var top = document.createElement("div");
+      top.className = "j-top";
+      var act = document.createElement("span");
+      act.className = "j-action";
+      var a = row.action || "saknas";
+      if (a === "Köp") act.className += " kop";
+      else if (a === "Avstå") act.className += " avsta";
+      else if (a === "Stoppad") act.className += " stoppad";
+      act.textContent = a;
+      var when = document.createElement("span");
+      when.className = "j-meta";
+      when.textContent = row.ts || "tid saknas";
+      top.appendChild(act);
+      top.appendChild(when);
+      el.appendChild(top);
+      var title = document.createElement("strong");
+      title.textContent = (row.symbol || (row.mint ? row.mint.slice(0, 6) : "symbol saknas"));
+      el.appendChild(title);
+      var meta = document.createElement("div");
+      meta.className = "j-meta";
+      meta.textContent = [
+        row.profile ? ("@" + row.profile) : "profil saknas",
+        row.amount_usd != null ? ("$" + Number(row.amount_usd).toFixed(2)) : "belopp saknas",
+        row.pnl_usd != null ? ("PnL $" + Number(row.pnl_usd).toFixed(2)) : null
+      ].filter(Boolean).join(" · ");
+      el.appendChild(meta);
+      var reason = document.createElement("p");
+      reason.className = "j-reason";
+      reason.textContent = row.reason_sv || "orsak saknas";
+      el.appendChild(reason);
+      var lesson = document.createElement("input");
+      lesson.className = "j-lesson";
+      lesson.type = "text";
+      lesson.placeholder = "Lektion (valfritt)";
+      lesson.value = row.lesson || "";
+      lesson.addEventListener("change", function () {
+        queueDeskWrite("journal_lesson", String(row.id) + "|" + lesson.value.slice(0, 180));
+      });
+      el.appendChild(lesson);
+      host.appendChild(el);
+    });
+  }
+
+  function bindKillUnlock() {
+    var btn = $("kill-unlock");
+    var dialog = $("kill-unlock-dialog");
+    var form = $("kill-unlock-form");
+    var input = $("kill-unlock-input");
+    if (!btn || !dialog || btn.__bound) return;
+    btn.__bound = true;
+    btn.addEventListener("click", function () {
+      if (typeof dialog.showModal === "function") dialog.showModal();
+      else dialog.setAttribute("open", "open");
+      if (input) { input.value = ""; input.focus(); }
+    });
+    if (form) form.addEventListener("submit", function (ev) {
+      var val = (ev.submitter && ev.submitter.value) || "cancel";
+      if (val === "ok") {
+        var phrase = input ? String(input.value || "").trim() : "";
+        queueDeskWrite("kill_switch_unlock", phrase);
+        var st = window.__nimbusLastState || {};
+        if (!st.kill_switch) st.kill_switch = {};
+        // optimistic only when phrase matches; desk is source of truth
+        if (phrase.toLowerCase() === "låsa upp") {
+          st.kill_switch.locked = false;
+          st.kill_switch.buys_locked = false;
+          st.kill_switch.reason_sv = "";
+          renderKillBanner(st);
+          renderDiscovery(st);
+          renderSuggestions(st);
+        }
+      }
+    });
+  }
+
   function renderState(state) {
     if (!state) { showBootEmpty(true); return; }
     shownState = state;
     showBootEmpty(false);
     renderHeader(state);
+    renderKillBanner(state);
+    bindKillUnlock();
     renderTraders(state);
     renderSuggestions(state);
     renderDiscovery(state);
     renderStoppade(state);
+    renderJournal(state);
     renderTokens(state);
     renderClosed(state);
     window.__nimbusLastState = state;
