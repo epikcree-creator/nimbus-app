@@ -1647,10 +1647,16 @@
 
   function followedTraders() {
     try {
-      var raw = JSON.parse(localStorage.getItem("nimbus_trader_follows") || "[]");
+      var stored = localStorage.getItem("nimbus_trader_follows");
+      // First visit (key missing): Oscar's nine FOMO profiles are followed by default.
+      // Explicit empty array [] means the user unfollowed everyone.
+      if (stored == null) {
+        return TRADER_NAMES.slice();
+      }
+      var raw = JSON.parse(stored);
       return Array.isArray(raw) ? raw.filter(function (name) { return TRADER_NAMES.indexOf(name) >= 0; }) : [];
     } catch (e) {
-      return [];
+      return TRADER_NAMES.slice();
     }
   }
 
@@ -2230,7 +2236,7 @@
       el.setAttribute("data-mint", card.mint || "");
       var badge = document.createElement("span");
       badge.className = "suggestion-badge";
-      badge.textContent = card.badge_sv || "Sniper Grok föreslår";
+      badge.textContent = card.badge_sv || "Swipe Mode föreslår";
       var title = document.createElement("strong");
       title.textContent = card.symbol || (card.mint || "").slice(0, 6) || "—";
       var rating = document.createElement("div");
@@ -2304,7 +2310,7 @@
       skip.className = "discovery-skip";
       skip.textContent = "Avstå";
       skip.addEventListener("click", function () {
-        logJournalAction("Avstå", { mint: card.mint, symbol: card.symbol, profile: "Sniper Grok" }, null, "Avstå suggestion");
+        logJournalAction("Avstå", { mint: card.mint, symbol: card.symbol, profile: "Swipe Mode" }, null, "Avstå suggestion");
         el.remove();
       });
       var buy = document.createElement("button");
@@ -2319,7 +2325,7 @@
           trade_id: "suggest:" + (card.mint || ""),
           mint: card.mint,
           symbol: card.symbol,
-          profile: "Sniper Grok",
+          profile: "Swipe Mode",
           amount_usd: fresh.amount,
           token_url: card.token_url,
           source_at: card.rated_at,
@@ -2327,7 +2333,7 @@
           image: card.image_url || card.image || null,
           initials: card.initials || null
         };
-        logJournalAction("Köp", event, fresh.amount, "Sniper Grok föreslår (paper)");
+        logJournalAction("Köp", event, fresh.amount, "Swipe Mode föreslår (paper)");
         recordPaperBuy(window.__nimbusLastState, event, fresh.amount);
         renderTokens(window.__nimbusLastState);
         var review = $("discovery-review");
@@ -2341,7 +2347,7 @@
           reviewImg.innerHTML = "";
           reviewImg.appendChild(coinArt(card, "coin-art review"));
         }
-        if (copy) copy.textContent = "Sniper Grok föreslår · $" + fresh.amount.toFixed(2) + " · ingen order skickas. Riktiga pengar är avstängda.";
+        if (copy) copy.textContent = "Swipe Mode föreslår · $" + fresh.amount.toFixed(2) + " · ingen order skickas. Riktiga pengar är avstängda.";
         if (link) {
           link.textContent = "";
           if (card.token_url) {
@@ -2792,6 +2798,116 @@
     });
   }
 
+
+  function formatCountdown(sec) {
+    if (sec == null || !isFinite(sec) || sec < 0) return "—";
+    var s = Math.floor(sec);
+    var h = Math.floor(s / 3600);
+    var m = Math.floor((s % 3600) / 60);
+    var r = s % 60;
+    return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0") + ":" + String(r).padStart(2, "0");
+  }
+
+  function renderChallenge(state) {
+    var box = (state && state.challenge) || {};
+    var note = $("challenge-note");
+    var cd = $("challenge-countdown");
+    var wins = $("challenge-wins");
+    var pnl = $("challenge-pnl");
+    var cash = $("challenge-cash");
+    var oscar = $("challenge-oscar");
+    var rules = $("challenge-rules");
+    var host = $("challenge-trades");
+    if (!host) return;
+    if (note) note.textContent = box.note_sv || "Ingen PAPER-utmaning körs.";
+    if (cd) {
+      cd.textContent = box.active ? formatCountdown(box.countdown_seconds) : (box.status === "finished" || box.status === "aborted" ? "Klar" : "Vilande");
+      cd.dataset.endsAt = box.ends_at || "";
+    }
+    if (wins) wins.textContent = String(box.wins || 0) + "/" + String(box.win_target_count || 10);
+    if (pnl) {
+      var v = Number(box.realized_pnl_usd);
+      pnl.textContent = isFinite(v) ? ((v >= 0 ? "+$" : "-$") + Math.abs(v).toFixed(2)) : "saknas";
+      pnl.className = isFinite(v) && v < 0 ? "pnl-neg" : "pnl-pos";
+    }
+    if (cash) {
+      var c = Number(box.cash_usd);
+      var cap = Number(box.capital_usd);
+      cash.textContent = (isFinite(c) ? ("$" + c.toFixed(0)) : "saknas") + (isFinite(cap) ? (" / $" + cap.toFixed(0)) : "");
+    }
+    if (oscar) {
+      var o = Number(box.oscar_manual_paper_usd);
+      oscar.textContent = (isFinite(o) ? ("$" + o.toFixed(0)) : "$200") + " orörd";
+    }
+    if (rules) {
+      rules.innerHTML = "";
+      (box.rules_sv || []).forEach(function (line) {
+        var li = document.createElement("li");
+        li.textContent = line;
+        rules.appendChild(li);
+      });
+    }
+    host.innerHTML = "";
+    var open = box.open || [];
+    open.forEach(function (row) {
+      var el = document.createElement("article");
+      el.className = "challenge-trade";
+      el.appendChild(coinArt(row, "coin-art"));
+      var body = document.createElement("div");
+      var title = document.createElement("strong");
+      title.textContent = (row.symbol || (row.mint || "").slice(0, 6) || "—");
+      var tag = document.createElement("span");
+      tag.className = "challenge-open-tag";
+      tag.textContent = "öppen";
+      title.appendChild(tag);
+      var meta = document.createElement("div");
+      meta.className = "meta";
+      meta.textContent = "Entry " + (row.entry_price != null ? row.entry_price : "saknas")
+        + " · $" + (row.size_usd != null ? Number(row.size_usd).toFixed(0) : "?")
+        + " · " + (row.entry_reason_sv || "saknas");
+      body.appendChild(title);
+      body.appendChild(meta);
+      el.appendChild(body);
+      host.appendChild(el);
+    });
+    var trades = box.trades || [];
+    if (!open.length && !trades.length) {
+      var empty = document.createElement("p");
+      empty.className = "empty-hint";
+      empty.textContent = box.active
+        ? (box.kill_switch_blocks_entries ? "Väntar på upplåst kill switch och STRICT+Starkt/Medel-förslag." : "Inga challenge-trades ännu.")
+        : "Inga challenge-trades.";
+      host.appendChild(empty);
+      return;
+    }
+    trades.forEach(function (row) {
+      var el = document.createElement("article");
+      el.className = "challenge-trade";
+      el.appendChild(coinArt(row, "coin-art"));
+      var body = document.createElement("div");
+      var title = document.createElement("strong");
+      title.textContent = row.symbol || (row.mint || "").slice(0, 6) || "—";
+      var pnlEl = document.createElement("span");
+      var pv = Number(row.pnl_usd);
+      if (isFinite(pv)) {
+        pnlEl.className = pv >= 0 ? "pnl-pos" : "pnl-neg";
+        pnlEl.textContent = " " + (pv >= 0 ? "+$" : "-$") + Math.abs(pv).toFixed(2);
+      } else {
+        pnlEl.textContent = " saknas";
+      }
+      title.appendChild(pnlEl);
+      var meta = document.createElement("div");
+      meta.className = "meta";
+      meta.textContent = "Entry " + (row.entry_price != null ? row.entry_price : "saknas")
+        + " → Exit " + (row.exit_price != null ? row.exit_price : "saknas")
+        + " · " + (row.exit_reason || "saknas");
+      body.appendChild(title);
+      body.appendChild(meta);
+      el.appendChild(body);
+      host.appendChild(el);
+    });
+  }
+
   function renderState(state) {
     if (!state) { showBootEmpty(true); return; }
     shownState = state;
@@ -2801,6 +2917,7 @@
     bindKillUnlock();
     renderTraders(state);
     renderSuggestions(state);
+    renderChallenge(state);
     renderDiscovery(state);
     renderStoppade(state);
     renderJournal(state);
@@ -2874,3 +2991,17 @@
   setInterval(function () { poll(cfg); }, POLL_MS);
   if (isLocalPreview() && location.search.indexOf("account=1") !== -1) openAccount();
 })();
+
+  (function challengeCountdownTick() {
+    setInterval(function () {
+      var cd = document.getElementById("challenge-countdown");
+      if (!cd || !cd.dataset.endsAt) return;
+      var ends = Date.parse(cd.dataset.endsAt);
+      if (!isFinite(ends)) return;
+      var sec = Math.max(0, Math.floor((ends - Date.now()) / 1000));
+      var h = Math.floor(sec / 3600);
+      var m = Math.floor((sec % 3600) / 60);
+      var r = sec % 60;
+      cd.textContent = String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0") + ":" + String(r).padStart(2, "0");
+    }, 1000);
+  })();
