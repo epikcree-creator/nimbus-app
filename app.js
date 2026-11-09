@@ -12,6 +12,24 @@
     { id: "executor", name: "Executor", sub: "Paper-fyllningar", color: "#00d35a", icon: "ℰ" },
     { id: "risk", name: "Risk", sub: "Stopp · trailing", color: "#ff6b9a", icon: "ℛ" }
   ];
+  function applyBrand() {
+    var name = window.NimbusBrand && window.NimbusBrand.name;
+    if (!name) return;
+    document.title = name;
+    var apple = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    if (apple) apple.setAttribute("content", name);
+    document.querySelectorAll("[data-app-name]").forEach(function (el) {
+      el.textContent = name;
+    });
+    document.querySelectorAll("[data-app-name-suffix]").forEach(function (el) {
+      el.textContent = name + el.getAttribute("data-app-name-suffix");
+    });
+    document.querySelectorAll("[data-app-name-alt]").forEach(function (el) {
+      el.setAttribute("alt", name);
+    });
+  }
+  applyBrand();
+
   var selectedAmt = 100;
   var lastClosedSig = "";
   var goalFilter = "ALL";
@@ -903,6 +921,14 @@
     if (backdrop) backdrop.addEventListener("click", closeAccount);
     var saveBtn = $("account-save");
     if (saveBtn) saveBtn.addEventListener("click", attemptAccountSave);
+    var sellCancel = $("sell-cancel");
+    if (sellCancel) sellCancel.addEventListener("click", function () {
+      var box = $("sell-confirm");
+      if (box) box.hidden = true;
+      pendingSell = null;
+    });
+    var sellOk = $("sell-ok");
+    if (sellOk) sellOk.addEventListener("click", confirmSell);
     var moneyPaper = $("money-paper");
     if (moneyPaper) moneyPaper.addEventListener("click", function () { chooseMoney("select-paper"); });
     var moneyLive = $("money-live");
@@ -1095,15 +1121,145 @@
   }
 
   /* ---- tokens / positions / audited coins ---- */
+  var sellLock = false;
+  var pendingSell = null;
+
+  function sessionSells() {
+    try {
+      var raw = JSON.parse(sessionStorage.getItem("nimbus_paper_sells") || "[]");
+      return Array.isArray(raw) ? raw : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function freshMark(row) {
+    var price = Number(row && (row.mark_price != null ? row.mark_price : row.price));
+    var at = row && (row.mark_price_at || row.price_at);
+    if (!isFinite(price) || price <= 0 || !at) return null;
+    var seen = new Date(at);
+    if (isNaN(seen.getTime()) || Date.now() - seen.getTime() > 15 * 60 * 1000) return null;
+    return { price: price, at: at };
+  }
+
+  function quoteSlice(size, entry, price, fraction) {
+    var sold = fraction === 1 ? size : Math.round(size * fraction * 100) / 100;
+    if (size - sold < 0.01) sold = size;
+    var remaining = Math.round((size - sold) * 100) / 100;
+    if (remaining < 0.01) {
+      sold = size;
+      remaining = 0;
+    }
+    var realized = Math.round(sold * (price / entry - 1) * 100) / 100;
+    return { sold: sold, remaining: remaining, realized: realized, closed: remaining === 0 };
+  }
+
+  function openSell(row, fraction) {
+    if (sellLock) return;
+    var box = $("sell-confirm");
+    var body = $("sell-confirm-body");
+    var title = $("sell-confirm-title");
+    if (!box || !body) return;
+    var mark = freshMark(row);
+    var entry = Number(row.entry);
+    title.textContent = "Bekräfta sälj";
+    if (!mark || !isFinite(entry) || entry <= 0) {
+      body.textContent = (row.symbol || "Token") + ": ingen färsk kurs. Försäljningen stoppas. Ingen kurs hittas på.";
+      pendingSell = null;
+      $("sell-ok").disabled = true;
+    } else {
+      var quote = quoteSlice(Number(row.remaining_usd), entry, mark.price, fraction);
+      pendingSell = { row: row, fraction: fraction, quote: quote, price: mark.price, at: mark.at };
+      body.textContent = (row.symbol || "Token") + " · " + Math.round(fraction * 100) + "% · säljer $" +
+        quote.sold.toFixed(2) + " · kvar $" + quote.remaining.toFixed(2) + " · kurs $" + mark.price + ".";
+      $("sell-ok").disabled = false;
+    }
+    box.hidden = false;
+  }
+
+  function confirmSell() {
+    if (sellLock) return;
+    sellLock = true;
+    var box = $("sell-confirm");
+    var body = $("sell-confirm-body");
+    var mode = String((window.__nimbusLastState && window.__nimbusLastState.mode) || "PAPER").toUpperCase();
+    if (!pendingSell) {
+      if (box) box.hidden = true;
+      sellLock = false;
+      return;
+    }
+    if (mode === "LIVE") {
+      body.textContent = "Riktiga pengar är avstängda. Ingen försäljning är bokförd. En senare riktig försäljning skulle använda " +
+        Math.round(pendingSell.fraction * 100) + "%.";
+      pendingSell = null;
+      sellLock = false;
+      return;
+    }
+    var saleId = pendingSell.row.key + ":" + pendingSell.fraction + ":" + pendingSell.row.remaining_usd;
+    var seen = sessionSells();
+    if (seen.some(function (row) { return row.id === saleId; })) {
+      if (box) box.hidden = true;
+      pendingSell = null;
+      sellLock = false;
+      return;
+    }
+    var quote = pendingSell.quote;
+    seen.push({
+      id: saleId,
+      action: "sell",
+      symbol: pendingSell.row.symbol,
+      fraction: pendingSell.fraction,
+      sold_usd: quote.sold,
+      remaining_usd: quote.remaining,
+      realized_usd: quote.realized,
+      order: false,
+      future_sell_fraction: pendingSell.fraction
+    });
+    try { sessionStorage.setItem("nimbus_paper_sells", JSON.stringify(seen)); } catch (e) {}
+    if (pendingSell.row.kind === "note") {
+      var notes = sessionPaperBuys().map(function (row) {
+        if (row.trade_id === pendingSell.row.trade_id) {
+          row.remaining_usd = quote.remaining;
+          row.realized_usd = Math.round(((Number(row.realized_usd) || 0) + quote.realized) * 100) / 100;
+          if (quote.closed) row.closed = true;
+        }
+        return row;
+      });
+      try { sessionStorage.setItem("nimbus_paper_buys", JSON.stringify(notes)); } catch (e2) {}
+    } else {
+      var overlays = {};
+      try { overlays = JSON.parse(sessionStorage.getItem("nimbus_position_overlays") || "{}"); } catch (e3) {}
+      var previous = overlays[pendingSell.row.key] || {};
+      overlays[pendingSell.row.key] = {
+        remaining_usd: quote.remaining,
+        realized_usd: Math.round(((Number(previous.realized_usd) || 0) + quote.realized) * 100) / 100,
+        closed: quote.closed
+      };
+      try { sessionStorage.setItem("nimbus_position_overlays", JSON.stringify(overlays)); } catch (e4) {}
+    }
+    if (box) box.hidden = true;
+    pendingSell = null;
+    sellLock = false;
+    renderState(window.__nimbusLastState);
+  }
+
   function renderTokens(state) {
     var grid = $("tokens-grid");
     grid.innerHTML = "";
     var rows = state.positions || [];
     sessionPaperBuys().forEach(function (row) {
-      var note = document.createElement("p");
-      note.className = "empty-hint";
-      note.textContent = "Pappersanteckning $" + Number(row.amount_usd).toFixed(2) + " · " + (row.symbol || row.mint || "?") + " · ingen order";
-      grid.appendChild(note);
+      if (row.closed) return;
+      appendHold(grid, {
+        key: "note:" + row.trade_id,
+        kind: "note",
+        trade_id: row.trade_id,
+        symbol: row.symbol,
+        remaining_usd: row.remaining_usd != null ? Number(row.remaining_usd) : Number(row.amount_usd),
+        entry: row.entry,
+        mark_price: row.mark_price,
+        mark_price_at: row.mark_price_at,
+        realized_usd: row.realized_usd || 0
+      });
     });
     if (!rows.length && !sessionPaperBuys().length) {
       var p = document.createElement("p");
@@ -1112,22 +1268,64 @@
       grid.appendChild(p);
       return;
     }
+    var overlays = {};
+    try { overlays = JSON.parse(sessionStorage.getItem("nimbus_position_overlays") || "{}"); } catch (e) {}
     rows.slice(0, 8).forEach(function (t) {
-      var a = document.createElement("a");
-      a.className = "token-row";
-      a.href = coinUrl(t.mint || t.address, t.chain || "solana");
-      a.target = "_blank";
-      a.rel = "noopener";
-      var chg = Number(t.pnl_usd != null ? t.pnl_usd : t.change_usd) || 0;
-      a.innerHTML =
-        "<div class='token-ico'>" + icoLetter(t.symbol || t.name) + "</div>" +
-        "<div><div class='token-name'>" + (t.name || t.symbol || "?") + "</div>" +
-        "<div class='token-amt'>" + (t.amount != null ? t.amount : (t.symbol || "")) + "</div></div>" +
-        "<div><div class='token-val'>" + fmtUsd(t.value_usd != null ? t.value_usd : t.usd || 0) + "</div>" +
-        "<div class='token-chg " + (chg >= 0 ? "pos" : "neg") + "'></div></div>";
-      a.querySelector(".token-chg").textContent = (chg >= 0 ? "+" : "") + fmtUsd(chg);
-      grid.appendChild(a);
+      var key = "pos:" + (t.id || t.mint);
+      var over = overlays[key] || {};
+      if (over.closed) return;
+      appendHold(grid, {
+        key: key,
+        kind: "desk",
+        symbol: t.symbol || t.name,
+        remaining_usd: over.remaining_usd != null ? Number(over.remaining_usd) : Number(t.size_usd != null ? t.size_usd : t.value_usd || 0),
+        entry: t.entry,
+        mark_price: t.mark_price,
+        mark_price_at: t.mark_price_at,
+        realized_usd: over.realized_usd || 0
+      });
     });
+  }
+
+  function appendHold(grid, row) {
+    var card = document.createElement("article");
+    card.className = "hold-card";
+    var title = document.createElement("strong");
+    title.textContent = (row.symbol || "Token") + " · $" + Number(row.remaining_usd || 0).toFixed(2);
+    card.appendChild(title);
+    var realized = document.createElement("div");
+    realized.textContent = "Realiserat " + ((Number(row.realized_usd) || 0) >= 0 ? "+" : "") + "$" + Number(row.realized_usd || 0).toFixed(2);
+    card.appendChild(realized);
+    var chips = document.createElement("div");
+    chips.className = "sell-row";
+    var picked = 1;
+    [0.25, 0.5, 0.75, 1].forEach(function (fraction) {
+      var chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "sell-chip" + (fraction === 1 ? " on" : "");
+      chip.textContent = Math.round(fraction * 100) + "%";
+      chip.addEventListener("click", function () {
+        picked = fraction;
+        chips.querySelectorAll(".sell-chip").forEach(function (el) { el.classList.remove("on"); });
+        chip.classList.add("on");
+        go.textContent = "Sälj " + Math.round(fraction * 100) + "%";
+      });
+      chips.appendChild(chip);
+    });
+    card.appendChild(chips);
+    var go = document.createElement("button");
+    go.type = "button";
+    go.className = "sell-go";
+    go.textContent = "Sälj 100%";
+    go.addEventListener("click", function () { openSell(row, picked); });
+    card.appendChild(go);
+    if (!freshMark(row) || !isFinite(Number(row.entry)) || Number(row.entry) <= 0) {
+      var block = document.createElement("p");
+      block.className = "amt-error";
+      block.textContent = "Ingen färsk kurs. Försäljningen stoppas.";
+      card.appendChild(block);
+    }
+    grid.appendChild(card);
   }
 
   function layerDots(layers) {
@@ -1213,9 +1411,10 @@
         };
       });
     }
-    $("closed-count").textContent = String(trades.length);
+    var sells = sessionSells();
+    $("closed-count").textContent = String(trades.length + sells.length);
     list.innerHTML = "";
-    if (!trades.length) {
+    if (!trades.length && !sells.length) {
       var p = document.createElement("p");
       p.className = "empty-hint";
       p.textContent = "Ingen aktivitet än i natt";
@@ -1248,6 +1447,15 @@
     }
     lastClosedSig = sig;
     seeded = true;
+    sells.slice().reverse().forEach(function (row) {
+      var line = document.createElement("div");
+      line.className = "closed-row";
+      line.innerHTML = "<div class='closed-ico'>S</div><div><div class='closed-main'>" +
+        (row.symbol || "Token") + "</div><div class='sell-badge'>SÄLJ " + Math.round(row.fraction * 100) +
+        "%</div></div><div class='closed-pnl'></div>";
+      line.querySelector(".closed-pnl").textContent = (row.realized_usd >= 0 ? "+" : "") + "$" + Number(row.realized_usd).toFixed(2);
+      list.insertBefore(line, list.firstChild);
+    });
   }
 
   function renderGoal(state) {
@@ -1277,11 +1485,12 @@
     syncBankrollUI(mode);
 
     var equity = Number(state.equity_usd) || 0;
-    setBalance($("balance"), equity);
+    var extra = sessionSells().reduce(function (sum, row) { return sum + (Number(row.realized_usd) || 0); }, 0);
+    setBalance($("balance"), equity + extra);
 
     var pill = $("status-pill");
     var deposit = Number(state.deposit_usd || state.bankroll_usd || 0);
-    var delta = equity - (deposit || 0);
+    var delta = equity + extra - (deposit || 0);
     if (!anyOk && equity === 0) {
       pill.className = "status-pill";
       pill.textContent = "Bot vilande";
@@ -1383,12 +1592,21 @@
     var maxTrade = Number(settings.max_trade_usd);
     if (!isFinite(maxTrade) || maxTrade <= 0) maxTrade = 50;
     var equity = Number(state && state.equity_usd) || 0;
+    var overlays = {};
+    try { overlays = JSON.parse(sessionStorage.getItem("nimbus_position_overlays") || "{}"); } catch (e) {}
     var reserved = 0;
     ((state && state.positions) || []).forEach(function (row) {
-      reserved += Number(row.size_usd != null ? row.size_usd : row.value_usd) || 0;
+      var over = overlays["pos:" + (row.id || row.mint)];
+      if (over && over.closed) return;
+      if (over && over.remaining_usd != null) reserved += Number(over.remaining_usd) || 0;
+      else reserved += Number(row.size_usd != null ? row.size_usd : row.value_usd) || 0;
     });
-    sessionPaperBuys().forEach(function (row) { reserved += Number(row.amount_usd) || 0; });
-    var available = Math.max(0, equity - reserved);
+    sessionPaperBuys().forEach(function (row) {
+      if (row.closed) return;
+      reserved += row.remaining_usd != null ? Number(row.remaining_usd) : (Number(row.amount_usd) || 0);
+    });
+    var realized = sessionSells().reduce(function (sum, row) { return sum + (Number(row.realized_usd) || 0); }, 0);
+    var available = Math.max(0, equity + realized - reserved);
     return { maxTrade: maxTrade, available: available, cap: Math.min(maxTrade, available) };
   }
 
@@ -1422,6 +1640,7 @@
       order: false,
       purchased: false,
       live_enabled: false,
+      remaining_usd: amount,
       mode: published === "LIVE" ? "LIVE_LOCKED" : "PAPER"
     };
     if (published === "LIVE") return intent;
@@ -1800,7 +2019,7 @@
       ".layer-dots{display:flex;gap:3px;justify-content:flex-end;flex-wrap:wrap}" +
       ".layer-dots i{width:8px;height:8px;border-radius:50%;display:inline-block}" +
       ".layer-dots i.y{background:var(--green)}" +
-      ".layer-dots i.n{background:#4a4058}.audit-reason{font-size:0.62rem;font-weight:500;color:rgba(235,235,245,0.55);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}";
+      ".layer-dots i.n{background:#C5D9EE}.audit-reason{font-size:0.62rem;font-weight:500;color:#3A6488;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}";
     document.head.appendChild(s);
   })();
 

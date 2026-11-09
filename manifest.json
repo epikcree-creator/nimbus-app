@@ -1,13 +1,13 @@
 {
   "name": "Nimbus",
   "short_name": "Nimbus",
-  "description": "Nimbus trading desk \u2014 paper first",
+  "description": "Nimbus — pappershandel",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#0b0714",
-  "theme_color": "#0b0714",
+  "background_color": "#EAF3FD",
+  "theme_color": "#1B6FD4",
   "icons": [
     {
       "src": "icons/icon-192.png",

@@ -1,16 +1,19 @@
-/* Nimbus service worker — cache shell for Android installability */
-var CACHE = "nimbus-shell-v14";
+/* Shell cache. The product name comes from brand.js. */
+importScripts("./brand.js");
+var CACHE = "nimbus-shell-v16";
 var SHELL = [
   "./",
   "./index.html",
   "./app.css",
   "./app.js",
+  "./brand.js",
   "./settings.js",
   "./discovery.js",
   "./settings_catalog.json",
-  "./icons/nimbus-logo.jpg",
+  "./icons/mark.png",
   "./chart.js",
   "./manifest.json",
+  "./icons/favicon.png",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-192-maskable.png",
@@ -41,6 +44,17 @@ self.addEventListener("fetch", function (e) {
   if (req.method !== "GET") return;
   if (req.url.indexOf("state.json") !== -1 || req.url.indexOf("/d/") !== -1) {
     e.respondWith(fetch(req));
+    return;
+  }
+  if (req.url.indexOf("manifest.json") !== -1) {
+    e.respondWith(fetch(req).then(function (res) { return res.json(); }).then(function (data) {
+      data.name = NimbusBrand.name;
+      data.short_name = NimbusBrand.name;
+      data.description = NimbusBrand.name + " — pappershandel";
+      return new Response(JSON.stringify(data), {
+        headers: { "Content-Type": "application/manifest+json" }
+      });
+    }));
     return;
   }
   e.respondWith(

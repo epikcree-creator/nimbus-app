@@ -3,16 +3,21 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-  <meta name="theme-color" content="#120818" />
+  <meta name="theme-color" content="#1B6FD4" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Nimbus" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="app.css?v=14" />
-  <title>Nimbus</title>
+  <link rel="icon" type="image/png" href="icons/favicon.png" />
+  <link rel="stylesheet" href="app.css?v=16" />
+  <script src="brand.js?v=16"></script>
+  <title></title>
+  <script>
+    document.title = NimbusBrand.name;
+    document.querySelector('meta[name="apple-mobile-web-app-title"]').setAttribute("content", NimbusBrand.name);
+  </script>
 </head>
 <body>
   <p id="demo-banner" class="demo-banner" hidden>DEMO / SIMULERING · inte live-resultat</p>
@@ -20,9 +25,9 @@
   <main id="app" class="shell">
     <header class="desk-head region-head">
       <div class="brand-row">
-        <img class="brand-logo" src="icons/nimbus-logo.jpg" alt="" width="36" height="36" />
+        <img class="brand-logo" src="icons/mark.png" alt="" width="36" height="36" />
         <div>
-          <h1 class="col-title">Nimbus</h1>
+          <h1 class="col-title" data-app-name></h1>
           <p class="col-sub" id="agents-sub">Följda profiler · papperspengar</p>
         </div>
       </div>
@@ -44,8 +49,8 @@
     <div class="wallet-card region-wallet" id="wallet-card">
       <div class="wallet-card-top">
         <div class="wallet-brand">
-          <img src="icons/nimbus-logo.jpg" alt="" width="22" height="22" />
-          <span>Nimbus Wallet</span>
+          <img src="icons/mark.png" alt="" width="22" height="22" />
+          <span data-app-name-suffix=" Wallet"></span>
         </div>
         <div class="wallet-pills">
           <span class="pill">SOL</span>
@@ -89,7 +94,7 @@
 
     <section class="discovery region-swipe tab-panel" id="discovery" data-panel="traders" aria-label="Följda köp">
       <div class="discovery-head">
-        <img src="icons/nimbus-logo.jpg" alt="Nimbus" width="44" height="44" />
+        <img src="icons/icon-192.png" data-app-name-alt width="44" height="44" />
         <div>
           <h2>Följda köp</h2>
           <p id="discovery-note">Inte ansluten. Inga följda köp är importerade.</p>
@@ -146,9 +151,20 @@
 
   </main>
 
+  <section id="sell-confirm" class="sell-confirm" hidden>
+    <div class="sell-card">
+      <h3 id="sell-confirm-title">Bekräfta sälj</h3>
+      <p id="sell-confirm-body"></p>
+      <div class="sell-actions">
+        <button type="button" id="sell-cancel">Avbryt</button>
+        <button type="button" id="sell-ok">Bekräfta</button>
+      </div>
+    </div>
+  </section>
+
   <section id="boot-empty" class="boot-empty" hidden>
-    <img src="icons/icon-192.png" alt="Nimbus" width="64" height="64" />
-    <h1>Nimbus</h1>
+    <img src="icons/icon-192.png" data-app-name-alt width="64" height="64" />
+    <h1 data-app-name></h1>
     <p>Väntar på desken</p>
     <p class="hint">Öppna länken från Telegram (@NimbusMobileBot) så appen kopplas.</p>
   </section>
@@ -194,9 +210,9 @@
     </div>
   </div>
 
-  <script src="settings.js?v=14"></script>
-  <script src="discovery.js?v=14"></script>
-  <script src="chart.js?v=14"></script>
-  <script src="app.js?v=14"></script>
+  <script src="settings.js?v=16"></script>
+  <script src="discovery.js?v=16"></script>
+  <script src="chart.js?v=16"></script>
+  <script src="app.js?v=16"></script>
 </body>
 </html>
