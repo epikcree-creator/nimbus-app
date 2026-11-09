@@ -188,7 +188,7 @@
       btn.className = "af-btn";
       btn.textContent = "Sätt paper-saldo $" + selectedAmt;
       btn.href = bankrollLink(selectedAmt);
-      src.textContent = "via Telegram";
+      src.textContent = "simulering";
     }
   }
 
@@ -220,14 +220,14 @@
     var published = result.publishedMode;
     var pill = $("mode-pill");
     if (pill) {
-      pill.textContent = published === "LIVE" ? "LIVE" : "PAPPER";
+      pill.textContent = published === "LIVE" ? "LIVE" : "SIM";
       pill.setAttribute("title", result.message);
     }
     var sub = $("agents-sub");
     if (sub) {
       sub.textContent = published === "LIVE"
         ? "5 agenter · desken visar LIVE · appen handlar inte live"
-        : "5 agenter · papperspengar";
+        : AGENTS.length + " agenter · papperspengar";
     }
     var status = $("money-status");
     if (status) status.textContent = published === "LIVE" ? "Appen: papperspengar" : "Papperspengar";
@@ -1011,6 +1011,7 @@
     AGENTS.forEach(function (a, idx) {
       var card = document.createElement("article");
       card.className = "agent-card";
+      card.style.borderColor = a.color;
       var status = hb[a.id] != null ? hb[a.id] : "not started";
       var ok = hbOk(status);
       var ag = (state.agents && (state.agents[a.id] || state.agents[a.id.toLowerCase()])) || null;
@@ -1023,7 +1024,7 @@
       if (ag && ag.today_count != null && !stats.closed) stats.closed = ag.today_count;
       var mid = document.createElement("div");
       mid.className = "agent-mid";
-      var statusSv = ok ? "live" : (status === "not started" ? "ej startad" : String(status).slice(0, 28));
+      var statusSv = ok ? "igång" : (status === "not started" ? "ej startad" : String(status).slice(0, 28));
       mid.innerHTML =
         "<div class='agent-name'>" + a.name + "</div>" +
         "<div class='agent-sub'>" + a.sub + " · " + statusSv + "</div>";
@@ -1058,7 +1059,7 @@
         pctEl.classList.add(pass ? "pos" : "neg");
         pctEl.style.fontSize = "0.95rem";
       } else {
-        pctEl.textContent = ok ? "…" : "—";
+        pctEl.textContent = "—";
         pctEl.classList.add("neu");
       }
       right.appendChild(pctEl);
@@ -1147,9 +1148,7 @@
       wrap.id = "audited-wrap";
       wrap.className = "audited-wrap";
       var tokensWrap = document.querySelector(".tokens-wrap");
-      if (tokensWrap && tokensWrap.parentNode) {
-        tokensWrap.parentNode.insertBefore(wrap, tokensWrap.nextSibling);
-      }
+      if (tokensWrap) tokensWrap.appendChild(wrap);
     }
     var coins = state.coins || [];
     var audits = state.audits || [];
@@ -1248,7 +1247,7 @@
     if (!deposit && Array.isArray(state.equity) && state.equity.length) deposit = Number(state.equity[0]) || 0;
     if (!deposit && equity > 0) deposit = equity;
     var mult = (deposit > 0 && equity > 0) ? (equity / deposit) : 1;
-    $("multi-pill").innerHTML = "since deposit <b>" + mult.toFixed(2) + "x</b>";
+    $("multi-pill").innerHTML = "since deposit <b>" + (deposit > 0 ? mult.toFixed(2) + "x" : "—") + "</b>";
     var pct = Math.max(0, Math.min(100, (mult / 10) * 100));
     $("goal-fill").style.width = pct + "%";
     $("goal-pct").textContent = Math.round(pct) + "%";
@@ -1257,19 +1256,15 @@
       d.classList.toggle("hit", mult >= m);
       d.classList.toggle("current", mult >= m * 0.85 && mult < m * 1.15);
     });
-    if (mult >= 10 && !window.__nimbusGoalToast) {
-      window.__nimbusGoalToast = true;
-      toast("goal", "Goal reached: 10x", "keep going");
-    }
   }
 
   function renderHeader(state) {
     var mode = String((state && state.mode) || "PAPER").toUpperCase();
     paintMoney(currentMoney(state, "show"));
-    var on = mode === "LIVE" || mode === "PAPER"; // auto-trade reflects desk running
     var hb = (state && state.heartbeats) || {};
     var anyOk = Object.keys(hb).some(function (k) { return hbOk(hb[k]); });
-    $("auto-toggle").classList.toggle("on", anyOk || mode === "LIVE");
+    var toggle = $("auto-toggle");
+    if (toggle) toggle.classList.remove("on");
     syncBankrollUI(mode);
 
     var equity = Number(state.equity_usd) || 0;
@@ -1382,7 +1377,15 @@
       card.setAttribute("data-trade", event.trade_id);
       var art = document.createElement("div");
       art.className = "discovery-art";
-      art.textContent = window.NimbusDiscovery.letter(event);
+      var image = String(event.image || "");
+      if (/^https:\/\/[^\s]+$/.test(image)) {
+        var photo = document.createElement("img");
+        photo.alt = "";
+        photo.src = image;
+        art.appendChild(photo);
+      } else {
+        art.textContent = window.NimbusDiscovery.letter(event);
+      }
       var pad = document.createElement("div");
       pad.className = "pad";
       var symbol = document.createElement("strong");
@@ -1466,6 +1469,14 @@
     renderGoal(state);
     window.__nimbusLastState = state;
     renderAccount(state);
+    renderGrok(state);
+  }
+
+  function renderGrok(state) {
+    var node = $("grok-budget-status");
+    if (!node) return;
+    var box = (state && state.grok) || {};
+    node.textContent = box.note_sv || "Av. Tak 5,00 USD per månad. En nyckel slår inte på anrop.";
   }
 
   function fetchJson(url) {
