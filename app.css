@@ -929,6 +929,17 @@ body.account-open { overflow: hidden; }
 /* ---- Journal ---- */
 .journal-panel { padding: 0 14px 24px; }
 .journal-head h2 { margin: 8px 0 4px; font-size: 1.05rem; }
+.journal-count {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  color: var(--ink-2);
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+.journal-count:empty,
+.journal-count[hidden] { display: none !important; }
+
 .journal-card {
   background: var(--card);
   border: 1px solid var(--border);
