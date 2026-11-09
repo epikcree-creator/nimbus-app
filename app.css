@@ -1051,3 +1051,23 @@ body.account-open { overflow: hidden; }
 .challenge-trade .coin-art{width:44px;height:44px;border-radius:12px;overflow:hidden;background:var(--fill);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.75rem}
 .challenge-trade .coin-art img{width:100%;height:100%;object-fit:cover}
 .challenge-open-tag{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:999px;background:var(--sky-100);color:var(--sky-900);font-size:0.68rem}
+
+/* Utmaning LIVE */
+.challenge-live-banner{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 0 10px;padding:10px 12px;border-radius:14px;background:linear-gradient(90deg,#155CC4,#4C9BF5);color:#fff}
+.challenge-live-banner strong{font-size:0.9rem}
+.challenge-status-pill{padding:4px 10px;border-radius:999px;background:rgba(255,255,255,0.2);font-size:0.75rem;font-weight:700}
+.challenge-status-pill.paused{background:#FFF6E0;color:#7A4A00}
+.challenge-status-pill.running{background:#E6F7ED;color:#08843F}
+.challenge-status-pill.done{background:#F1F6FC;color:#44607F}
+.challenge-paper-tag{margin:4px 0 0;font-size:0.72rem;color:var(--ink-3)}
+.challenge-open-card{display:grid;grid-template-columns:52px 1fr;gap:10px;padding:12px;margin:0 0 10px;border-radius:16px;background:var(--sheet);border:1px solid var(--line)}
+.challenge-open-card .coin-art{width:52px;height:52px;border-radius:14px}
+.challenge-metrics{display:flex;flex-wrap:wrap;gap:6px 10px;margin-top:6px;font-size:0.72rem;color:var(--ink-2)}
+.challenge-metrics b{color:var(--ink)}
+.challenge-event{display:grid;grid-template-columns:56px 1fr;gap:8px;padding:8px 0;border-top:1px solid var(--line);font-size:0.78rem}
+.challenge-event .kind{font-weight:700;text-transform:uppercase;font-size:0.68rem}
+.challenge-event .kind.kop{color:var(--buy)}
+.challenge-event .kind.salj,.challenge-event .kind.SL{color:var(--skip)}
+.challenge-event .kind.TP{color:var(--buy)}
+.challenge-toast{position:fixed;left:12px;right:12px;bottom:18px;z-index:80;padding:12px 14px;border-radius:14px;background:#0B2545;color:#fff;font-size:0.85rem;box-shadow:0 8px 24px rgba(11,37,69,0.25)}
+.challenge-toast[hidden]{display:none!important}

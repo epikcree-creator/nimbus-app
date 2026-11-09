@@ -11,8 +11,8 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="icons/favicon.png" />
-  <link rel="stylesheet" href="app.css?v=26" />
-  <script src="brand.js?v=26"></script>
+  <link rel="stylesheet" href="app.css?v=27" />
+  <script src="brand.js?v=27"></script>
   <title></title>
   <script>
     document.title = NimbusBrand.name;
@@ -96,26 +96,37 @@
       <button type="button" class="desk-tab" data-tab="tokens">Tokens</button>
       <button type="button" class="desk-tab" data-tab="insikt">Insikt</button>
       <button type="button" class="desk-tab" data-tab="board">Topplista</button>
+      <button type="button" class="desk-tab" data-tab="utmaning">Utmaning</button>
       <button type="button" class="desk-tab" data-tab="journal">Journal</button>
     </nav>
 
 
-    <section class="challenge-panel region-swipe tab-panel" id="challenge-panel" data-panel="traders" aria-label="PAPER-utmaning">
+    <section class="challenge-panel region-swipe tab-panel" id="challenge-panel" data-panel="utmaning" aria-label="Utmaning LIVE" hidden>
+      <div class="challenge-live-banner" id="challenge-live-banner">
+        <strong>Utmaning LIVE · PAPER</strong>
+        <span id="challenge-status-pill" class="challenge-status-pill">Pausad</span>
+      </div>
       <div class="challenge-head">
         <div>
-          <h2>PAPER-utmaning · 24 h</h2>
+          <h2>Utmaning LIVE</h2>
           <p id="challenge-note" class="setting-note">Ingen PAPER-utmaning körs.</p>
+          <p class="challenge-paper-tag" id="challenge-paper-tag">PAPER · simulerat · inga riktiga pengar</p>
         </div>
         <div class="challenge-countdown" id="challenge-countdown" aria-live="polite">—</div>
       </div>
       <div class="challenge-stats" id="challenge-stats">
+        <span>Status <b id="challenge-status-sv">—</b></span>
         <span>Vinster <b id="challenge-wins">0/10</b></span>
         <span>Resultat <b id="challenge-pnl">$0.00</b></span>
         <span>Kassa <b id="challenge-cash">saknas</b></span>
         <span>Oscars $200 <b id="challenge-oscar">orörd</b></span>
       </div>
       <ul class="challenge-rules" id="challenge-rules"></ul>
-      <h3 class="sec-title">Trades</h3>
+      <h3 class="sec-title">Öppna positioner</h3>
+      <div id="challenge-open"></div>
+      <h3 class="sec-title">Händelser</h3>
+      <div id="challenge-events"></div>
+      <h3 class="sec-title">Stängda trades</h3>
       <div id="challenge-trades"></div>
     </section>
 
@@ -311,9 +322,9 @@
     </div>
   </div>
 
-  <script src="settings.js?v=26"></script>
-  <script src="discovery.js?v=26"></script>
-  <script src="chart.js?v=26"></script>
-  <script src="app.js?v=26"></script>
+  <script src="settings.js?v=27"></script>
+  <script src="discovery.js?v=27"></script>
+  <script src="chart.js?v=27"></script>
+  <script src="app.js?v=27"></script>
 </body>
 </html>
