@@ -2450,6 +2450,46 @@
       }
       if (!merged.length) {
         wl.appendChild(elCard("Bevakning", watch.empty_sv || "Inga mint på bevakning.", "desk.intel.watchlist"));
+
+    // t147: Källor / Backtest / Bevakning (near-miss) / Lärdomar
+    var kallor = (intel && intel.kallor) || {};
+    if (kallor && (kallor.rows || []).length) {
+      var kLines = (kallor.rows || []).slice(0, 6).map(function (r) {
+        return (r.source || "?") + ": in=" + r.candidates + " mom=" + r.passed_momentum +
+          " trade=" + r.traded + " win=" + r.wins + " pnl=$" + r.pnl_usd;
+      }).join(" · ");
+      wl.appendChild(elCard("Källor", kLines || kallor.empty_sv || "saknas", "desk.source_stats"));
+    } else if (kallor) {
+      wl.appendChild(elCard("Källor", kallor.empty_sv || kallor.rule_sv || "Ingen källdata ännu.", "desk.source_stats"));
+    }
+    var bt = (intel && intel.backtest) || {};
+    if (bt) {
+      wl.appendChild(elCard(
+        "Backtest",
+        (bt.summary_sv || bt.empty_sv || "saknas") + (bt.disclaimer_sv ? " — " + bt.disclaimer_sv : ""),
+        "desk.backtest"
+      ));
+    }
+    var near = (intel && intel.bevakning_near) || {};
+    if (near) {
+      var nItems = near.items || [];
+      var nTxt = nItems.length
+        ? nItems.slice(0, 8).map(function (i) {
+            return (i.symbol || i.mint || "?").toString().slice(0, 12) + " (" + (i.reason || "?") + ")";
+          }).join(" · ")
+        : (near.empty_sv || "Inga near-miss på bevakning.");
+      wl.appendChild(elCard("Bevakning", nTxt, "desk.near_watch"));
+    }
+    var lar = (intel && intel.laridomar) || {};
+    if (lar && lar.title_sv) {
+      var lTxt = "Vinster: " + ((lar.wins || []).join("; ") || "saknas") +
+        " · Förluster: " + ((lar.losses || []).join("; ") || "saknas");
+      if ((lar.suggestions || []).length) {
+        lTxt += " · " + lar.suggestions.slice(0, 3).join(" · ");
+      }
+      wl.appendChild(elCard("Lärdomar", lTxt, "desk.lessons"));
+    }
+
       }
       merged.forEach(function (card) {
         var art = elCard(
