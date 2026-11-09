@@ -1174,3 +1174,75 @@ body.account-open { overflow: hidden; }
 .journal-panel .rules-expander { margin-top: 14px; }
 
 .compact-funds { display: none !important; }
+
+
+/* ——— t140u PAPER cash actions ——— */
+.balance-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 2px;
+}
+.balance-row .balance { margin: 0; flex: 1; min-width: 0; }
+.cash-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.cash-btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: #3E8FF2;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(62,143,242,0.28);
+}
+.cash-btn.ghost {
+  background: rgba(255,255,255,0.92);
+  color: #1a5fb4;
+  border: 1px solid rgba(62,143,242,0.35);
+  box-shadow: none;
+}
+.cash-btn:disabled {
+  opacity: 0.45;
+  box-shadow: none;
+}
+.paper-tag {
+  font-weight: 600;
+  color: #1a5fb4;
+}
+.cash-live-lock {
+  margin: 6px 0 0;
+  font-size: 0.72rem;
+  color: #b42318;
+  font-weight: 600;
+}
+.cash-sheet {
+  border: 0;
+  border-radius: 18px;
+  padding: 0;
+  width: min(92vw, 360px);
+  background: #fff;
+  box-shadow: 0 18px 50px rgba(20,50,100,0.25);
+}
+.cash-sheet::backdrop { background: rgba(15, 35, 70, 0.45); }
+.cash-sheet form { padding: 18px 16px 14px; display: flex; flex-direction: column; gap: 10px; }
+.cash-sheet h3 { margin: 0; font-size: 1.05rem; }
+.cash-sheet-note { margin: 0; font-size: 0.75rem; opacity: 0.75; line-height: 1.35; }
+.cash-amount-label { display: flex; flex-direction: column; gap: 6px; font-size: 0.8rem; font-weight: 600; }
+.cash-amount-label input {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 1.05rem;
+}
+.cash-sheet-error { margin: 0; color: #b42318; font-size: 0.78rem; }
+.cash-sheet-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+.cash-sheet-actions button {
+  border: 0; border-radius: 12px; padding: 10px 14px; font-weight: 700; font-size: 0.85rem;
+}
+.cash-sheet-actions .ghost { background: #f3f6fb; color: #234; }
+.cash-sheet-actions #cash-confirm { background: #3E8FF2; color: #fff; }

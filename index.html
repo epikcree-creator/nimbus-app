@@ -11,8 +11,8 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="icons/favicon.png" />
-  <link rel="stylesheet" href="app.css?v=28" />
-  <script src="brand.js?v=28"></script>
+  <link rel="stylesheet" href="app.css?v=29" />
+  <script src="brand.js?v=29"></script>
   <title></title>
   <script>
     document.title = NimbusBrand.name;
@@ -28,6 +28,22 @@
     </div>
     <button type="button" id="kill-unlock" class="kill-unlock">Lås upp…</button>
   </div>
+
+  <dialog id="cash-sheet" class="cash-sheet">
+    <form method="dialog" id="cash-form">
+      <h3 id="cash-sheet-title">Insättning</h3>
+      <p class="cash-sheet-note" id="cash-sheet-note">PAPER · papperspengar · Oscars manuella saldo (inte utmaningen)</p>
+      <label class="cash-amount-label">Belopp (USD)
+        <input id="cash-amount" type="number" inputmode="decimal" min="1" step="1" placeholder="t.ex. 25" required />
+      </label>
+      <p class="cash-sheet-error" id="cash-sheet-error" hidden></p>
+      <div class="cash-sheet-actions">
+        <button type="submit" value="cancel" class="ghost">Avbryt</button>
+        <button type="submit" value="ok" id="cash-confirm">Bekräfta</button>
+      </div>
+    </form>
+  </dialog>
+
   <dialog id="kill-unlock-dialog" class="kill-dialog">
     <form method="dialog" id="kill-unlock-form">
       <h3>Lås upp köp</h3>
@@ -75,8 +91,15 @@
           <span class="pill" id="mode-pill">SIM</span>
         </div>
       </div>
-      <p class="avail-label">Available to trade</p>
-      <div class="balance" id="balance" data-value="0">$0.00</div>
+      <p class="avail-label">Available to trade · <span class="paper-tag">papperspengar</span></p>
+      <div class="balance-row">
+        <div class="balance" id="balance" data-value="0">$0.00</div>
+        <div class="cash-actions" id="cash-actions">
+          <button type="button" class="cash-btn" id="btn-deposit" data-cash="deposit">Insättning</button>
+          <button type="button" class="cash-btn ghost" id="btn-withdraw" data-cash="withdraw">Uttag</button>
+        </div>
+      </div>
+      <p class="cash-live-lock" id="cash-live-lock" hidden>Riktiga pengar är låsta</p>
       <div class="wallet-card-bot">
         <span class="status-pill" id="status-pill">Bot vilande</span>
         <span class="pill" id="money-status">Papperspengar</span>
@@ -291,9 +314,9 @@
     </div>
   </div>
 
-  <script src="settings.js?v=28"></script>
-  <script src="discovery.js?v=28"></script>
-  <script src="chart.js?v=28"></script>
-  <script src="app.js?v=28"></script>
+  <script src="settings.js?v=29"></script>
+  <script src="discovery.js?v=29"></script>
+  <script src="chart.js?v=29"></script>
+  <script src="app.js?v=29"></script>
 </body>
 </html>

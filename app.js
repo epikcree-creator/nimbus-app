@@ -1676,6 +1676,123 @@
     return { amount: amount, error: error, limits: limits };
   }
 
+
+  function paperCashAvailable(state) {
+    var equity = Number(state && (state.equity_usd != null ? state.equity_usd : state.bankroll_usd));
+    if (!isFinite(equity)) equity = Number(state && state.deposit_usd) || 0;
+    return Math.max(0, equity);
+  }
+
+  function syncCashActions(state) {
+    var mode = String((state && state.mode) || "PAPER").toUpperCase();
+    var live = mode === "LIVE";
+    var lock = $("cash-live-lock");
+    var dep = $("btn-deposit");
+    var wit = $("btn-withdraw");
+    if (lock) lock.hidden = !live;
+    [dep, wit].forEach(function (btn) {
+      if (!btn) return;
+      btn.disabled = live;
+      btn.setAttribute("aria-disabled", live ? "true" : "false");
+      btn.title = live ? "Riktiga pengar är låsta" : (btn.dataset.cash === "deposit" ? "Insättning · papperspengar" : "Uttag · papperspengar");
+    });
+  }
+
+  function openCashSheet(kind) {
+    var state = window.__nimbusLastState || {};
+    if (String(state.mode || "PAPER").toUpperCase() === "LIVE") return;
+    var sheet = $("cash-sheet");
+    var title = $("cash-sheet-title");
+    var note = $("cash-sheet-note");
+    var input = $("cash-amount");
+    var err = $("cash-sheet-error");
+    var confirm = $("cash-confirm");
+    if (!sheet) return;
+    sheet.dataset.kind = kind;
+    if (title) title.textContent = kind === "withdraw" ? "Uttag" : "Insättning";
+    if (note) {
+      var avail = paperCashAvailable(state);
+      note.textContent = kind === "withdraw"
+        ? ("PAPER · papperspengar · tillgängligt $" + avail.toFixed(2) + " (inte utmaningskassan)")
+        : "PAPER · papperspengar · Oscars manuella saldo (inte utmaningen)";
+    }
+    if (input) { input.value = ""; input.focus(); }
+    if (err) { err.hidden = true; err.textContent = ""; }
+    if (confirm) confirm.textContent = "Bekräfta";
+    if (typeof sheet.showModal === "function") sheet.showModal();
+    else sheet.setAttribute("open", "open");
+  }
+
+  function bindCashActions() {
+    var dep = $("btn-deposit");
+    var wit = $("btn-withdraw");
+    var form = $("cash-form");
+    var sheet = $("cash-sheet");
+    if (dep && !dep.__bound) {
+      dep.__bound = true;
+      dep.addEventListener("click", function () { openCashSheet("deposit"); });
+    }
+    if (wit && !wit.__bound) {
+      wit.__bound = true;
+      wit.addEventListener("click", function () { openCashSheet("withdraw"); });
+    }
+    if (form && !form.__bound) {
+      form.__bound = true;
+      form.addEventListener("submit", function (ev) {
+        var val = (ev.submitter && ev.submitter.value) || "cancel";
+        if (val !== "ok") return;
+        var state = window.__nimbusLastState || {};
+        var err = $("cash-sheet-error");
+        var input = $("cash-amount");
+        var kind = (sheet && sheet.dataset.kind) || "deposit";
+        if (String(state.mode || "PAPER").toUpperCase() === "LIVE") {
+          if (err) { err.hidden = false; err.textContent = "Riktiga pengar är låsta"; }
+          ev.preventDefault();
+          return;
+        }
+        var amount = Number(input && input.value);
+        var msg = "";
+        if (!isFinite(amount) || amount <= 0) msg = "Ange ett belopp större än 0.";
+        else if (amount > 100000) msg = "Max $100000 per gång.";
+        else if (kind === "withdraw" && amount > paperCashAvailable(state) + 1e-9) {
+          msg = "Kan inte ta ut mer än $" + paperCashAvailable(state).toFixed(2) + ".";
+        }
+        if (msg) {
+          if (err) { err.hidden = false; err.textContent = msg; }
+          ev.preventDefault();
+          return;
+        }
+        var key = kind === "withdraw" ? "paper_withdraw" : "paper_deposit";
+        queueDeskWrite(key, String(amount));
+        // Optimistic local paint; desk publish is source of truth.
+        try {
+          var cur = paperCashAvailable(state);
+          var next = kind === "withdraw" ? (cur - amount) : (cur + amount);
+          state.bankroll_usd = next;
+          state.equity_usd = next;
+          state.deposit_usd = next;
+          if (!state.change_log) state.change_log = [];
+          state.change_log.unshift({
+            key: key,
+            old: String(cur),
+            new: String(next),
+            who: "owner",
+            at: new Date().toISOString()
+          });
+          renderHeader(state);
+          var toastHost = $("toasts");
+          if (toastHost) {
+            var n = document.createElement("div");
+            n.className = "toast";
+            n.textContent = (kind === "withdraw" ? "Uttag" : "Insättning") + " $" + amount.toFixed(2) + " · PAPER · väntar på desk";
+            toastHost.appendChild(n);
+            setTimeout(function () { n.remove(); }, 3500);
+          }
+        } catch (e) {}
+      });
+    }
+  }
+
   function queueDeskWrite(key, value) {
     try {
       var transport = transportOf(window.__nimbusLastState || {});
