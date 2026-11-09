@@ -2184,7 +2184,14 @@
     var box = (state && state.journal) || {};
     var rows = box.entries || [];
     host.innerHTML = "";
-    if (note) note.textContent = rows.length ? (rows.length + " rader") : (box.note_sv || "Ingen journaldata.");
+    if (note) note.textContent = rows.length ? (rows.length + " rader") : (box.note_sv || "Utmaningens trades hamnar här");
+    if (!rows.length) {
+      var empty = document.createElement("p");
+      empty.className = "empty-hint";
+      empty.textContent = box.note_sv || "Utmaningens trades hamnar här";
+      host.appendChild(empty);
+      return;
+    }
     rows.forEach(function (row) {
       var el = document.createElement("article");
       el.className = "journal-card";
@@ -2196,6 +2203,7 @@
       if (a === "Köp") act.className += " kop";
       else if (a === "Avstå") act.className += " avsta";
       else if (a === "Stoppad") act.className += " stoppad";
+      else if (a === "Sälj") act.className += " salj";
       act.textContent = a;
       var when = document.createElement("span");
       when.className = "j-meta";
@@ -2203,15 +2211,30 @@
       top.appendChild(act);
       top.appendChild(when);
       el.appendChild(top);
+      var metaObj = row.meta || {};
+      var imgUrl = metaObj.image_url || null;
+      if (imgUrl) {
+        var img = document.createElement("img");
+        img.className = "j-thumb";
+        img.src = imgUrl;
+        img.alt = "";
+        img.width = 36; img.height = 36;
+        el.appendChild(img);
+      }
       var title = document.createElement("strong");
       title.textContent = (row.symbol || (row.mint ? row.mint.slice(0, 6) : "symbol saknas"));
       el.appendChild(title);
       var meta = document.createElement("div");
       meta.className = "j-meta";
+      var label = (metaObj.label_sv || row.source || row.profile || "");
+      var isChallenge = !!(metaObj.challenge) || (String(label).indexOf("Utmaning") === 0) || label === "Utmaning · PAPER";
       meta.textContent = [
-        row.profile ? ("@" + row.profile) : "profil saknas",
+        isChallenge ? "Utmaning · PAPER" : (row.profile ? ("@" + row.profile) : "profil saknas"),
         row.amount_usd != null ? ("$" + Number(row.amount_usd).toFixed(2)) : "belopp saknas",
-        row.pnl_usd != null ? ("PnL $" + Number(row.pnl_usd).toFixed(2)) : null
+        row.entry_price != null ? ("in $" + Number(row.entry_price).toPrecision(4)) : null,
+        row.exit_price != null ? ("ut $" + Number(row.exit_price).toPrecision(4)) : null,
+        row.pnl_usd != null ? ("PnL $" + Number(row.pnl_usd).toFixed(2)) : null,
+        (metaObj.pnl_pct != null ? (Number(metaObj.pnl_pct) >= 0 ? "+" : "") + Number(metaObj.pnl_pct).toFixed(1) + "%" : null)
       ].filter(Boolean).join(" · ");
       el.appendChild(meta);
       var reason = document.createElement("p");
