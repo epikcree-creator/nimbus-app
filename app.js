@@ -245,7 +245,7 @@
     if (sub) {
       sub.textContent = published === "LIVE"
         ? "Desken visar LIVE · appen handlar inte"
-        : "Egen discovery · papperspengar";
+        : "Egna fynd · papperspengar";
     }
     var status = $("money-status");
     if (status) status.textContent = published === "LIVE" ? "Appen: papperspengar" : "Papperspengar";
@@ -1900,11 +1900,11 @@
     document.querySelectorAll(".tab-panel").forEach(function (panel) {
       panel.hidden = panel.getAttribute("data-panel") !== name;
     });
-    var home = name === "forslag";
+    // Wallet stays under header on every tab (compact PAPER balance).
     var wallet = $("wallet-card");
     var kicker = document.querySelector(".wallet-kicker");
-    if (wallet) wallet.hidden = !home;
-    if (kicker) kicker.hidden = !home;
+    if (wallet) wallet.hidden = false;
+    if (kicker) kicker.hidden = false;
   }
   function showTraderTab(name) { showDeskTab(name); }
 
@@ -1917,28 +1917,42 @@
     /* Följda-köp UI borttaget (t137u). */
   }
 
-  function renderStoppade(state) {
+  function strictFilterActive(state) {
+    var settings = (state && state.settings) || {};
+    var rug = (state && state.rugdesk) || {};
+    var disc = (state && state.discovery && state.discovery.rug_filter) || {};
+    if (disc.active === true || disc.active === false) return !!disc.active;
+    if (settings.rug_limits_approved === true || settings.rug_limits_approved === "true") return true;
+    if (rug.approved === true) return true;
+    return false;
+  }
 
+  function renderStoppade(state) {
     var host = $("stoppade-list");
     var count = $("stoppade-count");
     var note = $("stoppade-note");
-    if (!host || !window.NimbusDiscovery) return;
+    var pill = $("stoppade-strict-pill");
+    if (!host) return;
     var feed = (state && state.discovery) || {};
-    var items = window.NimbusDiscovery.stoppadeEvents(feed);
+    var items = (window.NimbusDiscovery && window.NimbusDiscovery.stoppadeEvents)
+      ? window.NimbusDiscovery.stoppadeEvents(feed)
+      : [];
+    var active = strictFilterActive(state);
     if (count) count.textContent = String(items.length);
+    if (pill) {
+      pill.textContent = active ? "STRICT på" : "STRICT av";
+      pill.classList.toggle("off", !active);
+    }
     if (note) {
-      var filt = feed.rug_filter || {};
-      note.textContent = filt.active
-        ? "Kort som STRICT-filtret dolde. Du kan öppna dem manuellt."
-        : "STRICT är av. Inga kort stoppas.";
+      note.textContent = active
+        ? "STRICT är på. Kort som filtret dolde visas här — du kan öppna dem manuellt."
+        : "STRICT-gränser saknas i state. Inga kort stoppas här.";
     }
     host.innerHTML = "";
     if (!items.length) {
       var empty = document.createElement("p");
       empty.className = "empty-hint";
-      empty.textContent = (feed.rug_filter && feed.rug_filter.active)
-        ? "Inga stoppade kort just nu."
-        : "Filtret är av.";
+      empty.textContent = active ? "Inga stoppade kort just nu." : "Inget att visa.";
       host.appendChild(empty);
       return;
     }
@@ -1951,10 +1965,7 @@
       face.textContent = window.NimbusDiscovery.letter(event);
       var body = document.createElement("div");
       var title = document.createElement("strong");
-      title.textContent = event.symbol || (event.mint || "").slice(0, 6);
-      var who = document.createElement("div");
-      who.className = "who";
-      who.textContent = (event.profile || "?") + " köpte";
+      title.textContent = event.symbol || (event.mint || "").slice(0, 6) || "saknas";
       var reasons = document.createElement("ul");
       reasons.className = "stoppade-reasons";
       window.NimbusDiscovery.reasonLines(event).forEach(function (line) {
@@ -1962,71 +1973,12 @@
         li.textContent = line;
         reasons.appendChild(li);
       });
-      var open = document.createElement("button");
-      open.type = "button";
-      open.className = "follow-btn stoppade-open";
-      open.textContent = "Öppna manuellt";
-      open.addEventListener("click", function () {
-        var decision = window.NimbusDiscovery.reviewOf(event);
-        var review = $("discovery-review");
-        var titleEl = $("discovery-review-title");
-        var copy = $("discovery-review-copy");
-        var link = $("discovery-link");
-        if (titleEl) titleEl.textContent = "Stoppad · " + (event.symbol || (event.mint || "").slice(0, 4));
-        if (copy) {
-          copy.textContent = (event.profile || "") + " · " +
-            window.NimbusDiscovery.reasonLines(event).join(" · ") +
-            " · ingen order skickas.";
-        }
-        if (link) {
-          link.textContent = "";
-          if (decision.tokenUrl) {
-            var anchor = document.createElement("a");
-            anchor.href = decision.tokenUrl;
-            anchor.target = "_blank";
-            anchor.rel = "noopener";
-            anchor.textContent = decision.tokenUrl;
-            link.appendChild(anchor);
-          }
-        }
-        if (review) {
-          review.hidden = false;
-          review.scrollIntoView({ block: "start" });
-        }
-      });
       body.appendChild(title);
-      body.appendChild(who);
       body.appendChild(reasons);
-      body.appendChild(open);
       card.appendChild(face);
       card.appendChild(body);
       host.appendChild(card);
     });
-  }
-
-
-
-  function coinArt(card, className) {
-    var wrap = document.createElement("div");
-    wrap.className = className || "coin-art";
-    var url = card && (card.image_url || card.image);
-    if (url && /^https:\/\/[^\s]+$/.test(String(url))) {
-      var img = document.createElement("img");
-      img.src = String(url);
-      img.alt = (card.symbol || card.name || "coin") + " logo";
-      img.loading = "lazy";
-      img.referrerPolicy = "no-referrer";
-      img.addEventListener("error", function () {
-        wrap.classList.add("placeholder");
-        wrap.textContent = (card.initials || (card.symbol || "?").slice(0, 2) || "??").toUpperCase();
-        img.remove();
-      });
-      wrap.appendChild(img);
-    } else {
-      wrap.classList.add("placeholder");
-      wrap.textContent = (card.initials || (card.symbol || "?").slice(0, 2) || "??").toUpperCase();
-    }
-    return wrap;
   }
 
   function renderSuggestions(state) {

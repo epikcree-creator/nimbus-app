@@ -11,8 +11,8 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="icons/favicon.png" />
-  <link rel="stylesheet" href="app.css?v=29" />
-  <script src="brand.js?v=29"></script>
+  <link rel="stylesheet" href="app.css?v=30" />
+  <script src="brand.js?v=30"></script>
   <title></title>
   <script>
     document.title = NimbusBrand.name;
@@ -62,7 +62,7 @@
         <img class="brand-logo" src="icons/icon-192.png" alt="" width="48" height="48" />
         <div>
           <h1 class="col-title" data-app-name></h1>
-          <p class="col-sub" id="agents-sub">Egen discovery · papperspengar</p>
+          <p class="col-sub" id="agents-sub">Egna fynd · papperspengar</p>
         </div>
       </div>
       <div class="agents-meta">
@@ -79,7 +79,7 @@
 
     <div id="toasts" class="toasts region-toast" aria-live="polite"></div>
 
-    <p class="wallet-kicker region-kicker compact">Trading wallet · Solana</p>
+    <p class="wallet-kicker region-kicker compact">Paper-saldo · Solana</p>
     <div class="wallet-card region-wallet compact" id="wallet-card">
       <div class="wallet-card-top">
         <div class="wallet-brand">
@@ -91,7 +91,7 @@
           <span class="pill" id="mode-pill">SIM</span>
         </div>
       </div>
-      <p class="avail-label">Available to trade · <span class="paper-tag">papperspengar</span></p>
+      <p class="avail-label">Tillgängligt · <span class="paper-tag">papperspengar</span></p>
       <div class="balance-row">
         <div class="balance" id="balance" data-value="0">$0.00</div>
         <div class="cash-actions" id="cash-actions">
@@ -120,6 +120,28 @@
       <button type="button" class="desk-tab" data-tab="journal">Journal</button>
     </nav>
 
+    <section class="suggestions region-swipe tab-panel" id="suggestions" data-panel="forslag" aria-label="Swipe Mode föreslår">
+      <div class="discovery-head">
+        <div>
+          <h2>Swipe Mode föreslår</h2>
+          <p id="suggestions-note">Scanner → STRICT → narrativ → förslag. Oscar bekräftar varje köp.</p>
+        </div>
+      </div>
+      <div id="suggestion-cards"></div>
+      <details class="stoppade-wrap rules-expander" id="stoppade" aria-label="Stoppade kort">
+        <summary>Stoppade <span class="count-orb" id="stoppade-count">0</span> · <span id="stoppade-strict-pill">STRICT på</span></summary>
+        <p id="stoppade-note" class="stoppade-note">Kort som STRICT-filtret dolde. Du kan öppna dem manuellt.</p>
+        <div id="stoppade-list"></div>
+      </details>
+      <!-- discovery-review reused for suggestion buy confirm -->
+      <section id="discovery-review" class="discovery-review" hidden>
+        <div id="discovery-review-image" class="review-image" hidden></div>
+        <h3 id="discovery-review-title">Köp</h3>
+        <p id="discovery-review-copy"></p>
+        <p class="discovery-safe" id="discovery-safe">Inget köp är gjort. Ingen order skickas och ingen plånbok öppnas.</p>
+        <p id="discovery-link"></p>
+        <button type="button" id="discovery-back">Tillbaka</button>
+      </section>
 
     <section class="challenge-panel region-swipe tab-panel" id="challenge-panel" data-panel="utmaning" aria-label="Utmaning LIVE" hidden>
       <div class="challenge-live-banner" id="challenge-live-banner">
@@ -153,30 +175,7 @@
       <div id="challenge-trades"></div>
     </section>
 
-    <section class="suggestions region-swipe tab-panel home-lead" id="suggestions" data-panel="forslag" aria-label="Swipe Mode föreslår">
-      <div class="discovery-head">
-        <div>
-          <h2>Swipe Mode föreslår</h2>
-          <p id="suggestions-note">Scanner → STRICT → narrativ → förslag. Oscar bekräftar varje köp.</p>
-        </div>
-      </div>
-      <div id="suggestion-cards"></div>
-      <section id="stoppade" class="stoppade-wrap" aria-label="Stoppade kort">
-        <div class="stoppade-head">
-          <h3>Stoppade <span class="count-orb" id="stoppade-count">0</span></h3>
-          <p id="stoppade-note">Kort som STRICT-filtret dolde. Du kan öppna dem manuellt.</p>
-        </div>
-        <div id="stoppade-list"></div>
-      </section>
-      <!-- discovery-review reused for suggestion buy confirm -->
-      <section id="discovery-review" class="discovery-review" hidden>
-        <div id="discovery-review-image" class="review-image" hidden></div>
-        <h3 id="discovery-review-title">Köp</h3>
-        <p id="discovery-review-copy"></p>
-        <p class="discovery-safe" id="discovery-safe">Inget köp är gjort. Ingen order skickas och ingen plånbok öppnas.</p>
-        <p id="discovery-link"></p>
-        <button type="button" id="discovery-back">Tillbaka</button>
-      </section>
+
     </section>
 
 
@@ -224,6 +223,7 @@
         </div>
       </details>
     </section>
+
 
     <div class="card add-funds region-funds compact-funds" id="add-funds" hidden>
       <div class="af-row">
@@ -305,9 +305,9 @@
     </div>
   </div>
 
-  <script src="settings.js?v=29"></script>
-  <script src="discovery.js?v=29"></script>
-  <script src="chart.js?v=29"></script>
-  <script src="app.js?v=29"></script>
+  <script src="settings.js?v=30"></script>
+  <script src="discovery.js?v=30"></script>
+  <script src="chart.js?v=30"></script>
+  <script src="app.js?v=30"></script>
 </body>
 </html>
