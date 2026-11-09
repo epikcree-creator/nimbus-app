@@ -1,1 +1,3 @@
-Sniper Grok Android shell (Pages). Cache: nimbus-shell-v21.
+# Sniper Grok
+
+Android PWA shell for the Sniper Grok trading desk (PAPER).
