@@ -1,4 +1,4 @@
-/* Nimbus Android PWA — polls desk JSON from DATA_BASE in URL fragment */
+/* Swipe Mode PWA — polls desk JSON from DATA_BASE in URL fragment */
 (function () {
   var POLL_MS = 15000;
   var LS_BASE = "nimbus_data_base";
@@ -2818,17 +2818,33 @@
     var oscar = $("challenge-oscar");
     var rules = $("challenge-rules");
     var host = $("challenge-trades");
-    if (!host) return;
+    var openHost = $("challenge-open");
+    var eventsHost = $("challenge-events");
+    var statusSv = $("challenge-status-sv");
+    var statusPill = $("challenge-status-pill");
+    var paperTag = $("challenge-paper-tag");
+    if (!host && !openHost) return;
+
+    var status = box.status || "idle";
+    var label = box.status_sv || status;
     if (note) note.textContent = box.note_sv || "Ingen PAPER-utmaning körs.";
+    if (paperTag) paperTag.textContent = box.paper_label_sv || "PAPER · simulerat · inga riktiga pengar";
+    if (statusSv) statusSv.textContent = label;
+    if (statusPill) {
+      statusPill.textContent = label;
+      statusPill.className = "challenge-status-pill" + (
+        status === "paused" ? " paused" : status === "running" || status === "aborting" ? " running" : status === "finished" || status === "aborted" ? " done" : ""
+      );
+    }
     if (cd) {
-      cd.textContent = box.active ? formatCountdown(box.countdown_seconds) : (box.status === "finished" || box.status === "aborted" ? "Klar" : "Vilande");
-      cd.dataset.endsAt = box.ends_at || "";
+      var showCd = status === "running" || status === "paused" || status === "aborting";
+      cd.textContent = showCd ? formatCountdown(box.countdown_seconds) : (status === "finished" || status === "aborted" ? "Klar" : "—");
+      cd.dataset.endsAt = showCd && box.ends_at ? box.ends_at : "";
     }
     if (wins) wins.textContent = String(box.wins || 0) + "/" + String(box.win_target_count || 10);
     if (pnl) {
       var v = Number(box.realized_pnl_usd);
       pnl.textContent = isFinite(v) ? ((v >= 0 ? "+$" : "-$") + Math.abs(v).toFixed(2)) : "saknas";
-      pnl.className = isFinite(v) && v < 0 ? "pnl-neg" : "pnl-pos";
     }
     if (cash) {
       var c = Number(box.cash_usd);
@@ -2847,65 +2863,163 @@
         rules.appendChild(li);
       });
     }
-    host.innerHTML = "";
-    var open = box.open || [];
-    open.forEach(function (row) {
-      var el = document.createElement("article");
-      el.className = "challenge-trade";
-      el.appendChild(coinArt(row, "coin-art"));
-      var body = document.createElement("div");
-      var title = document.createElement("strong");
-      title.textContent = (row.symbol || (row.mint || "").slice(0, 6) || "—");
-      var tag = document.createElement("span");
-      tag.className = "challenge-open-tag";
-      tag.textContent = "öppen";
-      title.appendChild(tag);
-      var meta = document.createElement("div");
-      meta.className = "meta";
-      meta.textContent = "Entry " + (row.entry_price != null ? row.entry_price : "saknas")
-        + " · $" + (row.size_usd != null ? Number(row.size_usd).toFixed(0) : "?")
-        + " · " + (row.entry_reason_sv || "saknas");
-      body.appendChild(title);
-      body.appendChild(meta);
-      el.appendChild(body);
-      host.appendChild(el);
-    });
-    var trades = box.trades || [];
-    if (!open.length && !trades.length) {
-      var empty = document.createElement("p");
-      empty.className = "empty-hint";
-      empty.textContent = box.active
-        ? (box.kill_switch_blocks_entries ? "Väntar på upplåst kill switch och STRICT+Starkt/Medel-förslag." : "Inga challenge-trades ännu.")
-        : "Inga challenge-trades.";
-      host.appendChild(empty);
-      return;
-    }
-    trades.forEach(function (row) {
-      var el = document.createElement("article");
-      el.className = "challenge-trade";
-      el.appendChild(coinArt(row, "coin-art"));
-      var body = document.createElement("div");
-      var title = document.createElement("strong");
-      title.textContent = row.symbol || (row.mint || "").slice(0, 6) || "—";
-      var pnlEl = document.createElement("span");
-      var pv = Number(row.pnl_usd);
-      if (isFinite(pv)) {
-        pnlEl.className = pv >= 0 ? "pnl-pos" : "pnl-neg";
-        pnlEl.textContent = " " + (pv >= 0 ? "+$" : "-$") + Math.abs(pv).toFixed(2);
-      } else {
-        pnlEl.textContent = " saknas";
+
+    if (openHost) {
+      openHost.innerHTML = "";
+      var opens = box.open || [];
+      if (!opens.length) {
+        var emptyO = document.createElement("p");
+        emptyO.className = "empty-hint";
+        emptyO.textContent = status === "paused" ? "Inga öppna positioner (pausad)." : "Inga öppna challenge-positioner.";
+        openHost.appendChild(emptyO);
       }
-      title.appendChild(pnlEl);
-      var meta = document.createElement("div");
-      meta.className = "meta";
-      meta.textContent = "Entry " + (row.entry_price != null ? row.entry_price : "saknas")
-        + " → Exit " + (row.exit_price != null ? row.exit_price : "saknas")
-        + " · " + (row.exit_reason || "saknas");
-      body.appendChild(title);
-      body.appendChild(meta);
-      el.appendChild(body);
-      host.appendChild(el);
+      opens.forEach(function (row) {
+        var el = document.createElement("article");
+        el.className = "challenge-open-card";
+        el.appendChild(coinArt(row, "coin-art"));
+        var body = document.createElement("div");
+        var title = document.createElement("strong");
+        title.textContent = row.symbol || (row.mint || "").slice(0, 6) || "—";
+        var meta = document.createElement("div");
+        meta.className = "challenge-metrics";
+        function chip(label, value) {
+          var span = document.createElement("span");
+          span.innerHTML = label + " <b>" + (value == null || value === "" ? "saknas" : value) + "</b>";
+          meta.appendChild(span);
+        }
+        chip("Entry", row.entry_price != null ? row.entry_price : null);
+        chip("Nu", row.current_price_missing || row.current_price == null ? null : row.current_price);
+        var pnlU = row.pnl_usd;
+        var pnlP = row.pnl_pct;
+        chip("PnL $", pnlU == null ? null : ((pnlU >= 0 ? "+$" : "-$") + Math.abs(Number(pnlU)).toFixed(2)));
+        chip("PnL %", pnlP == null ? null : ((pnlP >= 0 ? "+" : "") + Number(pnlP).toFixed(2) + "%"));
+        chip("TP", row.take_profit_price != null ? row.take_profit_price : null);
+        chip("SL", row.stop_price != null ? row.stop_price : null);
+        var reason = document.createElement("div");
+        reason.className = "meta";
+        reason.style.marginTop = "6px";
+        reason.textContent = row.entry_reason_sv || "saknas";
+        body.appendChild(title);
+        body.appendChild(meta);
+        body.appendChild(reason);
+        el.appendChild(body);
+        openHost.appendChild(el);
+      });
+    }
+
+    if (eventsHost) {
+      eventsHost.innerHTML = "";
+      var events = box.events || [];
+      if (!events.length) {
+        var emptyE = document.createElement("p");
+        emptyE.className = "empty-hint";
+        emptyE.textContent = "Inga challenge-händelser ännu.";
+        eventsHost.appendChild(emptyE);
+      }
+      events.forEach(function (ev) {
+        var el = document.createElement("article");
+        el.className = "challenge-event";
+        var kind = document.createElement("div");
+        kind.className = "kind " + String(ev.kind || "").replace("sälj", "salj");
+        kind.textContent = ev.kind || "saknas";
+        var body = document.createElement("div");
+        var line = document.createElement("div");
+        line.textContent = (ev.symbol || (ev.mint || "").slice(0, 6) || "—") + " · " + (ev.reason_sv || "saknas");
+        var when = document.createElement("div");
+        when.className = "meta";
+        when.textContent = ev.ts_stockholm || "saknas";
+        body.appendChild(line);
+        body.appendChild(when);
+        el.appendChild(kind);
+        el.appendChild(body);
+        eventsHost.appendChild(el);
+      });
+    }
+
+    if (host) {
+      host.innerHTML = "";
+      var trades = box.trades || [];
+      if (!trades.length) {
+        var empty = document.createElement("p");
+        empty.className = "empty-hint";
+        empty.textContent = "Inga stängda challenge-trades.";
+        host.appendChild(empty);
+      }
+      trades.forEach(function (row) {
+        var el = document.createElement("article");
+        el.className = "challenge-trade";
+        el.appendChild(coinArt(row, "coin-art"));
+        var body = document.createElement("div");
+        var title = document.createElement("strong");
+        title.textContent = row.symbol || (row.mint || "").slice(0, 6) || "—";
+        var pnlEl = document.createElement("span");
+        var pv = Number(row.pnl_usd);
+        if (isFinite(pv)) {
+          pnlEl.className = pv >= 0 ? "pnl-pos" : "pnl-neg";
+          pnlEl.textContent = " " + (pv >= 0 ? "+$" : "-$") + Math.abs(pv).toFixed(2);
+        } else {
+          pnlEl.textContent = " saknas";
+        }
+        title.appendChild(pnlEl);
+        var meta = document.createElement("div");
+        meta.className = "meta";
+        meta.textContent = "Entry " + (row.entry_price != null ? row.entry_price : "saknas")
+          + " → Exit " + (row.exit_price != null ? row.exit_price : "saknas")
+          + " · " + (row.exit_reason || "saknas");
+        body.appendChild(title);
+        body.appendChild(meta);
+        el.appendChild(body);
+        host.appendChild(el);
+      });
+    }
+
+    maybeChallengeTradeToast(box);
+  }
+
+  var __challengeSeenEventIds = null;
+  function maybeChallengeTradeToast(box) {
+    var events = (box && box.events) || [];
+    var ids = events.map(function (e) { return e.id; }).filter(function (id) { return id != null; });
+    if (__challengeSeenEventIds == null) {
+      try {
+        __challengeSeenEventIds = JSON.parse(sessionStorage.getItem("nimbus_challenge_seen_events") || "[]");
+      } catch (e) {
+        __challengeSeenEventIds = [];
+      }
+      // Seed without toasting historical events on first load.
+      if (!__challengeSeenEventIds.length && ids.length) {
+        __challengeSeenEventIds = ids.slice();
+        try { sessionStorage.setItem("nimbus_challenge_seen_events", JSON.stringify(__challengeSeenEventIds)); } catch (e2) {}
+        return;
+      }
+    }
+    var known = {};
+    __challengeSeenEventIds.forEach(function (id) { known[id] = true; });
+    var fresh = events.filter(function (e) { return e.id != null && !known[e.id] && (e.kind === "köp" || e.kind === "sälj" || e.kind === "TP" || e.kind === "SL"); });
+    if (!fresh.length) return;
+    fresh.forEach(function (ev) {
+      __challengeSeenEventIds.push(ev.id);
+      showChallengeToast(ev);
+      try {
+        if (navigator.vibrate) navigator.vibrate([40, 30, 40]);
+      } catch (e3) {}
     });
+    try { sessionStorage.setItem("nimbus_challenge_seen_events", JSON.stringify(__challengeSeenEventIds.slice(-80))); } catch (e4) {}
+  }
+
+  function showChallengeToast(ev) {
+    var node = $("challenge-toast");
+    if (!node) {
+      node = document.createElement("div");
+      node.id = "challenge-toast";
+      node.className = "challenge-toast";
+      document.body.appendChild(node);
+    }
+    var kind = ev.kind || "trade";
+    node.hidden = false;
+    node.textContent = "Utmaning LIVE · " + kind.toUpperCase() + " · " + (ev.symbol || "saknas") + " · PAPER";
+    clearTimeout(node.__hide);
+    node.__hide = setTimeout(function () { node.hidden = true; }, 4500);
   }
 
   function renderState(state) {
@@ -2954,7 +3068,13 @@
     }
     var base = cfg.dataBase.replace(/\/$/, "");
     fetchJson(base + "/state.json")
-      .then(function (state) { renderState(state); })
+      .then(function (state) { renderState(state);
+      try {
+        var ch = (state && state.challenge) || {};
+        var want = Number(ch.publish_interval_ms);
+        if (!isFinite(want) || want < 3000) want = (ch.live_view || ch.status === "paused" || ch.status === "running") ? 5000 : POLL_MS;
+        if (want !== __currentPollMs) schedulePoll(cfg, want);
+      } catch (ePoll) {} })
       .catch(function () { showBootEmpty(true); });
   }
 
@@ -2987,8 +3107,15 @@
   }
   wireControls();
   var cfg = loadConfig();
+  var __pollTimer = null;
+  var __currentPollMs = POLL_MS;
+  function schedulePoll(cfg, ms) {
+    if (__pollTimer) clearInterval(__pollTimer);
+    __currentPollMs = ms || POLL_MS;
+    __pollTimer = setInterval(function () { poll(cfg); }, __currentPollMs);
+  }
   poll(cfg);
-  setInterval(function () { poll(cfg); }, POLL_MS);
+  schedulePoll(cfg, POLL_MS);
   if (isLocalPreview() && location.search.indexOf("account=1") !== -1) openAccount();
 })();
 
