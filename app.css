@@ -59,21 +59,21 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
     grid-template-areas:
       "toast head"
       "kicker head"
-      "wallet agents"
-      "funds swipe"
-      "tokens closed"
-      "tokens goal";
+      "wallet tabs"
+      "funds traders"
+      "tokens swipe"
+      "tokens closed";
   }
   .region-head { grid-area: head; }
   .region-toast { grid-area: toast; }
   .region-kicker { grid-area: kicker; }
   .region-wallet { grid-area: wallet; }
-  .region-agents { grid-area: agents; }
+  .region-tabs { grid-area: tabs; }
+  .region-traders { grid-area: traders; }
   .region-swipe { grid-area: swipe; }
   .region-closed { grid-area: closed; }
   .region-funds { grid-area: funds; }
   .region-tokens { grid-area: tokens; }
-  .region-goal { grid-area: goal; }
 }
 
 .col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
@@ -703,5 +703,48 @@ body.account-open { overflow: hidden; }
 }
 .stat-row b { display: block; color: var(--fg); font-size: 0.78rem; }
 @media (prefers-reduced-motion: reduce) {
-  .balance .digit span, .goal-fill, .toast, .discovery-card { transition: none !important; animation: none !important; }
+  .balance .digit span, .toast, .discovery-card { transition: none !important; animation: none !important; }
 }
+.desk-tabs { display: flex; gap: 6px; }
+.desk-tab {
+  flex: 1;
+  min-height: 40px;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-weight: 750;
+}
+.desk-tab.on { color: #1a0a00; background: linear-gradient(180deg, #ff9a3a, var(--orange)); border-color: transparent; }
+.trader-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.trader-tile, .trader-profile, .confluence-card, .inbox-row {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+}
+.trader-tile { padding: 12px; text-align: left; }
+.trader-tile .face, .inbox-face {
+  width: 42px; height: 42px; border-radius: 14px;
+  display: grid; place-items: center; font-weight: 800;
+  background: #2a1840; color: #ffe1c4;
+}
+.trader-tile { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.follow-btn, .amt-chip {
+  min-height: 32px; border-radius: 999px; padding: 4px 10px;
+  border: 1px solid var(--border); background: var(--card2); font-weight: 750;
+}
+.follow-btn.on, .amt-chip.on { background: linear-gradient(180deg, #ff9a3a, var(--orange)); color: #1a0a00; border-color: transparent; }
+.confluence-card { padding: 12px; border-color: rgba(255, 122, 26, 0.7); margin-bottom: 8px; }
+.inbox-row { display: grid; grid-template-columns: 42px 1fr; gap: 8px; padding: 10px; margin-bottom: 8px; }
+.buy-badge { color: var(--green); font-weight: 800; font-size: 0.72rem; }
+.amt-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.amt-custom {
+  width: 88px; height: 36px; border-radius: 12px;
+  border: 1px solid var(--border); background: #140c1c; color: var(--fg); padding: 0 8px;
+}
+.amt-error { color: var(--red); font-size: 0.75rem; margin-top: 4px; }
+.stat-five { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 8px; }
+.stat-five div { background: #140c1c; border-radius: 12px; padding: 8px; }
+.stat-five b { display: block; font-size: 1rem; }
+.trader-profile { padding: 12px; margin-top: 10px; }
+.tab-panel[hidden] { display: none !important; }

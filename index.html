@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="app.css?v=13" />
+  <link rel="stylesheet" href="app.css?v=14" />
   <title>Nimbus</title>
 </head>
 <body>
@@ -23,11 +23,10 @@
         <img class="brand-logo" src="icons/nimbus-logo.jpg" alt="" width="36" height="36" />
         <div>
           <h1 class="col-title">Nimbus</h1>
-          <p class="col-sub" id="agents-sub">5 agenter · papperspengar</p>
+          <p class="col-sub" id="agents-sub">Följda profiler · papperspengar</p>
         </div>
       </div>
       <div class="agents-meta">
-        <span class="multi-pill" id="multi-pill">since deposit <b>1.00x</b></span>
         <div class="head-tools">
           <button type="button" class="icon-btn" id="btn-gear" aria-label="Kontoinställningar" title="Kontoinställningar">⚙</button>
           <div class="auto-trade" aria-disabled="true">
@@ -68,9 +67,27 @@
       </div>
     </div>
 
-    <div class="agents-list region-agents" id="agents-list"></div>
+    <nav class="desk-tabs region-tabs" aria-label="Vyer">
+      <button type="button" class="desk-tab on" data-tab="traders">Handlare</button>
+      <button type="button" class="desk-tab" data-tab="tokens">Tokens</button>
+      <button type="button" class="desk-tab" data-tab="board">Topplista</button>
+    </nav>
 
-    <section class="discovery region-swipe" id="discovery" aria-label="Följda köp">
+    <section class="traders region-traders tab-panel" id="traders-panel" data-panel="traders">
+      <p id="traders-note" class="setting-note">Följare, vinst och saldo visas inte. Importen har bara köp.</p>
+      <div id="confluence-list"></div>
+      <h2 class="sec-title">Inkorg</h2>
+      <div id="trader-inbox"></div>
+      <h2 class="sec-title">Handlare</h2>
+      <div id="trader-grid" class="trader-grid"></div>
+      <article id="trader-profile" class="trader-profile" hidden></article>
+    </section>
+
+    <section class="board-panel tab-panel" id="board-panel" data-panel="board" hidden>
+      <p id="leaderboard-note" class="empty-hint">Ingen topplista. Det finns inga stängda resultat att rangordna.</p>
+    </section>
+
+    <section class="discovery region-swipe tab-panel" id="discovery" data-panel="traders" aria-label="Följda köp">
       <div class="discovery-head">
         <img src="icons/nimbus-logo.jpg" alt="Nimbus" width="44" height="44" />
         <div>
@@ -120,34 +137,13 @@
       <a class="af-btn" id="af-btn" href="https://t.me/NimbusMobileBot?text=%2Fbankroll%20100" target="_blank" rel="noopener">Sätt paper-saldo $100</a>
     </div>
 
-    <div class="tokens-wrap region-tokens">
+    <div class="tokens-wrap region-tokens tab-panel" data-panel="tokens" hidden>
       <h2 class="sec-title">Tokens</h2>
       <div class="tokens-grid" id="tokens-grid">
         <p class="empty-hint">Inga innehav än</p>
       </div>
     </div>
 
-    <div class="goal-wrap card region-goal">
-      <div class="goal-head">
-        <span class="goal-label">GOAL <b id="goal-target">10x</b></span>
-        <div class="goal-filters" id="goal-filters">
-          <button type="button" data-f="1h">1h</button>
-          <button type="button" data-f="1d">1d</button>
-          <button type="button" data-f="1w">1w</button>
-          <button type="button" data-f="1m">1m</button>
-          <button type="button" class="on" data-f="ALL">ALL</button>
-        </div>
-        <span class="goal-pct" id="goal-pct">0%</span>
-      </div>
-      <div class="goal-track" id="goal-track">
-        <div class="goal-fill" id="goal-fill"></div>
-        <div class="goal-dots">
-          <span class="dot" data-m="2" style="left:20%"><i>2x</i></span>
-          <span class="dot" data-m="5" style="left:50%"><i>5x</i></span>
-          <span class="dot" data-m="10" style="left:100%"><i>10x</i></span>
-        </div>
-      </div>
-    </div>
   </main>
 
   <section id="boot-empty" class="boot-empty" hidden>
@@ -198,9 +194,9 @@
     </div>
   </div>
 
-  <script src="settings.js?v=13"></script>
-  <script src="discovery.js?v=13"></script>
-  <script src="chart.js?v=13"></script>
-  <script src="app.js?v=13"></script>
+  <script src="settings.js?v=14"></script>
+  <script src="discovery.js?v=14"></script>
+  <script src="chart.js?v=14"></script>
+  <script src="app.js?v=14"></script>
 </body>
 </html>

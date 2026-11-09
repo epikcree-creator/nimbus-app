@@ -226,8 +226,8 @@
     var sub = $("agents-sub");
     if (sub) {
       sub.textContent = published === "LIVE"
-        ? "5 agenter · desken visar LIVE · appen handlar inte live"
-        : AGENTS.length + " agenter · papperspengar";
+        ? "Desken visar LIVE · appen handlar inte"
+        : "Följda profiler · papperspengar";
     }
     var status = $("money-status");
     if (status) status.textContent = published === "LIVE" ? "Appen: papperspengar" : "Papperspengar";
@@ -922,6 +922,9 @@
     document.addEventListener("keydown", function (ev) {
       if (ev.key === "Escape") closeAccount();
     });
+    document.querySelectorAll(".desk-tab").forEach(function (button) {
+      button.addEventListener("click", function () { showTraderTab(button.getAttribute("data-tab")); });
+    });
     document.querySelectorAll("#goal-filters button").forEach(function (b) {
       b.addEventListener("click", function () {
         goalFilter = b.getAttribute("data-f") || "ALL";
@@ -1096,7 +1099,13 @@
     var grid = $("tokens-grid");
     grid.innerHTML = "";
     var rows = state.positions || [];
-    if (!rows.length) {
+    sessionPaperBuys().forEach(function (row) {
+      var note = document.createElement("p");
+      note.className = "empty-hint";
+      note.textContent = "Pappersanteckning $" + Number(row.amount_usd).toFixed(2) + " · " + (row.symbol || row.mint || "?") + " · ingen order";
+      grid.appendChild(note);
+    });
+    if (!rows.length && !sessionPaperBuys().length) {
       var p = document.createElement("p");
       p.className = "empty-hint";
       p.textContent = "Inga innehav än";
@@ -1343,6 +1352,246 @@
     return stockholmLine(event && event.source_at);
   }
 
+  var TRADER_NAMES = ["prevaile", "vascodicaprio", "Binkieee", "surgz", "bystevenr", "OmakaseOnly", "brezscales", "insentos", "Aurelius0121"];
+
+  function followedTraders() {
+    try {
+      var raw = JSON.parse(localStorage.getItem("nimbus_trader_follows") || "[]");
+      return Array.isArray(raw) ? raw.filter(function (name) { return TRADER_NAMES.indexOf(name) >= 0; }) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function setFollowed(name, on) {
+    var names = followedTraders().filter(function (item) { return item !== name; });
+    if (on) names.push(name);
+    try { localStorage.setItem("nimbus_trader_follows", JSON.stringify(names)); } catch (e) {}
+  }
+
+  function sessionPaperBuys() {
+    try {
+      var raw = JSON.parse(sessionStorage.getItem("nimbus_paper_buys") || "[]");
+      return Array.isArray(raw) ? raw : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function buyLimits(state) {
+    var settings = (state && state.settings) || {};
+    var maxTrade = Number(settings.max_trade_usd);
+    if (!isFinite(maxTrade) || maxTrade <= 0) maxTrade = 50;
+    var equity = Number(state && state.equity_usd) || 0;
+    var reserved = 0;
+    ((state && state.positions) || []).forEach(function (row) {
+      reserved += Number(row.size_usd != null ? row.size_usd : row.value_usd) || 0;
+    });
+    sessionPaperBuys().forEach(function (row) { reserved += Number(row.amount_usd) || 0; });
+    var available = Math.max(0, equity - reserved);
+    return { maxTrade: maxTrade, available: available, cap: Math.min(maxTrade, available) };
+  }
+
+  function chosenBuyAmount(state) {
+    var limits = buyLimits(state);
+    var stored = NaN;
+    try { stored = Number(sessionStorage.getItem("nimbus_buy_amount")); } catch (e) {}
+    var fallback = Number(state && state.settings && state.settings.default_trade_usd);
+    if (!isFinite(fallback) || fallback <= 0) fallback = 25;
+    var amount = isFinite(stored) && stored > 0 ? stored : fallback;
+    var error = "";
+    if (!isFinite(amount) || amount < 1) error = "Ange minst $1.";
+    else if (amount > limits.maxTrade) error = "Max per köp är $" + limits.maxTrade.toFixed(0) + ".";
+    else if (amount > limits.available) error = "Tillgängligt kapital är $" + limits.available.toFixed(2) + ".";
+    return { amount: amount, error: error, limits: limits };
+  }
+
+  function rememberAmount(amount) {
+    try { sessionStorage.setItem("nimbus_buy_amount", String(amount)); } catch (e) {}
+  }
+
+  function recordPaperBuy(state, event, amount) {
+    var published = String((state && state.mode) || "PAPER").toUpperCase();
+    var intent = {
+      amount_usd: amount,
+      future_order_amount_usd: amount,
+      mint: event.mint,
+      symbol: event.symbol,
+      profile: event.profile,
+      trade_id: event.trade_id,
+      order: false,
+      purchased: false,
+      live_enabled: false,
+      mode: published === "LIVE" ? "LIVE_LOCKED" : "PAPER"
+    };
+    if (published === "LIVE") return intent;
+    var rows = sessionPaperBuys();
+    rows.push(intent);
+    try { sessionStorage.setItem("nimbus_paper_buys", JSON.stringify(rows)); } catch (e) {}
+    return intent;
+  }
+
+  function latencyLabel(event) {
+    if (!event || event.source_at_tz !== "explicit") return "";
+    var source = new Date(event.source_at);
+    var observed = new Date(event.observed_at);
+    if (isNaN(source.getTime()) || isNaN(observed.getTime())) return "";
+    var seconds = Math.max(0, Math.round((observed - source) / 1000));
+    return seconds + "s efter köpet";
+  }
+
+  function clientConfluence(events, selected) {
+    var windowMin = 60;
+    var groups = {};
+    (events || []).forEach(function (event) {
+      if (selected.indexOf(event.profile) < 0 || event.source_at_tz !== "explicit") return;
+      var when = new Date(event.source_at);
+      if (isNaN(when.getTime())) return;
+      (groups[event.mint] = groups[event.mint] || []).push({ event: event, when: when });
+    });
+    var cards = [];
+    Object.keys(groups).forEach(function (mint) {
+      var rows = groups[mint].sort(function (a, b) { return a.when - b.when; });
+      var best = null;
+      rows.forEach(function (start) {
+        var bucket = rows.filter(function (row) {
+          return row.when >= start.when && row.when - start.when <= windowMin * 60000;
+        });
+        var names = [];
+        bucket.forEach(function (row) {
+          if (names.indexOf(row.event.profile) < 0) names.push(row.event.profile);
+        });
+        if (names.length >= 2 && (!best || names.length > best.names.length)) best = { names: names, symbol: start.event.symbol };
+      });
+      if (best) {
+        cards.push({
+          mint: mint,
+          symbol: best.symbol,
+          profiles: best.names,
+          note_sv: best.names.length + " följda handlare köpte " + (best.symbol || mint.slice(0, 4)) + " inom 60 min. Ingen order skickas."
+        });
+      }
+    });
+    return cards;
+  }
+
+  function showTraderTab(name) {
+    document.querySelectorAll(".desk-tab").forEach(function (button) {
+      button.classList.toggle("on", button.getAttribute("data-tab") === name);
+    });
+    document.querySelectorAll(".tab-panel").forEach(function (panel) {
+      var show = panel.getAttribute("data-panel") === name || (name === "traders" && panel.id === "discovery");
+      panel.hidden = !show;
+    });
+  }
+
+  function renderTraders(state) {
+    var grid = $("trader-grid");
+    var inbox = $("trader-inbox");
+    var confluence = $("confluence-list");
+    if (!grid || !inbox || !confluence) return;
+    var feed = (state && state.discovery) || { events: [] };
+    var box = (state && state.traders) || null;
+    var selected = followedTraders();
+    var events = (box && box.inbox) || feed.events || [];
+    var cards = (box && box.confluence) || clientConfluence(events, selected);
+    if (box && selected.length) {
+      cards = cards.filter(function (card) {
+        return (card.profiles || []).every(function (name) { return selected.indexOf(name) >= 0; });
+      });
+    }
+    confluence.innerHTML = "";
+    if (!selected.length) {
+      var idle = document.createElement("p");
+      idle.className = "empty-hint";
+      idle.textContent = "Inga handlare är följda. Samtidiga köp räknas först när minst två är följda.";
+      confluence.appendChild(idle);
+    } else if (!cards.length) {
+      var none = document.createElement("p");
+      none.className = "empty-hint";
+      none.textContent = "Inga samtidiga köp inom 60 minuter.";
+      confluence.appendChild(none);
+    } else {
+      cards.forEach(function (card) {
+        var el = document.createElement("article");
+        el.className = "confluence-card";
+        el.textContent = card.note_sv;
+        confluence.appendChild(el);
+      });
+    }
+    inbox.innerHTML = "";
+    if (!events.length) {
+      var emptyInbox = document.createElement("p");
+      emptyInbox.className = "empty-hint";
+      emptyInbox.textContent = "Ingen inkorg. Inga köp är importerade.";
+      inbox.appendChild(emptyInbox);
+    }
+    events.forEach(function (event) {
+      var row = document.createElement("article");
+      row.className = "inbox-row";
+      var face = document.createElement("div");
+      face.className = "inbox-face";
+      face.textContent = String(event.profile || "?").slice(0, 1).toUpperCase();
+      var body = document.createElement("div");
+      var title = document.createElement("strong");
+      title.textContent = (event.text_sv) || ((event.profile || "") + " köpte " + (event.symbol || "en coin"));
+      var meta = document.createElement("div");
+      meta.textContent = "$" + Number(event.amount_usd || 0).toFixed(2);
+      var latency = latencyLabel(event);
+      if (latency) {
+        var badge = document.createElement("span");
+        badge.textContent = " · " + latency;
+        meta.appendChild(badge);
+      }
+      var open = document.createElement("button");
+      open.type = "button";
+      open.className = "follow-btn";
+      open.textContent = "Visa kort";
+      open.addEventListener("click", function () {
+        showTraderTab("traders");
+        var card = document.querySelector('.discovery-card[data-trade="' + event.trade_id + '"]');
+        if (card) card.scrollIntoView({ block: "start" });
+      });
+      body.appendChild(title);
+      body.appendChild(meta);
+      body.appendChild(open);
+      row.appendChild(face);
+      row.appendChild(body);
+      inbox.appendChild(row);
+    });
+    grid.innerHTML = "";
+    TRADER_NAMES.forEach(function (name) {
+      var buys = events.filter(function (event) { return event.profile === name; }).length;
+      var tile = document.createElement("button");
+      tile.type = "button";
+      tile.className = "trader-tile";
+      tile.innerHTML = "<span class='face'>" + name.slice(0, 1).toUpperCase() + "</span><strong>" + name + "</strong><span>" + buys + " köp</span>";
+      var follow = document.createElement("span");
+      follow.className = "follow-btn" + (selected.indexOf(name) >= 0 ? " on" : "");
+      follow.textContent = selected.indexOf(name) >= 0 ? "Följer" : "Följ";
+      tile.appendChild(follow);
+      tile.addEventListener("click", function (ev) {
+        if (ev.target === follow) {
+          setFollowed(name, selected.indexOf(name) < 0);
+          renderTraders(window.__nimbusLastState);
+          return;
+        }
+        var profile = $("trader-profile");
+        if (!profile) return;
+        profile.hidden = false;
+        profile.innerHTML = "<h3>" + name + "</h3>" +
+          "<p>Följare — · Stängda —</p>" +
+          "<p>pnl · senaste 30 dagarna —</p>" +
+          "<p>Realiserat — · Orealiserat —</p>" +
+          "<p>Ingen kurva. Importen har ingen vinstserie.</p>" +
+          "<div class='stat-five'><div>ROI <b>—</b></div><div>Träff <b>—</b></div><div>Median <b>—</b></div><div>Snitt <b>—</b></div><div>Tillgängligt <b>—</b></div></div>";
+      });
+      grid.appendChild(tile);
+    });
+    var board = $("leaderboard-note");
+    if (board && box && box.leaderboard_note_sv) board.textContent = box.leaderboard_note_sv;
+  }
+
   function renderDiscovery(state) {
     var note = $("discovery-note");
     var host = $("discovery-cards");
@@ -1410,6 +1659,38 @@
         stale.textContent = "Gammalt köp · observerad " + stockholmLine(event.observed_at);
         pad.appendChild(stale);
       }
+      var choice = chosenBuyAmount(state);
+      var picker = document.createElement("div");
+      picker.className = "amt-row";
+      [5, 10, 25, 50].forEach(function (dollars) {
+        var chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "amt-chip" + (choice.amount === dollars ? " on" : "");
+        chip.textContent = "$" + dollars;
+        chip.addEventListener("click", function () {
+          rememberAmount(dollars);
+          renderDiscovery(window.__nimbusLastState);
+        });
+        picker.appendChild(chip);
+      });
+      var custom = document.createElement("input");
+      custom.className = "amt-custom";
+      custom.inputMode = "decimal";
+      custom.setAttribute("aria-label", "Eget belopp i USD");
+      custom.value = String(choice.amount);
+      custom.addEventListener("change", function () {
+        var next = Number(String(custom.value).replace(",", "."));
+        if (isFinite(next) && next > 0) rememberAmount(next);
+        renderDiscovery(window.__nimbusLastState);
+      });
+      picker.appendChild(custom);
+      pad.appendChild(picker);
+      if (choice.error) {
+        var problem = document.createElement("p");
+        problem.className = "amt-error";
+        problem.textContent = choice.error;
+        pad.appendChild(problem);
+      }
       var actions = document.createElement("div");
       actions.className = "discovery-actions";
       var skip = document.createElement("button");
@@ -1425,15 +1706,20 @@
       var buy = document.createElement("button");
       buy.type = "button";
       buy.className = "discovery-buy";
-      buy.textContent = "Köp";
+      buy.textContent = choice.error ? "Köp" : "Köp $" + choice.amount.toFixed(0);
+      buy.disabled = !!choice.error;
       buy.addEventListener("click", function () {
         var decision = window.NimbusDiscovery.reviewOf(event);
         if (decision.navigate || decision.order || decision.purchased) return;
+        var fresh = chosenBuyAmount(window.__nimbusLastState);
+        if (fresh.error) return;
+        var intent = recordPaperBuy(window.__nimbusLastState, event, fresh.amount);
+        renderTokens(window.__nimbusLastState);
         var title = $("discovery-review-title");
         var copy = $("discovery-review-copy");
         var link = $("discovery-link");
         if (title) title.textContent = "Köp " + (event.symbol || (event.mint || "").slice(0, 4));
-        if (copy) copy.textContent = event.profile + " · $" + Number(event.amount_usd).toFixed(2) + " · " + sourceLine(event) + " · ingen order skickas";
+        if (copy) copy.textContent = event.profile + " · valt belopp $" + intent.amount_usd.toFixed(2) + " · " + sourceLine(event) + " · ingen order skickas. Riktiga pengar är avstängda.";
         if (link) {
           link.textContent = "";
           if (decision.tokenUrl) {
@@ -1461,12 +1747,10 @@
     shownState = state;
     showBootEmpty(false);
     renderHeader(state);
+    renderTraders(state);
     renderDiscovery(state);
-    renderAgents(state);
     renderTokens(state);
-    renderAudited(state);
     renderClosed(state);
-    renderGoal(state);
     window.__nimbusLastState = state;
     renderAccount(state);
     renderGrok(state);
