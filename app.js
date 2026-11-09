@@ -2185,14 +2185,22 @@
     var box = (state && state.journal) || {};
     var rows = box.entries || [];
     host.innerHTML = "";
-    if (note) note.textContent = rows.length ? (rows.length + " rader") : (box.note_sv || "Utmaningens trades hamnar här");
+    // #journal-note is an .empty-hint card — hide it when there is no summary,
+    // otherwise an empty white bar shows under the Journal heading.
     if (!rows.length) {
+      if (note) {
+        note.textContent = "";
+        note.hidden = true;
+      }
       var empty = document.createElement("p");
       empty.className = "empty-hint journal-empty";
       empty.textContent = box.note_sv || "Utmaningens trades hamnar här";
       host.appendChild(empty);
-      if (note) note.textContent = "";
       return;
+    }
+    if (note) {
+      note.hidden = false;
+      note.textContent = rows.length + " rader";
     }
     rows.forEach(function (row) {
       var el = document.createElement("article");
