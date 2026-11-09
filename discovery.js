@@ -22,10 +22,37 @@
     var out = [];
     (events || []).forEach(function (event) {
       if (!event || hide[event.trade_id] || seen[event.profile + ":" + event.trade_id]) return;
+      if (event.rug_stopped) return;
       seen[event.profile + ":" + event.trade_id] = 1;
       out.push(event);
     });
     return out;
+  }
+
+  function stoppadeEvents(feed) {
+    var list = (feed && (feed.stoppade || feed.events_stopped)) || [];
+    if ((!list || !list.length) && feed && feed.events_all) {
+      list = (feed.events_all || []).filter(function (e) { return e && e.rug_stopped; });
+    }
+    var seen = {};
+    var out = [];
+    (list || []).forEach(function (event) {
+      if (!event) return;
+      var key = (event.profile || "") + ":" + (event.trade_id || event.mint || "");
+      if (seen[key]) return;
+      seen[key] = 1;
+      out.push(event);
+    });
+    return out;
+  }
+
+  function reasonLines(event) {
+    var rug = (event && event.rug) || {};
+    var lines = rug.reasons_sv || [];
+    if ((!lines || !lines.length) && rug.reasons) {
+      lines = rug.reasons.slice();
+    }
+    return lines || [];
   }
 
   function reviewOf(event) {
@@ -49,6 +76,8 @@
     allowToken: allowToken,
     allowProfile: allowProfile,
     visibleEvents: visibleEvents,
+    stoppadeEvents: stoppadeEvents,
+    reasonLines: reasonLines,
     reviewOf: reviewOf,
     letter: letter
   };

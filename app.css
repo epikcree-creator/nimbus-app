@@ -850,3 +850,17 @@ body.account-open { overflow: hidden; }
   .region-tokens { order: 1; }
   .region-closed, .region-funds { order: 2; }
 }
+
+
+/* STRICT Stoppade list */
+.stoppade-wrap{margin-top:18px;padding-top:14px;border-top:1px solid var(--border)}
+.stoppade-head{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.stoppade-head h3{margin:0;font-size:0.95rem;display:flex;align-items:center;gap:8px}
+.stoppade-head p{margin:0;font-size:0.72rem;color:#3A6488}
+.stoppade-card{display:grid;grid-template-columns:44px 1fr;gap:10px;padding:12px;border-radius:16px;background:var(--card);border:1px solid var(--border);margin-bottom:8px}
+.stoppade-face{width:44px;height:44px;border-radius:14px;background:#13253A;color:#9EC1E6;display:flex;align-items:center;justify-content:center;font-weight:800}
+.stoppade-card strong{display:block;font-size:0.92rem}
+.stoppade-card .who{font-size:0.72rem;color:#3A6488;margin-top:2px}
+.stoppade-reasons{margin:8px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}
+.stoppade-reasons li{font-size:0.68rem;color:#FF6B84;line-height:1.35}
+.stoppade-open{margin-top:8px}

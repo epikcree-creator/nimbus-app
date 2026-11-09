@@ -1826,7 +1826,13 @@
     var rug = $("rugdesk-note");
     if (rug) {
       var box = (state && state.rugdesk) || {};
-      rug.textContent = box.note_sv || "Ruggfilter: exempelbelopp är inte godkända. Grok är avstängt.";
+      var filt = (feed && feed.rug_filter) || {};
+      if (filt.active) {
+        rug.textContent = "STRICT ruggfilter på. Feed " + (filt.feed_count || 0) +
+          " · Stoppade " + (filt.stoppade_count || 0) + ". Inget köps automatiskt. Grok är avstängt.";
+      } else {
+        rug.textContent = box.note_sv || "Ruggfilter: inte godkänt. Grok är avstängt.";
+      }
     }
     host.innerHTML = "";
     var events = window.NimbusDiscovery.visibleEvents(feed.events || [], discoverySkips());
@@ -1959,6 +1965,94 @@
       card.appendChild(pad);
       host.appendChild(card);
     });
+    renderStoppade(state);
+  }
+
+
+  function renderStoppade(state) {
+    var host = $("stoppade-list");
+    var count = $("stoppade-count");
+    var note = $("stoppade-note");
+    if (!host || !window.NimbusDiscovery) return;
+    var feed = (state && state.discovery) || {};
+    var items = window.NimbusDiscovery.stoppadeEvents(feed);
+    if (count) count.textContent = String(items.length);
+    if (note) {
+      var filt = feed.rug_filter || {};
+      note.textContent = filt.active
+        ? "Kort som STRICT-filtret dolde. Du kan öppna dem manuellt."
+        : "STRICT är av. Inga kort stoppas.";
+    }
+    host.innerHTML = "";
+    if (!items.length) {
+      var empty = document.createElement("p");
+      empty.className = "empty-hint";
+      empty.textContent = (feed.rug_filter && feed.rug_filter.active)
+        ? "Inga stoppade kort just nu."
+        : "Filtret är av.";
+      host.appendChild(empty);
+      return;
+    }
+    items.forEach(function (event) {
+      var card = document.createElement("article");
+      card.className = "stoppade-card";
+      card.setAttribute("data-trade", event.trade_id || "");
+      var face = document.createElement("div");
+      face.className = "stoppade-face";
+      face.textContent = window.NimbusDiscovery.letter(event);
+      var body = document.createElement("div");
+      var title = document.createElement("strong");
+      title.textContent = event.symbol || (event.mint || "").slice(0, 6);
+      var who = document.createElement("div");
+      who.className = "who";
+      who.textContent = (event.profile || "?") + " köpte";
+      var reasons = document.createElement("ul");
+      reasons.className = "stoppade-reasons";
+      window.NimbusDiscovery.reasonLines(event).forEach(function (line) {
+        var li = document.createElement("li");
+        li.textContent = line;
+        reasons.appendChild(li);
+      });
+      var open = document.createElement("button");
+      open.type = "button";
+      open.className = "follow-btn stoppade-open";
+      open.textContent = "Öppna manuellt";
+      open.addEventListener("click", function () {
+        var decision = window.NimbusDiscovery.reviewOf(event);
+        var review = $("discovery-review");
+        var titleEl = $("discovery-review-title");
+        var copy = $("discovery-review-copy");
+        var link = $("discovery-link");
+        if (titleEl) titleEl.textContent = "Stoppad · " + (event.symbol || (event.mint || "").slice(0, 4));
+        if (copy) {
+          copy.textContent = (event.profile || "") + " · " +
+            window.NimbusDiscovery.reasonLines(event).join(" · ") +
+            " · ingen order skickas.";
+        }
+        if (link) {
+          link.textContent = "";
+          if (decision.tokenUrl) {
+            var anchor = document.createElement("a");
+            anchor.href = decision.tokenUrl;
+            anchor.target = "_blank";
+            anchor.rel = "noopener";
+            anchor.textContent = decision.tokenUrl;
+            link.appendChild(anchor);
+          }
+        }
+        if (review) {
+          review.hidden = false;
+          review.scrollIntoView({ block: "start" });
+        }
+      });
+      body.appendChild(title);
+      body.appendChild(who);
+      body.appendChild(reasons);
+      body.appendChild(open);
+      card.appendChild(face);
+      card.appendChild(body);
+      host.appendChild(card);
+    });
   }
 
   function renderState(state) {
@@ -1968,6 +2062,7 @@
     renderHeader(state);
     renderTraders(state);
     renderDiscovery(state);
+    renderStoppade(state);
     renderTokens(state);
     renderClosed(state);
     window.__nimbusLastState = state;

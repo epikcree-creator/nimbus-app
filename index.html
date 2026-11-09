@@ -11,8 +11,8 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="icons/favicon.png" />
-  <link rel="stylesheet" href="app.css?v=19" />
-  <script src="brand.js?v=19"></script>
+  <link rel="stylesheet" href="app.css?v=20" />
+  <script src="brand.js?v=20"></script>
   <title></title>
   <script>
     document.title = NimbusBrand.name;
@@ -110,6 +110,13 @@
         <button type="button" id="discovery-back">Tillbaka</button>
       </section>
       <button type="button" id="discovery-reset" class="discovery-reset">Visa överhoppade igen</button>
+      <section id="stoppade" class="stoppade-wrap" aria-label="Stoppade kort">
+        <div class="stoppade-head">
+          <h3>Stoppade <span class="count-orb" id="stoppade-count">0</span></h3>
+          <p id="stoppade-note">Kort som STRICT-filtret dolde. Du kan öppna dem manuellt.</p>
+        </div>
+        <div id="stoppade-list"></div>
+      </section>
     </section>
 
     <div class="closed-wrap card region-closed">
@@ -210,9 +217,9 @@
     </div>
   </div>
 
-  <script src="settings.js?v=19"></script>
-  <script src="discovery.js?v=19"></script>
-  <script src="chart.js?v=19"></script>
-  <script src="app.js?v=19"></script>
+  <script src="settings.js?v=20"></script>
+  <script src="discovery.js?v=20"></script>
+  <script src="chart.js?v=20"></script>
+  <script src="app.js?v=20"></script>
 </body>
 </html>
