@@ -1437,9 +1437,10 @@
   function renderClosed(state) {
     var list = $("closed-list");
     var trades = state.trades || state.closed || [];
+    // Challenge-era Journal: only real sells/stops. Never inflate with scanner rejects.
     if (!trades.length && Array.isArray(state.activity)) {
       trades = state.activity.filter(function (a) {
-        return a && (a.kind === "sold" || a.kind === "stopped" || a.kind === "bought" || a.kind === "rejected");
+        return a && (a.kind === "sold" || a.kind === "stopped" || a.kind === "challenge_sell");
       }).map(function (a) {
         return {
           symbol: a.title,
@@ -1457,7 +1458,7 @@
     if (!trades.length && !sells.length) {
       var p = document.createElement("p");
       p.className = "empty-hint";
-      p.textContent = "Ingen aktivitet än i natt";
+      p.textContent = "Inga stängda utmaningstrades än";
       list.appendChild(p);
       return;
     }
@@ -2187,9 +2188,10 @@
     if (note) note.textContent = rows.length ? (rows.length + " rader") : (box.note_sv || "Utmaningens trades hamnar här");
     if (!rows.length) {
       var empty = document.createElement("p");
-      empty.className = "empty-hint";
+      empty.className = "empty-hint journal-empty";
       empty.textContent = box.note_sv || "Utmaningens trades hamnar här";
       host.appendChild(empty);
+      if (note) note.textContent = "";
       return;
     }
     rows.forEach(function (row) {
