@@ -11,8 +11,8 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="icons/favicon.png" />
-  <link rel="stylesheet" href="app.css?v=21" />
-  <script src="brand.js?v=21"></script>
+  <link rel="stylesheet" href="app.css?v=22" />
+  <script src="brand.js?v=22"></script>
   <title></title>
   <script>
     document.title = NimbusBrand.name;
@@ -21,6 +21,25 @@
 </head>
 <body>
   <p id="demo-banner" class="demo-banner" hidden>DEMO / SIMULERING · inte live-resultat</p>
+  <div id="kill-banner" class="kill-banner" hidden role="alert">
+    <div class="kill-banner-body">
+      <strong>Köp låsta</strong>
+      <p id="kill-banner-reason">—</p>
+      <p class="kill-banner-note">Sälj är fortfarande tillåtna. Låses inte upp automatiskt.</p>
+    </div>
+    <button type="button" id="kill-unlock" class="kill-unlock">Lås upp…</button>
+  </div>
+  <dialog id="kill-unlock-dialog" class="kill-dialog">
+    <form method="dialog" id="kill-unlock-form">
+      <h3>Lås upp köp</h3>
+      <p>Skriv <code>låsa upp</code> för att bekräfta. Kill switch låses inte upp automatiskt.</p>
+      <input id="kill-unlock-input" type="text" autocomplete="off" placeholder="låsa upp" />
+      <div class="kill-dialog-actions">
+        <button type="submit" value="cancel" class="ghost">Avbryt</button>
+        <button type="submit" value="ok" id="kill-unlock-confirm">Bekräfta</button>
+      </div>
+    </form>
+  </dialog>
 
   <main id="app" class="shell">
     <header class="desk-head region-head">
@@ -76,6 +95,7 @@
       <button type="button" class="desk-tab on" data-tab="traders">Handlare</button>
       <button type="button" class="desk-tab" data-tab="tokens">Tokens</button>
       <button type="button" class="desk-tab" data-tab="board">Topplista</button>
+      <button type="button" class="desk-tab" data-tab="journal">Journal</button>
     </nav>
 
     <section class="traders region-traders tab-panel" id="traders-panel" data-panel="traders">
@@ -86,6 +106,14 @@
       <h2 class="sec-title">Handlare</h2>
       <div id="trader-grid" class="trader-grid"></div>
       <article id="trader-profile" class="trader-profile" hidden></article>
+    </section>
+
+    <section class="journal-panel tab-panel" id="journal-panel" data-panel="journal" hidden>
+      <div class="journal-head">
+        <h2>Journal</h2>
+        <p id="journal-note" class="empty-hint">Ingen journaldata.</p>
+      </div>
+      <div id="journal-list"></div>
     </section>
 
     <section class="board-panel tab-panel" id="board-panel" data-panel="board" hidden>
@@ -228,9 +256,9 @@
     </div>
   </div>
 
-  <script src="settings.js?v=21"></script>
-  <script src="discovery.js?v=21"></script>
-  <script src="chart.js?v=21"></script>
-  <script src="app.js?v=21"></script>
+  <script src="settings.js?v=22"></script>
+  <script src="discovery.js?v=22"></script>
+  <script src="chart.js?v=22"></script>
+  <script src="app.js?v=22"></script>
 </body>
 </html>
