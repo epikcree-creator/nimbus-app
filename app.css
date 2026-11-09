@@ -1,4 +1,4 @@
-/* Sniper Grok — clean layout (v19).
+/* Swipe Mode — clean layout (v19).
    Canvas: soft blurred sky-blue and white gradient. Surfaces: white sheets only where
    the user acts. Green is only Köp, red is only Avstå/Sälj. Visual layer only. */
 :root {
@@ -866,7 +866,7 @@ body.account-open { overflow: hidden; }
 .stoppade-open{margin-top:8px}
 
 
-/* Sniper Grok suggestions */
+/* Swipe Mode suggestions */
 .suggestions{margin-bottom:12px}
 .suggestion-card{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:18px;background:var(--card);border:1px solid var(--border);margin-bottom:10px}
 .suggestion-badge{display:inline-flex;align-items:center;gap:6px;font-size:0.68rem;font-weight:800;letter-spacing:0.02em;color:#0B3B66;background:rgba(80,160,255,0.16);border-radius:999px;padding:4px 10px;width:fit-content}
@@ -1034,3 +1034,20 @@ body.account-open { overflow: hidden; }
 .discovery-card .coin-art.thumb {
   width: 56px; height: 56px; border-radius: 14px; font-size: 0.95rem;
 }
+
+
+/* PAPER challenge panel */
+.challenge-panel{margin:12px 0 18px;padding:14px;border-radius:18px;background:var(--sheet);border:1px solid var(--line)}
+.challenge-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.challenge-head h2{margin:0;font-size:1.05rem}
+.challenge-countdown{min-width:92px;text-align:center;padding:10px 12px;border-radius:14px;background:var(--fill);color:var(--sky-900);font-weight:700;font-variant-numeric:tabular-nums}
+.challenge-stats{display:flex;flex-wrap:wrap;gap:10px 14px;margin:12px 0;font-size:0.82rem;color:var(--ink-2)}
+.challenge-stats b{color:var(--ink);font-weight:700}
+.challenge-rules{margin:0 0 12px;padding-left:18px;color:var(--ink-2);font-size:0.78rem;line-height:1.45}
+.challenge-trade{display:grid;grid-template-columns:44px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.challenge-trade .meta{font-size:0.75rem;color:var(--ink-3);line-height:1.35}
+.challenge-trade .pnl-pos{color:var(--buy);font-weight:700}
+.challenge-trade .pnl-neg{color:var(--skip);font-weight:700}
+.challenge-trade .coin-art{width:44px;height:44px;border-radius:12px;overflow:hidden;background:var(--fill);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.75rem}
+.challenge-trade .coin-art img{width:100%;height:100%;object-fit:cover}
+.challenge-open-tag{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:999px;background:var(--sky-100);color:var(--sky-900);font-size:0.68rem}
