@@ -1007,3 +1007,30 @@ body.account-open { overflow: hidden; }
 }
 .rating-pill.starkt { background: rgba(46, 170, 90, 0.15); color: #1B7A3E; }
 .rating-pill.svagt { background: rgba(255, 107, 132, 0.15); color: #B03048; }
+
+/* ---------- Coin art on suggestion / discovery cards ---------- */
+.coin-art {
+  width: 72px; height: 72px; border-radius: 18px; overflow: hidden;
+  background: linear-gradient(160deg, #D7E9FC 0%, #9EC6F2 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; color: #0B3B66; font-size: 1.1rem;
+  flex-shrink: 0; border: 1px solid rgba(31,111,224,0.2);
+}
+.coin-art.large { width: 100%; height: 180px; border-radius: 16px; font-size: 2.4rem; }
+.coin-art.review { width: 100%; height: 160px; border-radius: 16px; font-size: 2.2rem; margin-bottom: 10px; }
+.coin-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.coin-art.placeholder { letter-spacing: 0.04em; }
+.suggestion-card { gap: 10px; }
+.suggestion-score {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+.suggestion-score span {
+  font-size: 0.68rem; font-weight: 650; color: #1F4F7A;
+  background: rgba(255,255,255,0.75); border: 1px solid rgba(31,111,224,0.16);
+  border-radius: 999px; padding: 4px 8px;
+}
+.suggestion-score span.missing { color: #8A4B2A; background: rgba(255,200,160,0.35); }
+.review-image { margin: 0 0 8px; }
+.discovery-card .coin-art.thumb {
+  width: 56px; height: 56px; border-radius: 14px; font-size: 0.95rem;
+}

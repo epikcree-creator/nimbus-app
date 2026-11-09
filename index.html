@@ -11,8 +11,8 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="icons/favicon.png" />
-  <link rel="stylesheet" href="app.css?v=23" />
-  <script src="brand.js?v=23"></script>
+  <link rel="stylesheet" href="app.css?v=24" />
+  <script src="brand.js?v=24"></script>
   <title></title>
   <script>
     document.title = NimbusBrand.name;
@@ -99,6 +99,18 @@
       <button type="button" class="desk-tab" data-tab="journal">Journal</button>
     </nav>
 
+    <section class="suggestions region-swipe tab-panel" id="suggestions" data-panel="traders" aria-label="Sniper Grok föreslår">
+      <div class="discovery-head">
+        <img src="icons/icon-192.png" data-app-name-alt width="44" height="44" />
+        <div>
+          <h2>Sniper Grok föreslår</h2>
+          <p id="suggestions-note">Inga färskt bedömda förslag just nu.</p>
+        </div>
+      </div>
+      <div id="suggestion-cards"></div>
+    </section>
+
+
     <section class="traders region-traders tab-panel" id="traders-panel" data-panel="traders">
       <p id="traders-note" class="setting-note">Följare, vinst och saldo visas inte. Importen har bara köp.</p>
       <div id="confluence-list"></div>
@@ -153,17 +165,6 @@
       <p id="leaderboard-note" class="empty-hint">Ingen topplista. Det finns inga stängda resultat att rangordna.</p>
     </section>
 
-    <section class="suggestions region-swipe tab-panel" id="suggestions" data-panel="traders" aria-label="Sniper Grok föreslår">
-      <div class="discovery-head">
-        <img src="icons/icon-192.png" data-app-name-alt width="44" height="44" />
-        <div>
-          <h2>Sniper Grok föreslår</h2>
-          <p id="suggestions-note">Inga färskt bedömda förslag just nu.</p>
-        </div>
-      </div>
-      <div id="suggestion-cards"></div>
-    </section>
-
     <section class="discovery region-swipe tab-panel" id="discovery" data-panel="traders" aria-label="Följda köp">
       <div class="discovery-head">
         <img src="icons/icon-192.png" data-app-name-alt width="44" height="44" />
@@ -175,6 +176,7 @@
       </div>
       <div id="discovery-cards"></div>
       <section id="discovery-review" class="discovery-review" hidden>
+        <div id="discovery-review-image" class="review-image" hidden></div>
         <h3 id="discovery-review-title">Köp</h3>
         <p id="discovery-review-copy"></p>
         <p class="discovery-safe" id="discovery-safe">Inget köp är gjort. Ingen order skickas och ingen plånbok öppnas.</p>
@@ -289,9 +291,9 @@
     </div>
   </div>
 
-  <script src="settings.js?v=23"></script>
-  <script src="discovery.js?v=23"></script>
-  <script src="chart.js?v=23"></script>
-  <script src="app.js?v=23"></script>
+  <script src="settings.js?v=24"></script>
+  <script src="discovery.js?v=24"></script>
+  <script src="chart.js?v=24"></script>
+  <script src="app.js?v=24"></script>
 </body>
 </html>

@@ -1981,17 +1981,12 @@
       var card = document.createElement("article");
       card.className = "discovery-card";
       card.setAttribute("data-trade", event.trade_id);
-      var art = document.createElement("div");
-      art.className = "discovery-art";
-      var image = String(event.image || "");
-      if (/^https:\/\/[^\s]+$/.test(image)) {
-        var photo = document.createElement("img");
-        photo.alt = "";
-        photo.src = image;
-        art.appendChild(photo);
-      } else {
-        art.textContent = window.NimbusDiscovery.letter(event);
-      }
+      var art = coinArt({
+        image_url: event.image_url || event.image,
+        image: event.image_url || event.image,
+        symbol: event.symbol,
+        initials: event.initials || (window.NimbusDiscovery && window.NimbusDiscovery.letter(event))
+      }, "coin-art thumb discovery-art");
       var pad = document.createElement("div");
       pad.className = "pad";
       var symbol = document.createElement("strong");
@@ -2190,6 +2185,30 @@
   }
 
 
+
+  function coinArt(card, className) {
+    var wrap = document.createElement("div");
+    wrap.className = className || "coin-art";
+    var url = card && (card.image_url || card.image);
+    if (url && /^https:\/\/[^\s]+$/.test(String(url))) {
+      var img = document.createElement("img");
+      img.src = String(url);
+      img.alt = (card.symbol || card.name || "coin") + " logo";
+      img.loading = "lazy";
+      img.referrerPolicy = "no-referrer";
+      img.addEventListener("error", function () {
+        wrap.classList.add("placeholder");
+        wrap.textContent = (card.initials || (card.symbol || "?").slice(0, 2) || "??").toUpperCase();
+        img.remove();
+      });
+      wrap.appendChild(img);
+    } else {
+      wrap.classList.add("placeholder");
+      wrap.textContent = (card.initials || (card.symbol || "?").slice(0, 2) || "??").toUpperCase();
+    }
+    return wrap;
+  }
+
   function renderSuggestions(state) {
     var host = $("suggestion-cards");
     var note = $("suggestions-note");
@@ -2303,7 +2322,10 @@
           profile: "Sniper Grok",
           amount_usd: fresh.amount,
           token_url: card.token_url,
-          source_at: card.rated_at
+          source_at: card.rated_at,
+          image_url: card.image_url || card.image || null,
+          image: card.image_url || card.image || null,
+          initials: card.initials || null
         };
         logJournalAction("Köp", event, fresh.amount, "Sniper Grok föreslår (paper)");
         recordPaperBuy(window.__nimbusLastState, event, fresh.amount);
@@ -2313,6 +2335,12 @@
         var copy = $("discovery-review-copy");
         var link = $("discovery-link");
         if (titleEl) titleEl.textContent = "Förslag · " + (card.symbol || (card.mint || "").slice(0, 4));
+        var reviewImg = $("discovery-review-image");
+        if (reviewImg) {
+          reviewImg.hidden = false;
+          reviewImg.innerHTML = "";
+          reviewImg.appendChild(coinArt(card, "coin-art review"));
+        }
         if (copy) copy.textContent = "Sniper Grok föreslår · $" + fresh.amount.toFixed(2) + " · ingen order skickas. Riktiga pengar är avstängda.";
         if (link) {
           link.textContent = "";
@@ -2332,9 +2360,25 @@
       });
       actions.appendChild(skip);
       actions.appendChild(buy);
+      el.appendChild(coinArt(card, "coin-art large"));
       el.appendChild(badge);
       el.appendChild(title);
       el.appendChild(rating);
+      var scoreRow = document.createElement("div");
+      scoreRow.className = "suggestion-score";
+      (card.score || []).forEach(function (part) {
+        var chip = document.createElement("span");
+        var val = part.value;
+        if (val == null || val === "saknas") {
+          chip.className = "missing";
+          chip.textContent = (part.label_sv || part.key) + " saknas";
+        } else {
+          chip.textContent = (part.label_sv || part.key) + " " + val;
+        }
+        chip.title = part.source || "";
+        scoreRow.appendChild(chip);
+      });
+      if ((card.score || []).length) el.appendChild(scoreRow);
       el.appendChild(narrative);
       el.appendChild(meta);
       el.appendChild(osakert);
