@@ -32,10 +32,6 @@
     {
       "id": "rugfilter",
       "label": "Ruggfilter"
-    },
-    {
-      "id": "handlare",
-      "label": "Handlare"
     }
   ],
   "ticket_keys": [
@@ -742,7 +738,7 @@
       "unit": "",
       "kind": "bool",
       "default": false,
-      "note": "Av tills ägaren själv slår på det. Ingen rutin startar av sig själv."
+      "note": "När på: STRICT döljer köpkort som faller på någon regel. Inget köps automatiskt."
     },
     {
       "key": "rug_ticket_usd",
@@ -845,7 +841,7 @@
     {
       "key": "rug_min_lp_locked_pct",
       "group": "rugfilter",
-      "label": "Minst låst LP (exempel)",
+      "label": "Minst låst LP",
       "unit": "%",
       "kind": "number",
       "min": 0.0,
@@ -853,13 +849,13 @@
       "step": 1,
       "decimals": 1,
       "integer": false,
-      "default": 90.0,
-      "note": "Artikelexempel. Inte ett godkänt tak."
+      "default": 100.0,
+      "note": "STRICT: LP låst/bränt minst 100 %."
     },
     {
       "key": "rug_max_top10_pct",
       "group": "rugfilter",
-      "label": "Max topp 10 (exempel)",
+      "label": "Max topp 10",
       "unit": "%",
       "kind": "number",
       "min": 1.0,
@@ -867,13 +863,27 @@
       "step": 1,
       "decimals": 1,
       "integer": false,
-      "default": 30.0,
-      "note": "Artikelexempel. Inte ett godkänt tak."
+      "default": 20.0,
+      "note": "STRICT: topp 10 högst 20 %."
+    },
+    {
+      "key": "rug_max_single_holder_pct",
+      "group": "rugfilter",
+      "label": "Max ensam hållare",
+      "unit": "%",
+      "kind": "number",
+      "min": 0.1,
+      "max": 100.0,
+      "step": 0.5,
+      "decimals": 1,
+      "integer": false,
+      "default": 5.0,
+      "note": "STRICT: ensam hållare (ej LP) högst 5 %."
     },
     {
       "key": "rug_max_dev_pct",
       "group": "rugfilter",
-      "label": "Max utvecklare (exempel)",
+      "label": "Max skapare",
       "unit": "%",
       "kind": "number",
       "min": 0.0,
@@ -881,8 +891,8 @@
       "step": 0.5,
       "decimals": 1,
       "integer": false,
-      "default": 5.0,
-      "note": "Artikelexempel. Inte ett godkänt tak."
+      "default": 2.0,
+      "note": "STRICT: skapare högst 2 %."
     },
     {
       "key": "rug_max_insiders",
@@ -901,7 +911,7 @@
     {
       "key": "rug_min_liquidity_usd",
       "group": "rugfilter",
-      "label": "Minsta likviditet (exempel)",
+      "label": "Minsta likviditet",
       "unit": "USD",
       "kind": "number",
       "min": 1000.0,
@@ -909,8 +919,8 @@
       "step": 1000,
       "decimals": 0,
       "integer": false,
-      "default": 30000.0,
-      "note": "Artikelexempel. Inte ett godkänt tak."
+      "default": 20000.0,
+      "note": "STRICT: likviditet minst 20 000 USD."
     },
     {
       "key": "rug_max_ticket_share",
@@ -929,7 +939,7 @@
     {
       "key": "rug_min_age_min",
       "group": "rugfilter",
-      "label": "Minsta ålder (exempel)",
+      "label": "Minsta ålder",
       "unit": "min",
       "kind": "number",
       "min": 0.0,
@@ -937,8 +947,8 @@
       "step": 1,
       "decimals": 0,
       "integer": true,
-      "default": 30,
-      "note": "Artikelexempel. Inte ett godkänt tak."
+      "default": 15,
+      "note": "STRICT: token minst 15 minuter."
     },
     {
       "key": "rug_max_age_hours",
@@ -1079,80 +1089,6 @@
       "integer": false,
       "default": 0.25,
       "note": "Artikelexempel. Inte ett godkänt tak."
-    },
-    {
-      "key": "trader_window_min",
-      "group": "handlare",
-      "label": "Samtidiga köp, fönster",
-      "unit": "min",
-      "kind": "number",
-      "min": 5.0,
-      "max": 240.0,
-      "step": 5,
-      "decimals": 0,
-      "integer": true,
-      "default": 60,
-      "note": "Hur tätt köpen ska ligga. Skickar ingen order."
-    },
-    {
-      "key": "trader_min_count",
-      "group": "handlare",
-      "label": "Minst antal handlare",
-      "unit": "st",
-      "kind": "number",
-      "min": 2.0,
-      "max": 9.0,
-      "step": 1,
-      "decimals": 0,
-      "integer": true,
-      "default": 2,
-      "note": "Hur många följda profiler som ska köpa samma coin."
-    },
-    {
-      "key": "trader_notify",
-      "group": "handlare",
-      "label": "Telegram vid samtidiga köp",
-      "unit": "",
-      "kind": "bool",
-      "default": false,
-      "note": "Av. På skickar bara ett meddelande till ägarens låsta chatt. Ingen order."
-    },
-    {
-      "key": "trader_follows",
-      "group": "handlare",
-      "label": "Följda för avisering",
-      "unit": "",
-      "kind": "text",
-      "default": "",
-      "note": "Tomt tills du väljer profiler. Bara de nio namnen, åtskilda med kommatecken."
-    },
-    {
-      "key": "default_trade_usd",
-      "group": "handlare",
-      "label": "Förvalt köpbelopp",
-      "unit": "USD",
-      "kind": "number",
-      "min": 1.0,
-      "max": 200.0,
-      "step": 1,
-      "decimals": 2,
-      "integer": false,
-      "default": 25.0,
-      "note": "Startvärde för Köp. Ingen order skickas."
-    },
-    {
-      "key": "max_trade_usd",
-      "group": "handlare",
-      "label": "Max per köp",
-      "unit": "USD",
-      "kind": "number",
-      "min": 1.0,
-      "max": 200.0,
-      "step": 1,
-      "decimals": 2,
-      "integer": false,
-      "default": 50.0,
-      "note": "Tak för beloppet på kortet. Inte ett automatiskt köp."
     }
   ]
 }
