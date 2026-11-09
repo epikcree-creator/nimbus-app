@@ -245,7 +245,7 @@
     if (sub) {
       sub.textContent = published === "LIVE"
         ? "Desken visar LIVE · appen handlar inte"
-        : "Följda profiler · papperspengar";
+        : "Egen discovery · papperspengar";
     }
     var status = $("money-status");
     if (status) status.textContent = published === "LIVE" ? "Appen: papperspengar" : "Papperspengar";
@@ -1031,7 +1031,7 @@
       if (ev.key === "Escape") closeAccount();
     });
     document.querySelectorAll(".desk-tab").forEach(function (button) {
-      button.addEventListener("click", function () { showTraderTab(button.getAttribute("data-tab")); });
+      button.addEventListener("click", function () { showDeskTab(button.getAttribute("data-tab")); });
     });
     document.querySelectorAll("#goal-filters button").forEach(function (b) {
       b.addEventListener("click", function () {
@@ -1325,49 +1325,7 @@
     renderState(window.__nimbusLastState);
   }
 
-  function renderTokens(state) {
-    var grid = $("tokens-grid");
-    grid.innerHTML = "";
-    var rows = state.positions || [];
-    sessionPaperBuys().forEach(function (row) {
-      if (row.closed) return;
-      appendHold(grid, {
-        key: "note:" + row.trade_id,
-        kind: "note",
-        trade_id: row.trade_id,
-        symbol: row.symbol,
-        remaining_usd: row.remaining_usd != null ? Number(row.remaining_usd) : Number(row.amount_usd),
-        entry: row.entry,
-        mark_price: row.mark_price,
-        mark_price_at: row.mark_price_at,
-        realized_usd: row.realized_usd || 0
-      });
-    });
-    if (!rows.length && !sessionPaperBuys().length) {
-      var p = document.createElement("p");
-      p.className = "empty-hint";
-      p.textContent = "Inga innehav än";
-      grid.appendChild(p);
-      return;
-    }
-    var overlays = {};
-    try { overlays = JSON.parse(sessionStorage.getItem("nimbus_position_overlays") || "{}"); } catch (e) {}
-    rows.slice(0, 8).forEach(function (t) {
-      var key = "pos:" + (t.id || t.mint);
-      var over = overlays[key] || {};
-      if (over.closed) return;
-      appendHold(grid, {
-        key: key,
-        kind: "desk",
-        symbol: t.symbol || t.name,
-        remaining_usd: over.remaining_usd != null ? Number(over.remaining_usd) : Number(t.size_usd != null ? t.size_usd : t.value_usd || 0),
-        entry: t.entry,
-        mark_price: t.mark_price,
-        mark_price_at: t.mark_price_at,
-        realized_usd: over.realized_usd || 0
-      });
-    });
-  }
+  function renderTokens(state) { /* tokens tab removed */ }
 
   function appendHold(grid, row) {
     var card = document.createElement("article");
@@ -1643,28 +1601,12 @@
     return stockholmLine(event && event.source_at);
   }
 
-  var TRADER_NAMES = ["prevaile", "vascodicaprio", "Binkieee", "surgz", "bystevenr", "OmakaseOnly", "brezscales", "insentos", "Aurelius0121"];
+  var TRADER_NAMES = []; /* trader-copy removed t137u */
 
-  function followedTraders() {
-    try {
-      var stored = localStorage.getItem("nimbus_trader_follows");
-      // First visit (key missing): Oscar's nine FOMO profiles are followed by default.
-      // Explicit empty array [] means the user unfollowed everyone.
-      if (stored == null) {
-        return TRADER_NAMES.slice();
-      }
-      var raw = JSON.parse(stored);
-      return Array.isArray(raw) ? raw.filter(function (name) { return TRADER_NAMES.indexOf(name) >= 0; }) : [];
-    } catch (e) {
-      return TRADER_NAMES.slice();
-    }
-  }
+  function followedTraders() { return []; }
 
-  function setFollowed(name, on) {
-    var names = followedTraders().filter(function (item) { return item !== name; });
-    if (on) names.push(name);
-    try { localStorage.setItem("nimbus_trader_follows", JSON.stringify(names)); } catch (e) {}
-  }
+  function setFollowed(name, on) { /* no-op */ }
+
 
   function sessionPaperBuys() {
     try {
@@ -1832,279 +1774,34 @@
     return cards;
   }
 
-  function showTraderTab(name) {
+  function showDeskTab(name) {
+    name = name || "forslag";
+    if (name === "traders" || name === "board" || name === "tokens") name = "forslag";
     document.querySelectorAll(".desk-tab").forEach(function (button) {
       button.classList.toggle("on", button.getAttribute("data-tab") === name);
     });
     document.querySelectorAll(".tab-panel").forEach(function (panel) {
-      var show = panel.getAttribute("data-panel") === name || (name === "traders" && panel.id === "discovery");
-      panel.hidden = !show;
+      panel.hidden = panel.getAttribute("data-panel") !== name;
     });
+    var home = name === "forslag";
+    var wallet = $("wallet-card");
+    var kicker = document.querySelector(".wallet-kicker");
+    if (wallet) wallet.hidden = !home;
+    if (kicker) kicker.hidden = !home;
   }
+  function showTraderTab(name) { showDeskTab(name); }
+
 
   function renderTraders(state) {
-    var grid = $("trader-grid");
-    var inbox = $("trader-inbox");
-    var confluence = $("confluence-list");
-    if (!grid || !inbox || !confluence) return;
-    var feed = (state && state.discovery) || { events: [] };
-    var box = (state && state.traders) || null;
-    var selected = followedTraders();
-    var events = (box && box.inbox) || feed.events || [];
-    var cards = (box && box.confluence) || clientConfluence(events, selected);
-    if (box && selected.length) {
-      cards = cards.filter(function (card) {
-        return (card.profiles || []).every(function (name) { return selected.indexOf(name) >= 0; });
-      });
-    }
-    confluence.innerHTML = "";
-    if (!selected.length) {
-      var idle = document.createElement("p");
-      idle.className = "empty-hint";
-      idle.textContent = "Inga handlare är följda. Samtidiga köp räknas först när minst två är följda.";
-      confluence.appendChild(idle);
-    } else if (!cards.length) {
-      var none = document.createElement("p");
-      none.className = "empty-hint";
-      none.textContent = "Inga samtidiga köp inom 60 minuter.";
-      confluence.appendChild(none);
-    } else {
-      cards.forEach(function (card) {
-        var el = document.createElement("article");
-        el.className = "confluence-card";
-        el.textContent = card.note_sv;
-        confluence.appendChild(el);
-      });
-    }
-    inbox.innerHTML = "";
-    if (!events.length) {
-      var emptyInbox = document.createElement("p");
-      emptyInbox.className = "empty-hint";
-      emptyInbox.textContent = "Ingen inkorg. Inga köp är importerade.";
-      inbox.appendChild(emptyInbox);
-    }
-    events.forEach(function (event) {
-      var row = document.createElement("article");
-      row.className = "inbox-row";
-      var face = document.createElement("div");
-      face.className = "inbox-face";
-      face.textContent = String(event.profile || "?").slice(0, 1).toUpperCase();
-      var body = document.createElement("div");
-      var title = document.createElement("strong");
-      title.textContent = (event.text_sv) || ((event.profile || "") + " köpte " + (event.symbol || "en coin"));
-      var meta = document.createElement("div");
-      meta.textContent = "$" + Number(event.amount_usd || 0).toFixed(2);
-      var latency = latencyLabel(event);
-      if (latency) {
-        var badge = document.createElement("span");
-        badge.textContent = " · " + latency;
-        meta.appendChild(badge);
-      }
-      var open = document.createElement("button");
-      open.type = "button";
-      open.className = "follow-btn";
-      open.textContent = "Visa kort";
-      open.addEventListener("click", function () {
-        showTraderTab("traders");
-        var card = document.querySelector('.discovery-card[data-trade="' + event.trade_id + '"]');
-        if (card) card.scrollIntoView({ block: "start" });
-      });
-      body.appendChild(title);
-      body.appendChild(meta);
-      body.appendChild(open);
-      row.appendChild(face);
-      row.appendChild(body);
-      inbox.appendChild(row);
-    });
-    grid.innerHTML = "";
-    TRADER_NAMES.forEach(function (name) {
-      var buys = events.filter(function (event) { return event.profile === name; }).length;
-      var tile = document.createElement("button");
-      tile.type = "button";
-      tile.className = "trader-tile";
-      tile.innerHTML = "<span class='face'>" + name.slice(0, 1).toUpperCase() + "</span><strong>" + name + "</strong><span>" + buys + " köp</span>";
-      var follow = document.createElement("span");
-      follow.className = "follow-btn" + (selected.indexOf(name) >= 0 ? " on" : "");
-      follow.textContent = selected.indexOf(name) >= 0 ? "Följer" : "Följ";
-      tile.appendChild(follow);
-      tile.addEventListener("click", function (ev) {
-        if (ev.target === follow) {
-          setFollowed(name, selected.indexOf(name) < 0);
-          renderTraders(window.__nimbusLastState);
-          return;
-        }
-        var profile = $("trader-profile");
-        if (!profile) return;
-        profile.hidden = false;
-        profile.innerHTML = "<h3>" + name + "</h3>" +
-          "<p>Följare — · Stängda —</p>" +
-          "<p>pnl · senaste 30 dagarna —</p>" +
-          "<p>Realiserat — · Orealiserat —</p>" +
-          "<p>Ingen kurva. Importen har ingen vinstserie.</p>" +
-          "<div class='stat-five'><div>ROI <b>—</b></div><div>Träff <b>—</b></div><div>Median <b>—</b></div><div>Snitt <b>—</b></div><div>Tillgängligt <b>—</b></div></div>";
-      });
-      grid.appendChild(tile);
-    });
-    var board = $("leaderboard-note");
-    if (board && box && box.leaderboard_note_sv) board.textContent = box.leaderboard_note_sv;
+    /* Handlare / Topplista borttagna (t137u). */
   }
 
   function renderDiscovery(state) {
-    var note = $("discovery-note");
-    var host = $("discovery-cards");
-    var review = $("discovery-review");
-    if (!host || !window.NimbusDiscovery) return;
-    if (review) review.hidden = true;
-    var feed = (state && state.discovery) || { status: "not_connected", collector: "not_implemented", events: [], note_sv: "Inte ansluten." };
-    if (note) {
-      var noteText = feed.note_sv || "Inte ansluten.";
-      if (feed.last_checked_at) noteText += " Senast kontrollerad " + stockholmLine(feed.last_checked_at).split(" · ")[0] + " (Stockholm).";
-      note.textContent = noteText;
-    }
-    var rug = $("rugdesk-note");
-    if (rug) {
-      var box = (state && state.rugdesk) || {};
-      var filt = (feed && feed.rug_filter) || {};
-      if (filt.active) {
-        rug.textContent = "STRICT ruggfilter på. Feed " + (filt.feed_count || 0) +
-          " · Stoppade " + (filt.stoppade_count || 0) + ". Inget köps automatiskt. Grok är avstängt.";
-      } else {
-        rug.textContent = box.note_sv || "Ruggfilter: inte godkänt. Grok är avstängt.";
-      }
-    }
-    host.innerHTML = "";
-    var events = window.NimbusDiscovery.visibleEvents(feed.events || [], discoverySkips());
-    if (!events.length) {
-      var empty = document.createElement("p");
-      empty.className = "empty-hint";
-      empty.textContent = feed.status === "not_connected"
-        ? "Inga följda köp. Det här är inte scanners papperstrades."
-        : "Inga köp kvar att visa.";
-      host.appendChild(empty);
-      return;
-    }
-    events.forEach(function (event) {
-      var card = document.createElement("article");
-      card.className = "discovery-card";
-      card.setAttribute("data-trade", event.trade_id);
-      var art = coinArt({
-        image_url: event.image_url || event.image,
-        image: event.image_url || event.image,
-        symbol: event.symbol,
-        initials: event.initials || (window.NimbusDiscovery && window.NimbusDiscovery.letter(event))
-      }, "coin-art thumb discovery-art");
-      var pad = document.createElement("div");
-      pad.className = "pad";
-      var symbol = document.createElement("strong");
-      symbol.textContent = event.symbol || (event.mint || "").slice(0, 4);
-      var who = document.createElement("div");
-      who.className = "who";
-      who.textContent = event.profile;
-      var meta = document.createElement("div");
-      meta.className = "discovery-meta";
-      var amount = document.createElement("span");
-      amount.textContent = "$" + Number(event.amount_usd).toFixed(2);
-      var when = document.createElement("span");
-      when.textContent = sourceLine(event);
-      meta.appendChild(amount);
-      meta.appendChild(when);
-      pad.appendChild(symbol);
-      pad.appendChild(who);
-      pad.appendChild(meta);
-      if (event.trade_stale) {
-        var stale = document.createElement("div");
-        stale.className = "discovery-stale";
-        stale.textContent = "Gammalt köp · observerad " + stockholmLine(event.observed_at);
-        pad.appendChild(stale);
-      }
-      var choice = chosenBuyAmount(state);
-      var picker = document.createElement("div");
-      picker.className = "amt-row";
-      [5, 10, 25, 50].forEach(function (dollars) {
-        var chip = document.createElement("button");
-        chip.type = "button";
-        chip.className = "amt-chip" + (choice.amount === dollars ? " on" : "");
-        chip.textContent = "$" + dollars;
-        chip.addEventListener("click", function () {
-          rememberAmount(dollars);
-          renderDiscovery(window.__nimbusLastState);
-        });
-        picker.appendChild(chip);
-      });
-      var custom = document.createElement("input");
-      custom.className = "amt-custom";
-      custom.inputMode = "decimal";
-      custom.setAttribute("aria-label", "Eget belopp i USD");
-      custom.value = String(choice.amount);
-      custom.addEventListener("change", function () {
-        var next = Number(String(custom.value).replace(",", "."));
-        if (isFinite(next) && next > 0) rememberAmount(next);
-        renderDiscovery(window.__nimbusLastState);
-      });
-      picker.appendChild(custom);
-      pad.appendChild(picker);
-      if (choice.error) {
-        var problem = document.createElement("p");
-        problem.className = "amt-error";
-        problem.textContent = choice.error;
-        pad.appendChild(problem);
-      }
-      var actions = document.createElement("div");
-      actions.className = "discovery-actions";
-      var skip = document.createElement("button");
-      skip.type = "button";
-      skip.className = "discovery-skip";
-      skip.textContent = "Avstå";
-      skip.addEventListener("click", function () {
-        logJournalAction("Avstå", event, null, "Avstå från följt köp");
-        var ids = discoverySkips();
-        if (ids.indexOf(event.trade_id) < 0) ids.push(event.trade_id);
-        try { localStorage.setItem("nimbus_discovery_skips", JSON.stringify(ids)); } catch (e) {}
-        renderDiscovery(window.__nimbusLastState);
-      });
-      var buy = document.createElement("button");
-      buy.type = "button";
-      buy.className = "discovery-buy";
-      buy.textContent = choice.error ? "Köp" : "Köp $" + choice.amount.toFixed(0);
-      buy.disabled = !!choice.error;
-      buy.addEventListener("click", function () {
-        var decision = window.NimbusDiscovery.reviewOf(event);
-        if (decision.navigate || decision.order || decision.purchased) return;
-        var fresh = chosenBuyAmount(window.__nimbusLastState);
-        if (fresh.error) return;
-        logJournalAction("Köp", event, fresh.amount, "Följt köp (paper)");
-        var intent = recordPaperBuy(window.__nimbusLastState, event, fresh.amount);
-        renderTokens(window.__nimbusLastState);
-        var title = $("discovery-review-title");
-        var copy = $("discovery-review-copy");
-        var link = $("discovery-link");
-        if (title) title.textContent = "Köp " + (event.symbol || (event.mint || "").slice(0, 4));
-        if (copy) copy.textContent = event.profile + " · valt belopp $" + intent.amount_usd.toFixed(2) + " · " + sourceLine(event) + " · ingen order skickas. Riktiga pengar är avstängda.";
-        if (link) {
-          link.textContent = "";
-          if (decision.tokenUrl) {
-            var anchor = document.createElement("a");
-            anchor.href = decision.tokenUrl;
-            anchor.target = "_blank";
-            anchor.rel = "noopener";
-            anchor.textContent = decision.tokenUrl;
-            link.appendChild(anchor);
-          }
-        }
-        if (review) review.hidden = false;
-      });
-      actions.appendChild(skip);
-      actions.appendChild(buy);
-      pad.appendChild(actions);
-      card.appendChild(art);
-      card.appendChild(pad);
-      host.appendChild(card);
-    });
-    renderStoppade(state);
+    /* Följda-köp UI borttaget (t137u). */
   }
 
-
   function renderStoppade(state) {
+
     var host = $("stoppade-list");
     var count = $("stoppade-count");
     var note = $("stoppade-note");
@@ -2490,7 +2187,6 @@
           st.kill_switch.buys_locked = false;
           st.kill_switch.reason_sv = "";
           renderKillBanner(st);
-          renderDiscovery(st);
           renderSuggestions(st);
         }
       }
@@ -2608,14 +2304,14 @@
       }
       (changes.changes || []).forEach(function (row) {
         cl.appendChild(elCard(
-          row.title_sv || row.profile || "Handlare",
+          row.title_sv || row.profile || "Ändring",
           row.body_sv || "saknas",
           (row.source || "saknas") + " · " + (row.dated || "saknas"),
           row.kind === "new"
         ));
       });
       if (!(changes.changes || []).length) {
-        cl.appendChild(elCard("Vad ändrades", "Inga observationer ännu.", "desk.fomo_observations"));
+        cl.appendChild(elCard("Marknadsförändringar", "Inga observationer ännu.", "desk.intel"));
       }
     }
 
@@ -3029,15 +2725,16 @@
     renderHeader(state);
     renderKillBanner(state);
     bindKillUnlock();
-    renderTraders(state);
     renderSuggestions(state);
     renderChallenge(state);
-    renderDiscovery(state);
     renderStoppade(state);
     renderJournal(state);
     renderIntel(state);
-    renderTokens(state);
     renderClosed(state);
+    if (!window.__deskTabInit) {
+      window.__deskTabInit = true;
+      showDeskTab("forslag");
+    }
     window.__nimbusLastState = state;
     renderAccount(state);
     renderGrok(state);

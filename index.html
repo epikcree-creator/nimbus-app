@@ -11,8 +11,8 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="icons/favicon.png" />
-  <link rel="stylesheet" href="app.css?v=27" />
-  <script src="brand.js?v=27"></script>
+  <link rel="stylesheet" href="app.css?v=28" />
+  <script src="brand.js?v=28"></script>
   <title></title>
   <script>
     document.title = NimbusBrand.name;
@@ -21,11 +21,10 @@
 </head>
 <body>
   <p id="demo-banner" class="demo-banner" hidden>DEMO / SIMULERING · inte live-resultat</p>
-  <div id="kill-banner" class="kill-banner" hidden role="alert">
+  <div id="kill-banner" class="kill-banner compact" hidden role="alert">
     <div class="kill-banner-body">
       <strong>Köp låsta</strong>
       <p id="kill-banner-reason">—</p>
-      <p class="kill-banner-note">Sälj är fortfarande tillåtna. Låses inte upp automatiskt.</p>
     </div>
     <button type="button" id="kill-unlock" class="kill-unlock">Lås upp…</button>
   </div>
@@ -47,7 +46,7 @@
         <img class="brand-logo" src="icons/icon-192.png" alt="" width="48" height="48" />
         <div>
           <h1 class="col-title" data-app-name></h1>
-          <p class="col-sub" id="agents-sub">Följda profiler · papperspengar</p>
+          <p class="col-sub" id="agents-sub">Egen discovery · papperspengar</p>
         </div>
       </div>
       <div class="agents-meta">
@@ -58,14 +57,14 @@
             <span class="toggle" id="auto-toggle" aria-hidden="true"><i></i></span>
           </div>
         </div>
-        <p class="auto-note">Oscar bekräftar varje köp själv. Reglaget kan inte slå på handel.</p>
+        <p class="auto-note">Oscar bekräftar varje köp · PAPER</p>
       </div>
     </header>
 
     <div id="toasts" class="toasts region-toast" aria-live="polite"></div>
 
-    <p class="wallet-kicker region-kicker">Trading wallet · Solana</p>
-    <div class="wallet-card region-wallet" id="wallet-card">
+    <p class="wallet-kicker region-kicker compact">Trading wallet · Solana</p>
+    <div class="wallet-card region-wallet compact" id="wallet-card">
       <div class="wallet-card-top">
         <div class="wallet-brand">
           <img src="icons/mark.png" alt="" width="22" height="22" />
@@ -91,12 +90,10 @@
       </div>
     </div>
 
-    <nav class="desk-tabs region-tabs" aria-label="Vyer">
-      <button type="button" class="desk-tab on" data-tab="traders">Handlare</button>
-      <button type="button" class="desk-tab" data-tab="tokens">Tokens</button>
+    <nav class="desk-tabs region-tabs order-tabs" aria-label="Vyer">
+      <button type="button" class="desk-tab on" data-tab="forslag">Förslag</button>
+      <button type="button" class="desk-tab" data-tab="utmaning">Utmaning LIVE</button>
       <button type="button" class="desk-tab" data-tab="insikt">Insikt</button>
-      <button type="button" class="desk-tab" data-tab="board">Topplista</button>
-      <button type="button" class="desk-tab" data-tab="utmaning">Utmaning</button>
       <button type="button" class="desk-tab" data-tab="journal">Journal</button>
     </nav>
 
@@ -121,7 +118,10 @@
         <span>Kassa <b id="challenge-cash">saknas</b></span>
         <span>Oscars $200 <b id="challenge-oscar">orörd</b></span>
       </div>
-      <ul class="challenge-rules" id="challenge-rules"></ul>
+      <details class="rules-expander" id="challenge-rules-wrap">
+        <summary>Regler</summary>
+        <ul class="challenge-rules" id="challenge-rules"></ul>
+      </details>
       <h3 class="sec-title">Öppna positioner</h3>
       <div id="challenge-open"></div>
       <h3 class="sec-title">Händelser</h3>
@@ -130,38 +130,42 @@
       <div id="challenge-trades"></div>
     </section>
 
-    <section class="suggestions region-swipe tab-panel" id="suggestions" data-panel="traders" aria-label="Swipe Mode föreslår">
+    <section class="suggestions region-swipe tab-panel home-lead" id="suggestions" data-panel="forslag" aria-label="Swipe Mode föreslår">
       <div class="discovery-head">
-        <img src="icons/icon-192.png" data-app-name-alt width="44" height="44" />
         <div>
           <h2>Swipe Mode föreslår</h2>
-          <p id="suggestions-note">Inga färskt bedömda förslag just nu.</p>
+          <p id="suggestions-note">Scanner → STRICT → narrativ → förslag. Oscar bekräftar varje köp.</p>
         </div>
       </div>
       <div id="suggestion-cards"></div>
-    </section>
-
-
-    <section class="traders region-traders tab-panel" id="traders-panel" data-panel="traders">
-      <p id="traders-note" class="setting-note">Följare, vinst och saldo visas inte. Importen har bara köp.</p>
-      <div id="confluence-list"></div>
-      <h2 class="sec-title">Inkorg</h2>
-      <div id="trader-inbox"></div>
-      <h2 class="sec-title">Handlare</h2>
-      <div id="trader-grid" class="trader-grid"></div>
-      <article id="trader-profile" class="trader-profile" hidden></article>
+      <section id="stoppade" class="stoppade-wrap" aria-label="Stoppade kort">
+        <div class="stoppade-head">
+          <h3>Stoppade <span class="count-orb" id="stoppade-count">0</span></h3>
+          <p id="stoppade-note">Kort som STRICT-filtret dolde. Du kan öppna dem manuellt.</p>
+        </div>
+        <div id="stoppade-list"></div>
+      </section>
+      <!-- discovery-review reused for suggestion buy confirm -->
+      <section id="discovery-review" class="discovery-review" hidden>
+        <div id="discovery-review-image" class="review-image" hidden></div>
+        <h3 id="discovery-review-title">Köp</h3>
+        <p id="discovery-review-copy"></p>
+        <p class="discovery-safe" id="discovery-safe">Inget köp är gjort. Ingen order skickas och ingen plånbok öppnas.</p>
+        <p id="discovery-link"></p>
+        <button type="button" id="discovery-back">Tillbaka</button>
+      </section>
     </section>
 
 
     <section class="insikt-panel tab-panel" id="insikt-panel" data-panel="insikt" hidden>
-      <p id="insikt-note" class="setting-note">Insikt samlar brief, bevakning, fakta och vad som ändrats. PAPER · Oscar bekräftar varje köp.</p>
+      <p id="insikt-note" class="setting-note">Insikt: brief, bevakning, narrativ och fakta. PAPER · Oscar bekräftar varje köp.</p>
       <div class="insikt-habits" id="insikt-habits"></div>
 
       <h2 class="sec-title">Morgonbrief</h2>
       <p id="briefing-quiet" class="empty-hint" hidden></p>
       <div id="briefing-list" class="insikt-list"></div>
 
-      <h2 class="sec-title">Vad ändrades</h2>
+      <h2 class="sec-title">Marknadsförändringar</h2>
       <p id="changes-quiet" class="empty-hint" hidden></p>
       <div id="changes-list" class="insikt-list"></div>
 
@@ -190,30 +194,13 @@
         <p id="journal-note" class="empty-hint">Ingen journaldata.</p>
       </div>
       <div id="journal-list"></div>
-    </section>
-
-    <section class="board-panel tab-panel" id="board-panel" data-panel="board" hidden>
-      <p id="leaderboard-note" class="empty-hint">Ingen topplista. Det finns inga stängda resultat att rangordna.</p>
-    </section>
-
-    <section class="discovery region-swipe tab-panel" id="discovery" data-panel="traders" aria-label="Följda köp">
-      <div class="discovery-head">
-        <img src="icons/icon-192.png" data-app-name-alt width="44" height="44" />
-        <div>
-          <h2>Följda köp</h2>
-          <p id="discovery-note">Inte ansluten. Inga följda köp är importerade.</p>
-          <p id="rugdesk-note">Ruggfilter: exempelbelopp är inte godkända. Grok är avstängt.</p>
+      <details class="rules-expander" id="closed-expander">
+        <summary>Stängda trades <span class="count-orb" id="closed-count">0</span></summary>
+        <div class="closed-list" id="closed-list">
+          <p class="empty-hint">Inga stängda trades än</p>
         </div>
-      </div>
-      <div id="discovery-cards"></div>
-      <section id="discovery-review" class="discovery-review" hidden>
-        <div id="discovery-review-image" class="review-image" hidden></div>
-        <h3 id="discovery-review-title">Köp</h3>
-        <p id="discovery-review-copy"></p>
-        <p class="discovery-safe" id="discovery-safe">Inget köp är gjort. Ingen order skickas och ingen plånbok öppnas.</p>
-        <p id="discovery-link"></p>
-        <button type="button" id="discovery-back">Tillbaka</button>
-      </section>
+      </details>
+    </section>
       <button type="button" id="discovery-reset" class="discovery-reset">Visa överhoppade igen</button>
       <section id="stoppade" class="stoppade-wrap" aria-label="Stoppade kort">
         <div class="stoppade-head">
@@ -224,19 +211,7 @@
       </section>
     </section>
 
-    <div class="closed-wrap card region-closed">
-      <div class="closed-head">
-        <div class="closed-title">
-          Stängda <span class="count-orb" id="closed-count">0</span>
-        </div>
-        <span class="to-wallet">↑ TILL WALLET</span>
-      </div>
-      <div class="closed-list" id="closed-list">
-        <p class="empty-hint">Inga stängda trades än</p>
-      </div>
-    </div>
-
-    <div class="card add-funds region-funds" id="add-funds">
+    <div class="card add-funds region-funds compact-funds" id="add-funds" hidden>
       <div class="af-row">
         <span class="af-label">Add funds · paper</span>
         <div class="af-amount"><span id="af-display">$100</span></div>
@@ -253,12 +228,6 @@
       </div>
       <a class="af-btn" id="af-btn" href="https://t.me/NimbusMobileBot?text=%2Fbankroll%20100" target="_blank" rel="noopener">Sätt paper-saldo $100</a>
     </div>
-
-    <div class="tokens-wrap region-tokens tab-panel" data-panel="tokens" hidden>
-      <h2 class="sec-title">Tokens</h2>
-      <div class="tokens-grid" id="tokens-grid">
-        <p class="empty-hint">Inga innehav än</p>
-      </div>
     </div>
 
   </main>
@@ -322,9 +291,9 @@
     </div>
   </div>
 
-  <script src="settings.js?v=27"></script>
-  <script src="discovery.js?v=27"></script>
-  <script src="chart.js?v=27"></script>
-  <script src="app.js?v=27"></script>
+  <script src="settings.js?v=28"></script>
+  <script src="discovery.js?v=28"></script>
+  <script src="chart.js?v=28"></script>
+  <script src="app.js?v=28"></script>
 </body>
 </html>
