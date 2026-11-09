@@ -2644,7 +2644,7 @@
         // Strip leading "Vinster " — the HTML span already says Vinster.
         wins.textContent = String(box.wins_label_sv).replace(/^Vinster\s+/i, "");
       } else {
-        wins.textContent = String(box.wins || 0) + " (mål ≥" + String(box.win_target_count || 10) + ")";
+        wins.textContent = String(box.wins || 0);
       }
     }
     if (pnl) {
