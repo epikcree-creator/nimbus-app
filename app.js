@@ -329,7 +329,89 @@
         rpc_published: false
       },
       change_log: [],
-      settings_write: { direct: false }
+      settings_write: { direct: false },
+      kill_switch: { locked: false, reason_sv: null },
+      risk_limits: { max_buy_usd: 50, max_open_positions: 5, capital_usd: 200, open_positions: 0 },
+      journal: { active: true, count: 0, entries: [] },
+      intel: {
+        active: true,
+        generated_at: new Date().toISOString(),
+        timezone: "Europe/Stockholm",
+        guide_habits_sv: [
+          "Varje påstående har källa och datum.",
+          "Saknad data visas som saknas.",
+          "Tyst när inget ändrats.",
+          "Oscar bekräftar varje köp själv (PAPER)."
+        ],
+        briefing: {
+          active: true,
+          quiet: false,
+          items: [
+            { id: "kapital", title_sv: "Kapital", body_sv: "$200.00", source: "desk.balance", dated: "2026-11-09" },
+            { id: "oppna", title_sv: "Öppna positioner", body_sv: "saknas", source: "desk.positions", dated: "2026-11-09" },
+            { id: "natt", title_sv: "Kort över natten", body_sv: "2", source: "desk.trade_journal", dated: "2026-11-08" },
+            { id: "kill", title_sv: "Kill switch", body_sv: "öppen", source: "desk.kill_switch", dated: "2026-11-09 20:30" },
+            { id: "risk", title_sv: "Risklås", body_sv: "max $50.00 per köp · max 5 öppna", source: "desk.risk_limits", dated: "2026-11-09" }
+          ],
+          note_sv: "TEST — fixture brief"
+        },
+        changes: {
+          active: true,
+          quiet: false,
+          changes: [
+            {
+              profile: "prevaile",
+              kind: "new",
+              title_sv: "prevaile · 1 nya mint",
+              body_sv: "TEST $12.00",
+              buys_24h: 1,
+              new_mints: [{ mint: "TestMint1111111111111111111111111111111", symbol: "TEST", amount_usd: 12 }],
+              source: "desk.fomo_observations",
+              dated: "2026-11-09 20:30"
+            }
+          ]
+        },
+        watchlist: {
+          active: true,
+          quiet: true,
+          quiet_sv: "Inget nytt på bevakade mint.",
+          cards: [],
+          empty_sv: "Inga mint på bevakning."
+        },
+        sentiment: {
+          active: true,
+          cards: [
+            {
+              mint: "TestMint1111111111111111111111111111111",
+              symbol: "TEST",
+              rating: "Medel",
+              narrative_sv: "TEST — kort narrativ om en coin.",
+              mentions_1h: 4,
+              unique_accounts_1h: 3,
+              bot_suspect: "nej",
+              notes_sv: "fixture",
+              dated: "2026-11-09T12:00:00+00:00",
+              source: "desk.narrative_ratings"
+            }
+          ]
+        },
+        research: {
+          active: true,
+          packs: [
+            {
+              mint: "TestMint1111111111111111111111111111111",
+              symbol: "TEST",
+              title_sv: "Fakta · TEST",
+              note_sv: "TEST — varje rad har källa.",
+              claims: [
+                { claim_sv: "Narrativ: TEST — kort narrativ om en coin.", value: "Medel", source: "desk.narrative_ratings", dated: "2026-11-09T12:00:00+00:00" },
+                { claim_sv: "Omnämnanden senaste timmen (fri X-koll)", value: 4, source: "desk.narrative_ratings.mentions_1h", dated: "2026-11-09T12:00:00+00:00" },
+                { claim_sv: "Likviditet", value: "saknas", source: "desk.intel", dated: "saknas" }
+              ]
+            }
+          ]
+        }
+      }
     };
   }
 
@@ -2365,6 +2447,307 @@
     });
   }
 
+
+  var WATCH_KEY = "sniper_grok_watchlist_v1";
+
+  function loadLocalWatch() {
+    try {
+      var raw = localStorage.getItem(WATCH_KEY);
+      var parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) { return []; }
+  }
+
+  function saveLocalWatch(items) {
+    try { localStorage.setItem(WATCH_KEY, JSON.stringify(items.slice(0, 40))); } catch (e) {}
+  }
+
+  function addLocalWatch(mint, symbol) {
+    mint = String(mint || "").trim();
+    if (mint.length < 32 || mint.length > 44) return false;
+    var items = loadLocalWatch();
+    if (items.some(function (i) { return i.mint === mint; })) return true;
+    items.unshift({
+      mint: mint,
+      symbol: symbol || "saknas",
+      note_sv: "Tillagd manuellt",
+      added_at: new Date().toISOString()
+    });
+    saveLocalWatch(items);
+    return true;
+  }
+
+  function removeLocalWatch(mint) {
+    saveLocalWatch(loadLocalWatch().filter(function (i) { return i.mint !== mint; }));
+  }
+
+  function elCard(title, body, meta, changed) {
+    var card = document.createElement("article");
+    card.className = "insikt-card" + (changed ? " changed" : "");
+    var h = document.createElement("h3");
+    h.textContent = title;
+    card.appendChild(h);
+    if (body) {
+      var p = document.createElement("p");
+      p.className = "insikt-body";
+      p.textContent = body;
+      card.appendChild(p);
+    }
+    if (meta) {
+      var m = document.createElement("div");
+      m.className = "insikt-meta";
+      m.textContent = meta;
+      card.appendChild(m);
+    }
+    return card;
+  }
+
+  function renderIntel(state) {
+    var intel = (state && state.intel) || null;
+    var note = $("insikt-note");
+    if (note) {
+      note.textContent = intel && intel.active
+        ? "Insikt · PAPER · varje påstående har källa. Oscar bekräftar varje köp."
+        : "Insikt väntar på desken.";
+    }
+    var habits = $("insikt-habits");
+    if (habits) {
+      habits.innerHTML = "";
+      ((intel && intel.guide_habits_sv) || []).forEach(function (line) {
+        var s = document.createElement("span");
+        s.textContent = line;
+        habits.appendChild(s);
+      });
+    }
+
+    // Briefing
+    var briefing = (intel && intel.briefing) || {};
+    var bq = $("briefing-quiet");
+    var bl = $("briefing-list");
+    if (bl) {
+      bl.innerHTML = "";
+      if (briefing.quiet && bq) {
+        bq.hidden = false;
+        bq.textContent = briefing.quiet_sv || "Inget nytt sedan igår.";
+      } else if (bq) {
+        bq.hidden = true;
+      }
+      (briefing.items || []).forEach(function (item) {
+        bl.appendChild(elCard(
+          item.title_sv || "Punkt",
+          String(item.body_sv == null ? "saknas" : item.body_sv),
+          (item.source || "saknas") + " · " + (item.dated || "saknas")
+        ));
+      });
+      if (!(briefing.items || []).length) {
+        bl.appendChild(elCard("Morgonbrief", "saknas", "desk.intel"));
+      }
+    }
+
+    // Changes
+    var changes = (intel && intel.changes) || {};
+    var cq = $("changes-quiet");
+    var cl = $("changes-list");
+    if (cl) {
+      cl.innerHTML = "";
+      if (changes.quiet && cq) {
+        cq.hidden = false;
+        cq.textContent = changes.quiet_sv || "Inget nytt.";
+      } else if (cq) {
+        cq.hidden = true;
+      }
+      (changes.changes || []).forEach(function (row) {
+        cl.appendChild(elCard(
+          row.title_sv || row.profile || "Handlare",
+          row.body_sv || "saknas",
+          (row.source || "saknas") + " · " + (row.dated || "saknas"),
+          row.kind === "new"
+        ));
+      });
+      if (!(changes.changes || []).length) {
+        cl.appendChild(elCard("Vad ändrades", "Inga observationer ännu.", "desk.fomo_observations"));
+      }
+    }
+
+    // Watchlist: merge desk + local
+    var watch = (intel && intel.watchlist) || {};
+    var wq = $("watch-quiet");
+    var wl = $("watch-list");
+    var local = loadLocalWatch();
+    var deskCards = watch.cards || [];
+    var seen = {};
+    var merged = [];
+    deskCards.forEach(function (c) { seen[c.mint] = true; merged.push(c); });
+    local.forEach(function (item) {
+      if (seen[item.mint]) return;
+      merged.push({
+        mint: item.mint,
+        symbol: item.symbol || "saknas",
+        note_sv: item.note_sv || "Lokal bevakning",
+        changed: false,
+        change_sv: "Väntar på desk-fakta",
+        claims_preview: [],
+        source: "localStorage",
+        dated: item.added_at || "saknas",
+        local: true
+      });
+    });
+    if (wl) {
+      wl.innerHTML = "";
+      if (watch.quiet && !local.length && wq) {
+        wq.hidden = false;
+        wq.textContent = watch.quiet_sv || "Inget nytt på bevakning.";
+      } else if (wq) {
+        wq.hidden = true;
+      }
+      if (!merged.length) {
+        wl.appendChild(elCard("Bevakning", watch.empty_sv || "Inga mint på bevakning.", "desk.intel.watchlist"));
+      }
+      merged.forEach(function (card) {
+        var art = elCard(
+          (card.symbol || "saknas") + (card.changed ? " · ändrat" : ""),
+          card.change_sv || card.note_sv || "saknas",
+          (card.source || "saknas") + " · " + (card.dated || "saknas"),
+          !!card.changed
+        );
+        var mintLine = document.createElement("div");
+        mintLine.className = "insikt-meta";
+        mintLine.textContent = String(card.mint || "").slice(0, 12) + "…" + String(card.mint || "").slice(-6);
+        art.appendChild(mintLine);
+        (card.claims_preview || []).slice(0, 3).forEach(function (claim) {
+          var row = document.createElement("div");
+          row.className = "claim-row";
+          var a = document.createElement("span");
+          a.textContent = claim.claim_sv || "saknas";
+          var b = document.createElement("strong");
+          b.textContent = String(claim.value == null ? "saknas" : claim.value);
+          var src = document.createElement("div");
+          src.className = "claim-src";
+          src.textContent = (claim.source || "saknas") + " · " + (claim.dated || "saknas");
+          row.appendChild(a);
+          row.appendChild(b);
+          row.appendChild(src);
+          art.appendChild(row);
+        });
+        if (card.local) {
+          var rm = document.createElement("button");
+          rm.type = "button";
+          rm.className = "follow-btn";
+          rm.textContent = "Ta bort";
+          rm.addEventListener("click", function () {
+            removeLocalWatch(card.mint);
+            renderIntel(shownState || state);
+          });
+          art.appendChild(rm);
+        }
+        wl.appendChild(art);
+      });
+    }
+
+    // Sentiment
+    var sentiment = (intel && intel.sentiment) || {};
+    var se = $("sentiment-empty");
+    var sl = $("sentiment-list");
+    if (sl) {
+      sl.innerHTML = "";
+      var cards = sentiment.cards || [];
+      if (!cards.length && se) {
+        se.hidden = false;
+        se.textContent = sentiment.empty_sv || "Inga narrativbetyg ännu.";
+      } else if (se) {
+        se.hidden = true;
+      }
+      cards.forEach(function (card) {
+        var art = elCard(
+          (card.symbol || "saknas") + " · narrativ",
+          card.narrative_sv || "saknas",
+          (card.source || "saknas") + " · " + (card.dated || "saknas")
+        );
+        var pill = document.createElement("span");
+        pill.className = "rating-pill " + String(card.rating || "").toLowerCase();
+        pill.textContent = card.rating || "saknas";
+        art.insertBefore(pill, art.firstChild.nextSibling);
+        var meta2 = document.createElement("div");
+        meta2.className = "insikt-meta";
+        meta2.textContent = "Omnämnanden 1h: " + (card.mentions_1h == null ? "saknas" : card.mentions_1h)
+          + " · Unika: " + (card.unique_accounts_1h == null ? "saknas" : card.unique_accounts_1h)
+          + " · Bot: " + (card.bot_suspect == null ? "saknas" : card.bot_suspect);
+        art.appendChild(meta2);
+        var add = document.createElement("button");
+        add.type = "button";
+        add.className = "follow-btn";
+        add.textContent = "Bevaka";
+        add.addEventListener("click", function () {
+          addLocalWatch(card.mint, card.symbol);
+          renderIntel(shownState || state);
+        });
+        art.appendChild(add);
+        sl.appendChild(art);
+      });
+    }
+
+    // Research
+    var research = (intel && intel.research) || {};
+    var re = $("research-empty");
+    var rl = $("research-list");
+    if (rl) {
+      rl.innerHTML = "";
+      var packs = research.packs || [];
+      if (!packs.length && re) {
+        re.hidden = false;
+        re.textContent = research.empty_sv || "Inga mint att forska på.";
+      } else if (re) {
+        re.hidden = true;
+      }
+      packs.forEach(function (pack) {
+        var art = elCard(pack.title_sv || "Fakta", pack.note_sv || "", pack.mint ? (String(pack.mint).slice(0, 8) + "…") : "saknas");
+        (pack.claims || []).forEach(function (claim) {
+          var row = document.createElement("div");
+          row.className = "claim-row";
+          var a = document.createElement("span");
+          a.textContent = claim.claim_sv || "saknas";
+          var b = document.createElement("strong");
+          b.textContent = String(claim.value == null ? "saknas" : claim.value);
+          var src = document.createElement("div");
+          src.className = "claim-src";
+          src.textContent = (claim.source || "saknas") + " · " + (claim.dated || "saknas");
+          row.appendChild(a);
+          row.appendChild(b);
+          row.appendChild(src);
+          art.appendChild(row);
+        });
+        var add = document.createElement("button");
+        add.type = "button";
+        add.className = "follow-btn";
+        add.textContent = "Bevaka";
+        add.addEventListener("click", function () {
+          addLocalWatch(pack.mint, pack.symbol);
+          renderIntel(shownState || state);
+        });
+        art.appendChild(add);
+        rl.appendChild(art);
+      });
+    }
+  }
+
+  function bindWatchAdd() {
+    var btn = $("watch-add-btn");
+    if (!btn || btn.__bound) return;
+    btn.__bound = true;
+    btn.addEventListener("click", function () {
+      var mint = ($("watch-mint") && $("watch-mint").value) || "";
+      var symbol = ($("watch-symbol") && $("watch-symbol").value) || "";
+      if (!addLocalWatch(mint, symbol)) {
+        if ($("watch-note")) $("watch-note").textContent = "Ogiltig mint (32–44 tecken).";
+        return;
+      }
+      if ($("watch-mint")) $("watch-mint").value = "";
+      if ($("watch-symbol")) $("watch-symbol").value = "";
+      if ($("watch-note")) $("watch-note").textContent = "Tillagd lokalt. Desken fyller fakta när mint syns.";
+      renderIntel(shownState || window.__nimbusLastState || {});
+    });
+  }
+
   function renderState(state) {
     if (!state) { showBootEmpty(true); return; }
     shownState = state;
@@ -2377,6 +2760,7 @@
     renderDiscovery(state);
     renderStoppade(state);
     renderJournal(state);
+    renderIntel(state);
     renderTokens(state);
     renderClosed(state);
     window.__nimbusLastState = state;

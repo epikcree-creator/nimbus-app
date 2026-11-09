@@ -11,8 +11,8 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="icons/favicon.png" />
-  <link rel="stylesheet" href="app.css?v=22" />
-  <script src="brand.js?v=22"></script>
+  <link rel="stylesheet" href="app.css?v=23" />
+  <script src="brand.js?v=23"></script>
   <title></title>
   <script>
     document.title = NimbusBrand.name;
@@ -94,6 +94,7 @@
     <nav class="desk-tabs region-tabs" aria-label="Vyer">
       <button type="button" class="desk-tab on" data-tab="traders">Handlare</button>
       <button type="button" class="desk-tab" data-tab="tokens">Tokens</button>
+      <button type="button" class="desk-tab" data-tab="insikt">Insikt</button>
       <button type="button" class="desk-tab" data-tab="board">Topplista</button>
       <button type="button" class="desk-tab" data-tab="journal">Journal</button>
     </nav>
@@ -106,6 +107,38 @@
       <h2 class="sec-title">Handlare</h2>
       <div id="trader-grid" class="trader-grid"></div>
       <article id="trader-profile" class="trader-profile" hidden></article>
+    </section>
+
+
+    <section class="insikt-panel tab-panel" id="insikt-panel" data-panel="insikt" hidden>
+      <p id="insikt-note" class="setting-note">Insikt samlar brief, bevakning, fakta och vad som ändrats. PAPER · Oscar bekräftar varje köp.</p>
+      <div class="insikt-habits" id="insikt-habits"></div>
+
+      <h2 class="sec-title">Morgonbrief</h2>
+      <p id="briefing-quiet" class="empty-hint" hidden></p>
+      <div id="briefing-list" class="insikt-list"></div>
+
+      <h2 class="sec-title">Vad ändrades</h2>
+      <p id="changes-quiet" class="empty-hint" hidden></p>
+      <div id="changes-list" class="insikt-list"></div>
+
+      <h2 class="sec-title">Bevakning</h2>
+      <p id="watch-note" class="setting-note">Lägg till mint från fakta-kort. Tyst när inget ändrats.</p>
+      <div class="watch-add">
+        <input id="watch-mint" type="text" inputmode="text" autocomplete="off" placeholder="Mint-adress (32–44 tecken)" />
+        <input id="watch-symbol" type="text" autocomplete="off" placeholder="Symbol (valfritt)" />
+        <button type="button" id="watch-add-btn" class="follow-btn">Bevaka</button>
+      </div>
+      <p id="watch-quiet" class="empty-hint" hidden></p>
+      <div id="watch-list" class="insikt-list"></div>
+
+      <h2 class="sec-title">Narrativ &amp; sentiment</h2>
+      <p id="sentiment-empty" class="empty-hint" hidden></p>
+      <div id="sentiment-list" class="insikt-list"></div>
+
+      <h2 class="sec-title">Faktadisk</h2>
+      <p id="research-empty" class="empty-hint" hidden></p>
+      <div id="research-list" class="insikt-list"></div>
     </section>
 
     <section class="journal-panel tab-panel" id="journal-panel" data-panel="journal" hidden>
@@ -256,9 +289,9 @@
     </div>
   </div>
 
-  <script src="settings.js?v=22"></script>
-  <script src="discovery.js?v=22"></script>
-  <script src="chart.js?v=22"></script>
-  <script src="app.js?v=22"></script>
+  <script src="settings.js?v=23"></script>
+  <script src="discovery.js?v=23"></script>
+  <script src="chart.js?v=23"></script>
+  <script src="app.js?v=23"></script>
 </body>
 </html>

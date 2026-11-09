@@ -952,3 +952,58 @@ body.account-open { overflow: hidden; }
   background: #fff;
 }
 .discovery-buy:disabled { opacity: 0.45; box-shadow: none; }
+
+/* ---------- Insikt (marketplace-inspired desk) ---------- */
+.desk-tabs { grid-template-columns: repeat(5, 1fr); }
+.desk-tab { font-size: 0.78rem; padding: 0 4px; }
+.insikt-panel { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.insikt-habits {
+  display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px;
+}
+.insikt-habits span {
+  font-size: 0.68rem; font-weight: 600; color: #1F4F7A;
+  background: rgba(255,255,255,0.72); border: 1px solid rgba(31,111,224,0.18);
+  border-radius: 999px; padding: 5px 10px;
+}
+.insikt-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.insikt-card {
+  background: linear-gradient(160deg, #FFFFFF 0%, #EAF3FE 100%);
+  border: 1px solid rgba(31, 111, 224, 0.18);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+}
+.insikt-card h3 {
+  margin: 0 0 4px; font-size: 0.9rem; font-weight: 700; color: var(--ink);
+}
+.insikt-card .insikt-body {
+  margin: 0; font-size: 0.82rem; line-height: 1.4; color: var(--ink);
+}
+.insikt-card .insikt-meta {
+  margin-top: 6px; font-size: 0.68rem; color: #3A6488; line-height: 1.35;
+}
+.insikt-card.changed {
+  border-color: rgba(31, 111, 224, 0.45);
+  box-shadow: 0 0 0 1px rgba(62, 143, 242, 0.25), var(--shadow);
+}
+.insikt-card .claim-row {
+  display: grid; grid-template-columns: 1fr auto; gap: 6px;
+  padding: 6px 0; border-top: 1px solid rgba(31,111,224,0.1);
+  font-size: 0.78rem;
+}
+.insikt-card .claim-row:first-of-type { border-top: 0; margin-top: 6px; }
+.insikt-card .claim-src { grid-column: 1 / -1; font-size: 0.64rem; color: #3A6488; }
+.watch-add {
+  display: grid; grid-template-columns: 1fr 88px auto; gap: 6px;
+  margin: 0 0 10px;
+}
+.watch-add input {
+  min-height: 40px; border-radius: 10px; border: 1px solid var(--line);
+  padding: 8px 10px; font-size: 0.8rem; background: #fff; color: var(--ink);
+}
+.rating-pill {
+  display: inline-block; font-size: 0.68rem; font-weight: 700;
+  padding: 3px 8px; border-radius: 999px; background: rgba(31,111,224,0.12); color: #1F4F7A;
+}
+.rating-pill.starkt { background: rgba(46, 170, 90, 0.15); color: #1B7A3E; }
+.rating-pill.svagt { background: rgba(255, 107, 132, 0.15); color: #B03048; }
