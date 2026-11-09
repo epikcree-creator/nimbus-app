@@ -1,7 +1,7 @@
 {
-  "name": "Nimbus",
-  "short_name": "Nimbus",
-  "description": "Nimbus — pappershandel",
+  "name": "Sniper Grok",
+  "short_name": "Sniper Grok",
+  "description": "Sniper Grok — pappershandel",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
