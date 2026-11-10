@@ -11,8 +11,8 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="icons/favicon.png" />
-  <link rel="stylesheet" href="app.css?v=30" />
-  <script src="brand.js?v=30"></script>
+  <link rel="stylesheet" href="app.css?v=39" />
+  <script src="brand.js?v=39"></script>
   <title></title>
   <script>
     document.title = NimbusBrand.name;
@@ -62,50 +62,33 @@
         <img class="brand-logo" src="icons/icon-192.png" alt="" width="48" height="48" />
         <div>
           <h1 class="col-title" data-app-name></h1>
-          <p class="col-sub" id="agents-sub">Egna fynd · papperspengar</p>
+          <p class="col-sub" id="agents-sub">PAPER · papperspengar</p>
         </div>
+        <span class="mode-badge" id="mode-badge">PAPER</span>
+        <span class="live-dot" id="live-dot" hidden><i></i> Live</span>
       </div>
-      <div class="agents-meta">
-        <div class="head-tools">
-          <button type="button" class="icon-btn" id="btn-gear" aria-label="Kontoinställningar" title="Kontoinställningar">⚙</button>
-          <div class="auto-trade" aria-disabled="true">
-            <span>Auto-trade: AV</span>
-            <span class="toggle" id="auto-toggle" aria-hidden="true"><i></i></span>
-          </div>
-        </div>
-        <p class="auto-note">Oscar bekräftar varje köp · PAPER</p>
+      <div class="head-tools">
+        <button type="button" class="cash-btn" id="btn-deposit" data-cash="deposit">Insättning</button>
+        <button type="button" class="cash-btn ghost" id="btn-withdraw" data-cash="withdraw">Uttag</button>
+        <button type="button" class="icon-btn" id="btn-gear" aria-label="Kontoinställningar" title="Kontoinställningar">⚙</button>
       </div>
     </header>
 
     <div id="toasts" class="toasts region-toast" aria-live="polite"></div>
 
-    <p class="wallet-kicker region-kicker compact">Paper-saldo · Solana</p>
-    <div class="wallet-card region-wallet compact" id="wallet-card">
-      <div class="wallet-card-top">
-        <div class="wallet-brand">
-          <img src="icons/mark.png" alt="" width="22" height="22" />
-          <span data-app-name-suffix=" Wallet"></span>
-        </div>
-        <div class="wallet-pills">
-          <span class="pill">SOL</span>
-          <span class="pill" id="mode-pill">SIM</span>
-        </div>
-      </div>
-      <p class="avail-label">Tillgängligt · <span class="paper-tag">papperspengar</span></p>
-      <div class="balance-row">
-        <div class="balance" id="balance" data-value="0">$0.00</div>
-        <div class="cash-actions" id="cash-actions">
-          <button type="button" class="cash-btn" id="btn-deposit" data-cash="deposit">Insättning</button>
-          <button type="button" class="cash-btn ghost" id="btn-withdraw" data-cash="withdraw">Uttag</button>
-        </div>
-      </div>
+    <div class="ticker-wrap" id="ticker-wrap" hidden>
+      <div class="ticker" id="ticker"></div>
+    </div>
+
+    <!-- Hidden: keep IDs for existing wallet renderers; Insättning/Uttag live in the header. -->
+    <div class="wallet-card region-wallet compact declutter-wallet" id="wallet-card" hidden>
+      <span class="pill" id="mode-pill">SIM</span>
+      <div class="balance" id="balance" data-value="0">$0.00</div>
       <p class="cash-live-lock" id="cash-live-lock" hidden>Riktiga pengar är låsta</p>
-      <div class="wallet-card-bot">
-        <span class="status-pill" id="status-pill">Bot vilande</span>
-        <span class="pill" id="money-status">Papperspengar</span>
-        <span class="wm" id="wm">····</span>
-      </div>
-      <div class="stat-row" aria-label="Endast siffror från desken" hidden>
+      <span class="status-pill" id="status-pill">Bot vilande</span>
+      <span class="pill" id="money-status">Papperspengar</span>
+      <span class="wm" id="wm">····</span>
+      <div class="stat-row" hidden>
         <span>SKANNADE <b id="stat-scanned">–</b></span>
         <span>ÖPPNA <b id="stat-open">–</b></span>
         <span>VINST <b id="stat-win">saknas</b></span>
@@ -114,13 +97,13 @@
     </div>
 
     <nav class="desk-tabs region-tabs order-tabs" aria-label="Vyer">
-      <button type="button" class="desk-tab on" data-tab="forslag">Förslag</button>
-      <button type="button" class="desk-tab" data-tab="utmaning">Utmaning LIVE</button>
+      <button type="button" class="desk-tab on" data-tab="utmaning">Live</button>
+      <button type="button" class="desk-tab" data-tab="forslag">Förslag</button>
       <button type="button" class="desk-tab" data-tab="insikt">Insikt</button>
       <button type="button" class="desk-tab" data-tab="journal">Journal</button>
     </nav>
 
-    <section class="suggestions region-swipe tab-panel" id="suggestions" data-panel="forslag" aria-label="Swipe Mode föreslår">
+    <section class="suggestions region-swipe tab-panel" id="suggestions" data-panel="forslag" aria-label="Swipe Mode föreslår" hidden>
       <div class="discovery-head">
         <div>
           <h2>Swipe Mode föreslår</h2>
@@ -144,36 +127,65 @@
       </section>
     </section>
 
-    <section class="challenge-panel region-swipe tab-panel" id="challenge-panel" data-panel="utmaning" aria-label="Utmaning LIVE" hidden>
-      <div class="challenge-live-banner" id="challenge-live-banner">
-        <strong>Utmaning LIVE · PAPER</strong>
+    <section class="challenge-panel region-swipe tab-panel" id="challenge-panel" data-panel="utmaning" aria-label="Live">
+      <div class="challenge-toolbar">
         <span id="challenge-status-pill" class="challenge-status-pill">Pausad</span>
-      </div>
-      <div class="challenge-head">
-        <div>
-          <h2>Utmaning LIVE</h2>
-          <p id="challenge-note" class="setting-note">Ingen PAPER-utmaning körs.</p>
-          <p class="challenge-paper-tag" id="challenge-paper-tag">PAPER · simulerat · inga riktiga pengar</p>
-        </div>
         <div class="challenge-countdown" id="challenge-countdown" aria-live="polite">—</div>
+        <button type="button" class="btn-recap" id="btn-recap">Recap</button>
       </div>
-      <div class="challenge-stats" id="challenge-stats">
+      <p id="challenge-note" class="setting-note" hidden>Ingen PAPER-utmaning körs.</p>
+      <p class="challenge-paper-tag" id="challenge-paper-tag">PAPER · simulerat · inga riktiga pengar</p>
+
+      <div class="live-hero" id="live-hero">
+        <div class="live-hero-top">
+          <span class="session-pill" id="session-pnl-pill">saknas</span>
+        </div>
+        <div class="live-balance" id="live-balance">saknas</div>
+        <div class="hero-meta">
+          <span id="hero-put-in">in saknas · trades saknas</span>
+          <span class="mult-badge miss" id="hero-mult">saknas</span>
+        </div>
+        <div class="hero-wl" id="hero-wl">saknas</div>
+        <div class="session-chart-wrap">
+          <canvas id="session-chart" width="360" height="120" aria-label="Sessionsgraf"></canvas>
+          <div class="chart-labels"><span id="chart-start">saknas</span><span id="chart-end">saknas</span></div>
+        </div>
+      </div>
+
+      <h3 class="sec-title">Öppna positioner</h3>
+      <div id="challenge-open"></div>
+
+      <h3 class="sec-title">Recent trades</h3>
+      <div class="recent-trades" id="recent-trades"></div>
+      <div id="challenge-events" hidden></div>
+      <div id="challenge-trades" hidden></div>
+
+      <section class="agents-panel" id="agents-panel" aria-label="Agenter">
+        <div class="agents-head">
+          <h3 id="agents-title">agents – working together</h3>
+          <span class="agents-running" id="agents-running">saknas</span>
+        </div>
+        <div id="agents-list"></div>
+        <div class="swipe-core" id="swipe-core" aria-label="Swipe-kärnan"></div>
+      </section>
+
+      <div class="last-gates-wrap">
+        <div id="last-gates"></div>
+      </div>
+
+      <details class="rules-expander" id="challenge-rules-wrap">
+        <summary>Regler</summary>
+        <ul class="challenge-rules" id="challenge-rules"></ul>
+      </details>
+
+      <!-- kept for renderChallenge leftover ids -->
+      <div id="challenge-stats" hidden>
         <span>Status <b id="challenge-status-sv">—</b></span>
         <span>Vinster <b id="challenge-wins">0</b></span>
         <span>Resultat <b id="challenge-pnl">$0.00</b></span>
         <span>Kassa <b id="challenge-cash">saknas</b></span>
         <span>Oscars $200 <b id="challenge-oscar">orörd</b></span>
       </div>
-      <details class="rules-expander" id="challenge-rules-wrap">
-        <summary>Regler</summary>
-        <ul class="challenge-rules" id="challenge-rules"></ul>
-      </details>
-      <h3 class="sec-title">Öppna positioner</h3>
-      <div id="challenge-open"></div>
-      <h3 class="sec-title">Händelser</h3>
-      <div id="challenge-events"></div>
-      <h3 class="sec-title">Stängda trades</h3>
-      <div id="challenge-trades"></div>
     </section>
 
     <section class="insikt-panel tab-panel" id="insikt-panel" data-panel="insikt" hidden>
@@ -241,6 +253,32 @@
     </div>
     </div>
 
+
+    <dialog id="recap-sheet" class="recap-sheet">
+      <div class="recap-inner">
+        <div class="recap-handle" aria-hidden="true"></div>
+        <div class="recap-hero">
+          <div><span class="k">Put in</span><span class="v" id="recap-put">saknas</span></div>
+          <div><span class="k">Now worth</span><span class="v" id="recap-now">saknas</span></div>
+          <div><span class="k">Multiplier</span><span class="v" id="recap-mult">saknas</span></div>
+        </div>
+        <div class="recap-grid">
+          <div class="recap-cell"><span class="k">Trades</span><span class="v" id="recap-trades">saknas</span></div>
+          <div class="recap-cell"><span class="k">Coins</span><span class="v" id="recap-coins">saknas</span></div>
+          <div class="recap-cell"><span class="k">Sources</span><span class="v" id="recap-sources">saknas</span></div>
+          <div class="recap-cell"><span class="k">Agents</span><span class="v" id="recap-agents">5</span></div>
+        </div>
+        <div class="recap-bestworst">
+          <div>Best · <strong id="recap-best">saknas</strong></div>
+          <div>Worst · <strong id="recap-worst">saknas</strong></div>
+          <div>Win rate · <strong id="recap-winrate">saknas</strong></div>
+        </div>
+        <menu>
+          <button type="button" class="ghost" id="recap-close" value="close">Stäng</button>
+        </menu>
+      </div>
+    </dialog>
+
   </main>
 
   <section id="sell-confirm" class="sell-confirm" hidden>
@@ -302,9 +340,10 @@
     </div>
   </div>
 
-  <script src="settings.js?v=30"></script>
-  <script src="discovery.js?v=30"></script>
-  <script src="chart.js?v=30"></script>
-  <script src="app.js?v=30"></script>
+  <script src="settings.js?v=39"></script>
+  <script src="discovery.js?v=39"></script>
+  <script src="chart.js?v=39"></script>
+  <script src="live.js?v=39"></script>
+  <script src="app.js?v=39"></script>
 </body>
 </html>
