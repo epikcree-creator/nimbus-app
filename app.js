@@ -245,7 +245,7 @@
     if (sub) {
       sub.textContent = published === "LIVE"
         ? "Desken visar LIVE · appen handlar inte"
-        : "Egna fynd · papperspengar";
+        : "PAPER · papperspengar";
     }
     var status = $("money-status");
     if (status) status.textContent = published === "LIVE" ? "Appen: papperspengar" : "Papperspengar";
@@ -2746,7 +2746,7 @@
       if (!opens.length) {
         var emptyO = document.createElement("p");
         emptyO.className = "empty-hint";
-        emptyO.textContent = status === "paused" ? "Inga öppna positioner (pausad)." : "Inga öppna challenge-positioner.";
+        emptyO.textContent = status === "paused" ? "Inga öppna positioner (pausad)." : "Inga öppna positioner.";
         openHost.appendChild(emptyO);
       }
       opens.forEach(function (row) {

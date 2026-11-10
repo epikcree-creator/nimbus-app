@@ -1627,3 +1627,14 @@ body.account-open { overflow: hidden; }
 .sec-title { font-size: 14px; font-weight: 650; margin: 14px 0 8px; color: var(--ink); }
 .challenge-panel { display: flex; flex-direction: column; gap: 12px; }
 .challenge-live-banner { display: none; } /* replaced by top live-dot */
+
+/* 412px header: keep badge + Live under the title, tools on their own row */
+.desk-head { flex-wrap: wrap; align-items: flex-start; gap: 10px 12px; }
+.brand-row { flex: 1 1 180px; min-width: 0; }
+.brand-text { min-width: 0; }
+.brand-badges { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.head-tools { margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 430px) {
+  .head-tools { width: 100%; margin-left: 0; }
+  .head-tools .cash-btn { padding: 6px 12px; }
+}
