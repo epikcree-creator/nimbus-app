@@ -1,4 +1,4 @@
-/* Swipe Mode t164 layout: Hem · Trades · Agenter · Plånbok.
+/* Degen (was Swipe Mode) t164/t170 layout: Hem · Trades · Agenter · Plånbok.
    Real desk data only (state.json). Missing values read "saknas". PAPER only. */
 (function (global) {
   "use strict";
@@ -30,6 +30,11 @@
   function hm(iso) {
     var d = new Date(iso); if (!iso || isNaN(d.getTime())) return "saknas";
     return new Intl.DateTimeFormat("sv-SE", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(d);
+  }
+  function dayHm(iso) {
+    var d = new Date(iso); if (!iso || isNaN(d.getTime())) return "saknas";
+    var wd = new Intl.DateTimeFormat("sv-SE", { timeZone: TZ, weekday: "short" }).format(d).replace(".", "");
+    return wd + " " + hm(iso);
   }
   function dayLabel(d) {
     return new Intl.DateTimeFormat("sv-SE", { timeZone: TZ, weekday: "short", day: "numeric", month: "short" }).format(d);
@@ -91,8 +96,8 @@
     __prog.start = isFinite(st) ? st : null;
     __prog.end = isFinite(en) ? en : null;
     var a = $("hero-prog-start"), b = $("hero-prog-end");
-    if (a) a.textContent = __prog.start ? "start " + hm(box.started_at) : "start saknas";
-    if (b) b.textContent = __prog.end ? "slut " + hm(box.ends_at) : "slut saknas";
+    if (a) a.textContent = __prog.start ? "start " + dayHm(box.started_at) : "start saknas";
+    if (b) b.textContent = __prog.end ? "slut " + dayHm(box.ends_at) : "slut saknas";
     paintProgress();
   }
 
@@ -241,6 +246,71 @@
       var p = num(st.passed_today);
       note.textContent = "Inga trades än. " + (p == null ? "Pass idag saknas." : (p + " mynt har klarat STRICT idag."));
     }
+  }
+
+  /* ---------- HEM: why no trades (t170) ---------- */
+  // Labels the desk writes into feed rows (desk/swipe_crew.py FAIL_SV). Used only
+  // when the published state has no stats.block_reasons yet (before 21:40 restart).
+  var WHY_LABELS = ["tunn pool", "RugCheck-varning", "topp-10 tung", "val-holder", "LP olåst",
+    "mint öppen", "freeze öppen", "dev håller för mycket", "creator håller för mycket", "data saknas"];
+  function whyFromFeed(crew) {
+    var rows = ((crew && crew.feed) || []).filter(function (e) {
+      return /^strict:/.test(String(e.id || "")) && e.verdict !== "pass";
+    });
+    // "för ung" rows are rechecked at 15 min, not blocked: count them apart.
+    var young = rows.filter(function (e) { return String(e.text || "").indexOf("för ung") !== -1; }).length;
+    var mature = rows.filter(function (e) { return String(e.text || "").indexOf("för ung") === -1; });
+    var counts = {};
+    mature.forEach(function (e) {
+      var t = String(e.text || "");
+      WHY_LABELS.forEach(function (l) { if (t.indexOf(l) !== -1) counts[l] = (counts[l] || 0) + 1; });
+    });
+    var list = Object.keys(counts).map(function (k) { return { label_sv: k, n: counts[k], pct: mature.length ? 100 * counts[k] / mature.length : null }; });
+    list.sort(function (a, b) { return b.n - a.n; });
+    return { failed: mature.length, young: young, reasons: list.slice(0, 5),
+      scope: mature.length ? "senaste " + mature.length + " i flödet" : "saknas" };
+  }
+  function renderWhy(box, crew) {
+    var card = $("hem-why");
+    if (!card) return;
+    var none = !(box.open || []).length;
+    card.hidden = !none;
+    if (!none) return;
+    var st = (crew && crew.stats) || {};
+    var data;
+    if (Array.isArray(st.block_reasons)) {
+      data = { failed: num(st.failed_today), young: num(st.young_today), reasons: st.block_reasons,
+        scope: (num(st.failed_today) == null ? "saknas" : st.failed_today.toLocaleString("sv-SE") + " stoppade idag") };
+    } else {
+      data = whyFromFeed(crew);
+    }
+    $("why-scope").textContent = data.scope;
+    var list = $("why-list");
+    list.innerHTML = "";
+    var reasons = (data.reasons || []).filter(function (r) { return num(r.pct) != null; });
+    if (!reasons.length) {
+      list.appendChild(el("li", "why-empty", "Orsaker saknas"));
+    }
+    reasons.slice(0, 5).forEach(function (r, i) {
+      var li = el("li", "why-row" + (i === 0 ? " top" : ""));
+      var lab = el("span", "why-lab", r.label_sv || r.code || "saknas");
+      var pct = el("b", "why-pct", Math.round(num(r.pct)) + " %");
+      var bar = el("i", "why-bar");
+      var fill = el("u");
+      fill.style.width = Math.max(2, Math.min(100, num(r.pct))).toFixed(1) + "%";
+      bar.appendChild(fill);
+      li.appendChild(lab); li.appendChild(pct); li.appendChild(bar);
+      list.appendChild(li);
+    });
+    var note = $("why-note");
+    var p = num(st.passed_today);
+    var top = reasons[0];
+    var parts = [];
+    if (top) parts.push(Math.round(num(top.pct)) + " % av mynten som var gamla nog stoppades av " + top.label_sv + ".");
+    if (num(data.young) != null && data.young > 0) parts.push(data.young.toLocaleString("sv-SE") + " var under 15 min och kollas igen.");
+    if (p != null) parts.push(p + " klarade STRICT idag, inget klarade alla filter.");
+    parts.push("Filtren lättas inte. Väntar på mynt som klarar alla filter.");
+    note.textContent = parts.join(" ");
   }
 
   /* ---------- positions ---------- */
@@ -456,7 +526,7 @@
     if (!host) return;
     var list = (crew && crew.agents) || [];
     var title = $("core-title");
-    if (title) title.textContent = list.length + " agenter → Swipe-kärnan";
+    if (title) title.textContent = list.length + " agenter → " + ((global.NimbusBrand && NimbusBrand.name) || "Degen") + "-kärnan";
     if (__coreN === list.length && host.querySelector("svg")) {
       list.forEach(function (a, i) {
         var n = host.querySelector('.core-node[data-i="' + i + '"]');
@@ -501,7 +571,7 @@
     var hub = el("div", "core-hub");
     var img = new Image(); img.src = "icons/icon-192.png"; img.alt = ""; img.width = 40; img.height = 40;
     hub.appendChild(img);
-    hub.appendChild(el("div", "core-hub-name", "SWIPE-KÄRNAN"));
+    hub.appendChild(el("div", "core-hub-name", (((global.NimbusBrand && NimbusBrand.name) || "Degen").toUpperCase()) + "-KÄRNAN"));
     host.appendChild(hub);
     __coreN = list.length;
     syncMotion();
@@ -749,6 +819,7 @@
     renderBalance(box);
     renderChart(box);
     renderEmpty(box, crew);
+    renderWhy(box, crew);
     renderOpen("hem-open", "hem-open-n", box);
     renderOpen("tr-open", "tr-open-n", box);
     renderClosedStrip(box);

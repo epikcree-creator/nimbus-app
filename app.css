@@ -1,4 +1,4 @@
-/* Swipe Mode — clean layout (v19).
+/* Degen — clean layout (v19).
    Canvas: soft blurred sky-blue and white gradient. Surfaces: white sheets only where
    the user acts. Green is only Köp, red is only Avstå/Sälj. Visual layer only. */
 :root {
@@ -867,7 +867,7 @@ body.account-open { overflow: hidden; }
 .stoppade-open{margin-top:8px}
 
 
-/* Swipe Mode suggestions */
+/* Degen suggestions */
 .suggestions{margin-bottom:12px}
 .suggestion-card{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:18px;background:var(--card);border:1px solid var(--border);margin-bottom:10px}
 .suggestion-badge{display:inline-flex;align-items:center;gap:6px;font-size:0.68rem;font-weight:800;letter-spacing:0.02em;color:#0B3B66;background:rgba(80,160,255,0.16);border-radius:999px;padding:4px 10px;width:fit-content}

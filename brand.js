@@ -1,2 +1,2 @@
 /* User-visible product name. A later rename edits this string only. */
-var NimbusBrand = { name: "Swipe Mode" };
+var NimbusBrand = { name: "Degen" };

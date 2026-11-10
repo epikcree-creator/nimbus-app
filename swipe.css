@@ -1,4 +1,4 @@
-/* Swipe Mode t164 — clean white/blue layout after the x_cha1n reference.
+/* Degen t164/t170 — clean white/blue layout after the x_cha1n reference.
    One blue accent, monospace numbers, colour only for agents and win/loss. */
 :root {
   --sw-bg: #F6F8FB;
@@ -292,3 +292,43 @@ body.sw::before, body.sw::after { display: none !important; }
 .sw-panel .stoppade-wrap > summary { padding: 12px 0; font-weight: 700; font-size: .9rem; }
 .sw-panel #suggestion-cards:empty { display: none; }
 .last-gates-wrap .empty-hint { border: 0 !important; padding: 2px !important; }
+
+/* ---------- t170 polish ---------- */
+/* Hem: why no trades */
+.why-card[hidden] { display: none !important; }
+.why-card { padding: 16px 16px 14px; }
+.why-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.why-head h2 { margin: 0; font-size: .98rem; font-weight: 740; letter-spacing: -0.01em; color: var(--sw-ink); }
+.why-scope { font: 600 .66rem/1.2 var(--sw-mono); color: var(--sw-ink3); text-align: right; }
+.why-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.why-row { display: grid; grid-template-columns: 1fr auto; row-gap: 5px; align-items: baseline; }
+.why-lab { font-size: .82rem; font-weight: 560; color: var(--sw-ink); }
+.why-pct { font: 700 .8rem/1 var(--sw-mono); color: var(--sw-ink2); font-variant-numeric: tabular-nums; }
+.why-row.top .why-pct { color: var(--sw-blue); }
+.why-bar { grid-column: 1 / -1; display: block; height: 6px; border-radius: 999px; background: var(--sw-blue-50); overflow: hidden; }
+.why-bar u { display: block; height: 100%; border-radius: inherit; background: rgba(31,111,224,.45); text-decoration: none; }
+.why-row.top .why-bar u { background: var(--sw-blue); }
+.why-empty { font-size: .8rem; color: var(--sw-ink3); text-align: center; padding: 6px 0; }
+.why-note { margin: 12px 0 0; font-size: .74rem; line-height: 1.45; color: var(--sw-ink2); }
+
+/* odometer card: tighter, consistent label size */
+.odo-card { padding: 16px 12px 14px; }
+.odo-note { font-size: .74rem; line-height: 1.4; }
+
+/* Agenter: newest at the bottom, so fade the clipped top edge instead of cutting a row */
+.crew-feed { -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 28px); mask-image: linear-gradient(to bottom, transparent 0, #000 28px); padding-top: 18px; }
+.crew-chips .chip span, .crew-chips .chip small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.msg-bub { font-family: var(--font, system-ui), system-ui, sans-serif; font-size: .8rem; }
+
+/* suggestion score chips: warn tone for a failed sub-check */
+.suggestion-score span.warn { color: #9A5B00; background: #FFF6E5; border-color: rgba(217,119,6,.25); }
+.suggestion-card .coin-art.large img { image-rendering: auto; object-fit: cover; }
+
+/* section rhythm: same 12px gap above every section title */
+.sw-panel > .sec-row { margin: 12px 2px 0; }
+/* Plånbok desk banner: seven clean agent dots instead of an overlapping square stack */
+.crew-dots { gap: 5px; align-items: center; flex: none; }
+.crew-dots i { width: 10px; height: 10px; border-radius: 50%; margin-right: 0; border-width: 2px; }
+.crew-dots i.on { background: var(--agent); }
+.desk-banner-row { align-items: center; gap: 10px; }
+#desk-line { font-family: var(--font, system-ui), system-ui, sans-serif; font-size: .78rem; color: var(--sw-ink2); }

@@ -1,4 +1,4 @@
-/* Swipe Mode PWA — polls desk JSON from DATA_BASE in URL fragment */
+/* Degen PWA — polls desk JSON from DATA_BASE in URL fragment */
 (function () {
   var POLL_MS = 15000;
   var LS_BASE = "nimbus_data_base";
@@ -109,6 +109,21 @@
   }
 
   function $(id) { return document.getElementById(id); }
+  /* t170: product is Degen. Desk strings published before the 21:40 restart
+     still say "Swipe Mode"; rename them on the client so every screen matches. */
+  function brandName() { return (window.NimbusBrand && NimbusBrand.name) || "Degen"; }
+  function brandText(v) {
+    if (typeof v !== "string") return v;
+    return v.replace(/Swipe Mode/g, brandName()).replace(/Swipe-kärnan/g, brandName() + "-kärnan").replace(/SWIPE-KÄRNAN/g, brandName().toUpperCase() + "-KÄRNAN");
+  }
+  function brandDeep(o, depth) {
+    if (depth > 12 || o == null) return o;
+    if (typeof o === "string") return brandText(o);
+    if (Array.isArray(o)) { for (var i = 0; i < o.length; i++) o[i] = brandDeep(o[i], depth + 1); return o; }
+    if (typeof o === "object") { for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) o[k] = brandDeep(o[k], depth + 1); }
+    return o;
+  }
+  window.NimbusBrandText = brandText;
 
   function fmtUsd(n, digits) {
     n = Number(n) || 0;
@@ -1988,6 +2003,22 @@
     });
   }
 
+  /* t170: readable score chips ($ with thin spaces, % with one decimal, Swedish momentum codes) */
+  var MOMENTUM_SV = { vol_m5_low: "volym 5m låg", buys_le_sells: "fler sälj än köp", vertical_pump: "vertikal pump", no_pullback: "ingen rekyl", ok: "ok", saknas: "saknas" };
+  function scoreValue(key, val) {
+    var n = Number(val);
+    if ((key === "liquidity_usd" || key === "volume_h1_usd") && isFinite(n)) return "$" + Math.round(n).toLocaleString("sv-SE");
+    if (/_pct$/.test(String(key)) && isFinite(n)) return n.toFixed(1).replace(".", ",") + " %";
+    if (key === "momentum") return MOMENTUM_SV[val] || String(val).replace(/_/g, " ");
+    return String(val);
+  }
+  /* dexscreener serves a 64 px thumbnail; the card shows it full width, so ask for 256 px (the CDN only accepts some sizes; 200/300/400 return 422) */
+  function sharpImage(url) {
+    url = String(url || "");
+    if (/^https:\/\/cdn\.dexscreener\.com\//.test(url)) return url.replace(/([?&])width=\d+/, "$1width=256").replace(/([?&])height=\d+/, "$1height=256");
+    return url;
+  }
+
   /* restored t164: suggestion cards and challenge rows call this */
   function coinArt(card, className) {
     var wrap = document.createElement("div");
@@ -1995,11 +2026,12 @@
     var url = card && (card.image_url || card.image);
     if (url && /^https:\/\/[^\s]+$/.test(String(url))) {
       var img = document.createElement("img");
-      img.src = String(url);
+      img.src = className && className.indexOf("large") !== -1 ? sharpImage(url) : String(url);
       img.alt = (card.symbol || card.name || "coin") + " logo";
       img.loading = "lazy";
       img.referrerPolicy = "no-referrer";
       img.addEventListener("error", function () {
+        if (img.src !== String(url)) { img.src = String(url); return; }
         wrap.classList.add("placeholder");
         wrap.textContent = (card.initials || (card.symbol || "?").slice(0, 2) || "??").toUpperCase();
         img.remove();
@@ -2023,7 +2055,7 @@
     if (!cards.length) {
       var empty = document.createElement("p");
       empty.className = "empty-hint";
-      empty.textContent = "Inga förslag att visa.";
+      empty.textContent = "Väntar på mynt som klarar alla filter";
       host.appendChild(empty);
       return;
     }
@@ -2033,7 +2065,7 @@
       el.setAttribute("data-mint", card.mint || "");
       var badge = document.createElement("span");
       badge.className = "suggestion-badge";
-      badge.textContent = card.badge_sv || "Swipe Mode föreslår";
+      badge.textContent = brandText(card.badge_sv) || (brandName() + " föreslår");
       var title = document.createElement("strong");
       title.textContent = card.symbol || (card.mint || "").slice(0, 6) || "—";
       var rating = document.createElement("div");
@@ -2107,7 +2139,7 @@
       skip.className = "discovery-skip";
       skip.textContent = "Avstå";
       skip.addEventListener("click", function () {
-        logJournalAction("Avstå", { mint: card.mint, symbol: card.symbol, profile: "Swipe Mode" }, null, "Avstå suggestion");
+        logJournalAction("Avstå", { mint: card.mint, symbol: card.symbol, profile: brandName() }, null, "Avstå suggestion");
         el.remove();
       });
       var buy = document.createElement("button");
@@ -2122,7 +2154,7 @@
           trade_id: "suggest:" + (card.mint || ""),
           mint: card.mint,
           symbol: card.symbol,
-          profile: "Swipe Mode",
+          profile: brandName(),
           amount_usd: fresh.amount,
           token_url: card.token_url,
           source_at: card.rated_at,
@@ -2130,7 +2162,7 @@
           image: card.image_url || card.image || null,
           initials: card.initials || null
         };
-        logJournalAction("Köp", event, fresh.amount, "Swipe Mode föreslår (paper)");
+        logJournalAction("Köp", event, fresh.amount, brandName() + " föreslår (paper)");
         recordPaperBuy(window.__nimbusLastState, event, fresh.amount);
         renderTokens(window.__nimbusLastState);
         var review = $("discovery-review");
@@ -2144,7 +2176,7 @@
           reviewImg.innerHTML = "";
           reviewImg.appendChild(coinArt(card, "coin-art review"));
         }
-        if (copy) copy.textContent = "Swipe Mode föreslår · $" + fresh.amount.toFixed(2) + " · ingen order skickas. Riktiga pengar är avstängda.";
+        if (copy) copy.textContent = brandName() + " föreslår · $" + fresh.amount.toFixed(2) + " · ingen order skickas. Riktiga pengar är avstängda.";
         if (link) {
           link.textContent = "";
           if (card.token_url) {
@@ -2176,9 +2208,10 @@
           chip.className = "missing";
           chip.textContent = (part.label_sv || part.key) + " saknas";
         } else {
-          chip.textContent = (part.label_sv || part.key) + " " + val;
+          chip.textContent = (part.label_sv || part.key) + " " + scoreValue(part.key, val);
+          if (part.ok === false) chip.className = "warn";
         }
-        chip.title = part.source || "";
+        chip.title = part.detail_sv || part.source || "";
         scoreRow.appendChild(chip);
       });
       if ((card.score || []).length) el.appendChild(scoreRow);
@@ -2936,6 +2969,7 @@
 
   function renderState(state) {
     if (!state) { showBootEmpty(true); return; }
+    brandDeep(state, 0);
     shownState = state;
     showBootEmpty(false);
     renderHeader(state);

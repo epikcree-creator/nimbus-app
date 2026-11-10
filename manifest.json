@@ -1,7 +1,7 @@
 {
-  "name": "Swipe Mode",
-  "short_name": "Swipe Mode",
-  "description": "Swipe Mode — pappershandel",
+  "name": "Degen",
+  "short_name": "Degen",
+  "description": "Degen — pappershandel",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

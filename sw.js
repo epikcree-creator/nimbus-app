@@ -1,6 +1,6 @@
 /* Shell cache. The product name comes from brand.js. */
 importScripts("./brand.js");
-var CACHE = "nimbus-shell-v43";
+var CACHE = "nimbus-shell-v44";
 var SHELL = [
   "./",
   "./index.html",
@@ -60,9 +60,19 @@ self.addEventListener("fetch", function (e) {
     }));
     return;
   }
+  // t170: network first so a new deploy shows on the next open; cache only offline.
+  // Before v44 the shell was cache-first, so index.html could stay one version behind.
   e.respondWith(
-    caches.match(req).then(function (hit) {
-      return hit || fetch(req).then(function (res) { return res; });
+    fetch(req).then(function (res) {
+      if (res && res.ok && new URL(req.url).origin === self.location.origin) {
+        var copy = res.clone();
+        caches.open(CACHE).then(function (c) { c.put(req, copy); });
+      }
+      return res;
+    }).catch(function () {
+      return caches.match(req, { ignoreSearch: true }).then(function (hit) {
+        return hit || (req.mode === "navigate" ? caches.match("./index.html") : Response.error());
+      });
     })
   );
 });

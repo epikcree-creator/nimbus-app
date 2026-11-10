@@ -11,9 +11,9 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="icons/favicon.png" />
-  <link rel="stylesheet" href="app.css?v=43" />
-  <link rel="stylesheet" href="swipe.css?v=43" />
-  <script src="brand.js?v=43"></script>
+  <link rel="stylesheet" href="app.css?v=44" />
+  <link rel="stylesheet" href="swipe.css?v=44" />
+  <script src="brand.js?v=44"></script>
   <title></title>
   <script>
     document.title = NimbusBrand.name;
@@ -122,6 +122,15 @@
         <p class="odo-note" id="odo-note">Inga trades än. Inget mynt har klarat alla filter.</p>
       </article>
 
+      <article class="sw-card why-card" id="hem-why" hidden aria-labelledby="why-title">
+        <div class="why-head">
+          <h2 id="why-title">Varför inga trades just nu</h2>
+          <span class="why-scope" id="why-scope">saknas</span>
+        </div>
+        <ol class="why-list" id="why-list"></ol>
+        <p class="why-note" id="why-note">Väntar på mynt som klarar alla filter</p>
+      </article>
+
       <div class="sec-row"><h2>Öppna positioner</h2><span id="hem-open-n">0 öppna</span></div>
       <div class="sw-list" id="hem-open"></div>
 
@@ -139,7 +148,7 @@
 
     <!-- ============ TRADES ============ -->
     <section class="tab-panel sw-panel" data-panel="trades" id="panel-trades" hidden aria-label="Trades">
-      <section class="suggestions region-swipe" id="suggestions" aria-label="Swipe Mode föreslår">
+      <section class="suggestions region-swipe" id="suggestions" aria-label="Degen föreslår">
         <div class="sec-row"><h2>Förslag</h2><span>du bekräftar varje köp</span></div>
         <p id="suggestions-note" class="sw-note">Skanner → STRICT → narrativ → förslag.</p>
         <div id="suggestion-cards"></div>
@@ -193,8 +202,8 @@
       </label>
       <p class="sw-note crew-filter-note">Bara filter. Agenterna tar inte emot chatt.</p>
 
-      <div class="sec-row"><h2 id="core-title">7 agenter → Swipe-kärnan</h2></div>
-      <div class="sw-card core-card"><div class="swipe-core" id="crew-core" aria-label="Swipe-kärnan"></div></div>
+      <div class="sec-row"><h2 id="core-title">7 agenter → Degen-kärnan</h2></div>
+      <div class="sw-card core-card"><div class="swipe-core" id="crew-core" aria-label="Degen-kärnan"></div></div>
 
       <details class="rules-expander sw-exp insikt-panel" id="insikt-panel">
         <summary>Insikt</summary>
@@ -235,7 +244,7 @@
       </div>
       <p class="cash-live-lock" id="cash-live-lock" hidden>Riktiga pengar är låsta</p>
       <article class="sw-card desk-banner" id="desk-banner">
-        <div class="desk-banner-top"><strong>SWIPE DESK · 7 AGENTER</strong><span class="state-badge" id="desk-state">saknas</span></div>
+        <div class="desk-banner-top"><strong>DEGEN DESK · 7 AGENTER</strong><span class="state-badge" id="desk-state">saknas</span></div>
         <div class="desk-banner-row"><span class="crew-dots" id="desk-dots"></span><span id="desk-line">saknas</span></div>
       </article>
       <div class="sec-row"><h2>Tillgångar</h2></div>
@@ -350,11 +359,11 @@
     </div>
   </div>
 
-  <script src="settings.js?v=43"></script>
-  <script src="discovery.js?v=43"></script>
-  <script src="chart.js?v=43"></script>
-  <script src="live.js?v=43"></script>
-  <script src="app.js?v=43"></script>
-  <script src="swipe.js?v=43"></script>
+  <script src="settings.js?v=44"></script>
+  <script src="discovery.js?v=44"></script>
+  <script src="chart.js?v=44"></script>
+  <script src="live.js?v=44"></script>
+  <script src="app.js?v=44"></script>
+  <script src="swipe.js?v=44"></script>
 </body>
 </html>
