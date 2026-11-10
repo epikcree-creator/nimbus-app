@@ -406,6 +406,34 @@
     renderClosed(box);
     renderGoal(box);
   }
+  /* t189: why coins stopped — per-stage counts + top block reasons from state.pipeline. */
+  function renderFunnel(state) {
+    var host = $("dg-agents"); if (!host) return;
+    var card = $("dg-funnel");
+    if (!card) { card = el("article", "dg-funnel"); card.id = "dg-funnel"; host.parentNode.insertBefore(card, host.nextSibling); }
+    card.innerHTML = "";
+    var p = state.pipeline;
+    var h = el("div", "dg-fun-h"); h.appendChild(el("strong", null, "Varför stoppades mynten"));
+    h.appendChild(el("span", null, p ? "senaste " + p.window_min + " min · " + hm(p.updated_at) : "saknas"));
+    card.appendChild(h);
+    if (!p || !p.stages) { card.appendChild(el("p", "dg-empty", "Pipeline-data saknas")); return; }
+    var max = 1; p.stages.forEach(function (s) { var n = num(s.n); if (n != null && n > max) max = n; });
+    var ol = el("ol", "dg-fun-st");
+    p.stages.forEach(function (s) {
+      var n = num(s.n), li = el("li", s.key === "momentum_block" ? "blk" : null);
+      li.appendChild(el("span", null, s.label_sv));
+      var bar = el("i"); bar.style.width = (n == null ? 0 : Math.max(2, n / max * 100)).toFixed(1) + "%"; li.appendChild(bar);
+      li.appendChild(el("b", null, n == null ? "saknas" : Math.round(n).toLocaleString("sv-SE")));
+      ol.appendChild(li);
+    });
+    card.appendChild(ol);
+    var tb = p.top_blocks || [];
+    if (tb.length) {
+      var ul = el("ul", "dg-fun-top");
+      tb.forEach(function (t) { var li = el("li"); li.appendChild(el("em", null, t.stage)); li.appendChild(el("span", null, t.label_sv)); li.appendChild(el("b", null, String(t.n))); ul.appendChild(li); });
+      card.appendChild(ul);
+    }
+  }
   var seenClosed = null;
   function renderClosed(box) {
     var host = $("dg-closed"); if (!host) return;
@@ -469,6 +497,7 @@
     var box = state.challenge || {};
     try { renderWallet(state, box); } catch (e) { if (g.console) console.error(e); }
     try { renderAgents(state, box); } catch (e2) { if (g.console) console.error(e2); }
+    try { renderFunnel(state); } catch (e3) { if (g.console) console.error(e3); }
     watch(box);
     if (!state0) { state0 = state; goPage("wallet", false); }
     paintDots();

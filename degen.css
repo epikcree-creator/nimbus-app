@@ -348,3 +348,16 @@ body.dg .boot-empty h1 { color: #fff !important; }
 body.dg .boot-empty p { color: var(--dg-ink2) !important; }
 /* t186: a right swipe on the first page must not trigger browser back navigation */
 html:has(body.dg), body.dg { overscroll-behavior-x: none; }
+
+/* t189: pipeline funnel (Agenter) */
+.dg-funnel { margin-top: 10px; padding: 12px 14px; border-radius: 16px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); }
+.dg-fun-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+.dg-fun-h span { color: var(--dg-ink3); font-size: 12px; }
+.dg-fun-st { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
+.dg-fun-st li { display: grid; grid-template-columns: 9.5em 1fr 3.5em; align-items: center; gap: 8px; font-size: 12.5px; }
+.dg-fun-st i { display: block; height: 6px; border-radius: 3px; background: #22D3EE; opacity: .85; }
+.dg-fun-st li.blk i { background: #FF4D6D; }
+.dg-fun-st b { text-align: right; font-variant-numeric: tabular-nums; }
+.dg-fun-top { list-style: none; margin: 10px 0 0; padding: 8px 0 0; border-top: 1px solid rgba(255,255,255,.08); display: grid; gap: 4px; font-size: 12px; }
+.dg-fun-top li { display: grid; grid-template-columns: 5.5em 1fr auto; gap: 8px; }
+.dg-fun-top em { color: var(--dg-ink3); font-style: normal; }
