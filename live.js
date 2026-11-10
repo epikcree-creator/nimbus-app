@@ -137,17 +137,14 @@
       span.className = "ticker-chip";
       var sym = document.createElement("b");
       sym.textContent = item.symbol || (item.mint || "").slice(0, 6) || "saknas";
-      var ch = document.createElement("em");
-      if (item.change_missing || item.change_pct == null) {
-        ch.className = "miss";
-        ch.textContent = "saknas";
-      } else {
+      span.appendChild(sym);
+      if (!(item.change_missing || item.change_pct == null)) {
+        var ch = document.createElement("em");
         var v = Number(item.change_pct);
         ch.className = v >= 0 ? "up" : "down";
         ch.textContent = (v >= 0 ? "+" : "") + v.toFixed(2) + "%";
+        span.appendChild(ch);
       }
-      span.appendChild(sym);
-      span.appendChild(ch);
       return span;
     }
     host.innerHTML = "";
@@ -183,7 +180,7 @@
     if (put) {
       var cap = box.put_in_usd != null ? box.put_in_usd : box.capital_usd;
       var nTrades = box.closed_count != null ? box.closed_count : ((box.trades || []).length);
-      var putTxt = (cap == null || !isFinite(Number(cap))) ? "in saknas" : ("in " + fmtUsd(cap, 0));
+      var putTxt = (cap == null || !isFinite(Number(cap))) ? "insatt saknas" : ("insatt " + fmtUsd(cap, 0));
       var trTxt = nTrades == null ? "trades saknas" : (nTrades + " trades");
       put.textContent = putTxt + " · " + trTxt;
     }
@@ -237,7 +234,17 @@
     var points = box.equity_points || [];
     var baseline = box.put_in_usd != null ? Number(box.put_in_usd) : Number(box.capital_usd);
     var startL = clockHHMM(box.started_at_stockholm);
-    var endL = clockHHMM(box.ends_at_stockholm);
+    var endL;
+    var finished = box.status === "finished" || box.status === "aborted";
+    if (finished) {
+      endL = clockHHMM(box.ends_at_stockholm);
+    } else {
+      var nowL = box.now_stockholm;
+      if (!nowL && points.length && points[points.length - 1].t) {
+        nowL = String(points[points.length - 1].t).slice(0, 5);
+      }
+      endL = nowL ? ("nu " + nowL) : "nu";
+    }
     var startEl = $("chart-start");
     var endEl = $("chart-end");
     if (startEl) startEl.textContent = startL;
@@ -298,86 +305,269 @@
     });
   }
 
+
+  var ICONS = {
+    eye: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle fill="none" stroke="#fff" stroke-width="2" cx="12" cy="12" r="3"/></svg>',
+    shield: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3l8 4v6c0 5-3.5 7.5-8 10-4.5-2.5-8-5-8-10V7l8-4z"/></svg>',
+    trend: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 16l6-6 4 3 6-7"/><path fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 6h6v6"/></svg>',
+    bubble: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 6h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4 3v-3H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/></svg>',
+    bolt: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M13 2L4 14h7l-1 8 10-12h-7z"/></svg>'
+  };
+
+  function reducedMotion() {
+    return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  var __typed = {};
+  var __typeRaf = 0;
+
+  function typeStatus(el, id, full, active) {
+    if (!el) return;
+    full = full || "väntar";
+    var st = __typed[id] || { full: "", shown: "" };
+    if (reducedMotion() || !active) {
+      st.full = full;
+      st.shown = full;
+      st.anim = false;
+      __typed[id] = st;
+      el.textContent = full;
+      return;
+    }
+    if (st.full === full && !st.anim) {
+      el.textContent = st.shown || full;
+      return;
+    }
+    // Only type a real new status string. Never invent streaming text.
+    st.full = full;
+    st.shown = "";
+    st.anim = true;
+    st.t0 = performance.now();
+    st.dur = Math.min(600, Math.max(120, (full.length / 30) * 1000));
+    __typed[id] = st;
+    if (!__typeRaf) __typeRaf = requestAnimationFrame(tickTypes);
+  }
+
+  function tickTypes(now) {
+    __typeRaf = 0;
+    var going = false;
+    Object.keys(__typed).forEach(function (id) {
+      var st = __typed[id];
+      if (!st.anim) return;
+      var t = Math.min(1, (now - st.t0) / st.dur);
+      var n = Math.max(0, Math.min(st.full.length, Math.round(st.full.length * t)));
+      st.shown = st.full.slice(0, n);
+      var el = document.querySelector('.agent-card[data-id="' + id + '"] .agent-line');
+      if (el) el.textContent = st.shown;
+      if (t < 1) going = true;
+      else st.anim = false;
+    });
+    if (going) __typeRaf = requestAnimationFrame(tickTypes);
+  }
+
   function renderAgents(box) {
     var host = $("agents-list");
     var title = $("agents-title");
     var run = $("agents-running");
     var agentsBox = box.agents || {};
-    if (title) title.textContent = agentsBox.title_sv || "agents – working together";
+    if (title) title.textContent = agentsBox.title_sv || "Agenter – arbetar ihop";
     if (run) {
       var n = agentsBox.running;
       var tot = agentsBox.total || 5;
-      run.textContent = (n == null ? "saknas" : (n + " running"));
+      run.innerHTML = "";
+      var dot = document.createElement("i");
+      dot.className = "aktif-dot" + (n > 0 ? " on" : "");
+      var lab = document.createElement("span");
+      lab.textContent = (n == null ? "saknas" : (n + " aktiva"));
+      run.appendChild(dot);
+      run.appendChild(lab);
     }
     if (!host) return;
-    host.innerHTML = "";
     var list = agentsBox.agents || [];
+    if (!host.dataset.built || host.children.length !== list.length) {
+      host.innerHTML = "";
+      host.dataset.built = "1";
+      list.forEach(function (a) {
+        var card = document.createElement("article");
+        card.className = "agent-card";
+        card.setAttribute("data-id", a.id);
+        card.style.setProperty("--agent", a.color || "#2563EB");
+        var ico = document.createElement("div");
+        ico.className = "agent-ico";
+        ico.innerHTML = ICONS[a.icon] || ICONS.eye;
+        var mid = document.createElement("div");
+        mid.className = "agent-mid";
+        var name = document.createElement("strong");
+        name.className = "agent-name";
+        name.textContent = a.name || a.id || "saknas";
+        var line = document.createElement("code");
+        line.className = "agent-line";
+        var row = document.createElement("div");
+        row.className = "agent-status";
+        row.appendChild(line);
+        mid.appendChild(name);
+        mid.appendChild(row);
+        var src = document.createElement("span");
+        src.className = "agent-src";
+        src.textContent = a.source || "";
+        card.appendChild(ico);
+        card.appendChild(mid);
+        card.appendChild(src);
+        host.appendChild(card);
+      });
+    }
     list.forEach(function (a) {
-      var row = document.createElement("div");
-      row.className = "agent-row" + (a.running ? " on" : "");
-      var dot = document.createElement("i");
-      dot.className = "agent-dot";
-      dot.style.background = a.color || "#1F6FE0";
-      var name = document.createElement("strong");
-      name.textContent = a.name || a.id || "saknas";
-      var line = document.createElement("code");
-      line.textContent = a.line || "saknas";
-      row.appendChild(dot);
-      row.appendChild(name);
-      row.appendChild(line);
-      host.appendChild(row);
+      var card = host.querySelector('.agent-card[data-id="' + a.id + '"]');
+      if (!card) return;
+      card.style.setProperty("--agent", a.color || "#2563EB");
+      card.classList.toggle("on", !!a.running);
+      var name = card.querySelector(".agent-name");
+      if (name) name.textContent = a.name || a.id || "saknas";
+      var src = card.querySelector(".agent-src");
+      if (src) src.textContent = a.source || "";
+      var line = card.querySelector(".agent-line");
+      var text = a.line || "väntar";
+      typeStatus(line, a.id, text, !!a.running);
+      var cur = card.querySelector(".agent-cursor");
+      if (a.running) {
+        if (!cur) {
+          cur = document.createElement("span");
+          cur.className = "agent-cursor";
+          cur.textContent = "█";
+          var row = card.querySelector(".agent-status");
+          if (row) row.appendChild(cur);
+          else card.querySelector(".agent-mid").appendChild(cur);
+        }
+        cur.hidden = false;
+      } else if (cur) {
+        cur.hidden = true;
+      }
     });
     renderCore(agentsBox);
   }
 
+  var __coreBuilt = false;
   function renderCore(agentsBox) {
     var host = $("swipe-core");
     if (!host) return;
     var list = (agentsBox && agentsBox.agents) || [];
     var coreName = (agentsBox && agentsBox.core_sv) || "Swipe-kärnan";
+    var title = (agentsBox && agentsBox.core_title_sv) || "5 agenter → Swipe-kärnan";
+    var cap = $("core-title");
+    if (cap) cap.textContent = title;
+    if (__coreBuilt && host.querySelector("svg.core-svg")) {
+      // Update colours/names in place so EXEC actions never jump the layout.
+      list.slice(0, 5).forEach(function (a, i) {
+        var node = host.querySelector('.core-node[data-i="' + i + '"]');
+        if (node) {
+          node.style.setProperty("--agent", a.color || "#2563EB");
+          var lab = node.querySelector(".core-node-name");
+          if (lab) lab.textContent = a.name || "";
+        }
+        var dot = host.querySelector('.core-particle[data-i="' + i + '"]');
+        if (dot) dot.setAttribute("fill", a.color || "#2563EB");
+      });
+      syncCoreMotion();
+      return;
+    }
     host.innerHTML = "";
+    var count = document.createElement("div");
+    count.className = "core-count";
+    count.textContent = "5 → 1";
+    host.appendChild(count);
     var svgNS = "http://www.w3.org/2000/svg";
     var svg = document.createElementNS(svgNS, "svg");
-    svg.setAttribute("viewBox", "0 0 320 160");
+    svg.setAttribute("viewBox", "0 0 320 210");
     svg.setAttribute("class", "core-svg");
-    var cx = 160, cy = 80;
-    // positions: 5 around the core
+    var cx = 160, cy = 168;
+    // Arc of 5 nodes
     var pos = [
-      [40, 40], [40, 120], [160, 18], [280, 40], [280, 120]
+      [36, 58], [88, 32], [160, 22], [232, 32], [284, 58]
     ];
     list.slice(0, 5).forEach(function (a, i) {
       var p = pos[i] || [40, 40];
-      var line = document.createElementNS(svgNS, "line");
-      line.setAttribute("x1", p[0]);
-      line.setAttribute("y1", p[1]);
-      line.setAttribute("x2", cx);
-      line.setAttribute("y2", cy);
-      line.setAttribute("stroke", a.color || "#1F6FE0");
-      line.setAttribute("stroke-width", "1.6");
-      line.setAttribute("stroke-dasharray", "4 6");
-      line.setAttribute("class", "core-pulse");
-      line.style.setProperty("--delay", (i * 0.35) + "s");
-      svg.appendChild(line);
-      var c = document.createElementNS(svgNS, "circle");
-      c.setAttribute("cx", p[0]);
-      c.setAttribute("cy", p[1]);
-      c.setAttribute("r", "8");
-      c.setAttribute("fill", a.color || "#1F6FE0");
-      svg.appendChild(c);
+      var path = document.createElementNS(svgNS, "path");
+      var id = "core-path-" + i;
+      // Light-grey curve down into the core
+      var d = "M " + p[0] + " " + p[1] + " Q " + p[0] + " " + ((p[1] + cy) / 2 + 10) + " " + cx + " " + (cy - 28);
+      path.setAttribute("d", d);
+      path.setAttribute("id", id);
+      path.setAttribute("fill", "none");
+      path.setAttribute("stroke", "rgba(11,37,69,0.16)");
+      path.setAttribute("stroke-width", "1.2");
+      path.setAttribute("class", "core-path");
+      svg.appendChild(path);
+      var particle = document.createElementNS(svgNS, "circle");
+      particle.setAttribute("r", "2.4");
+      particle.setAttribute("fill", a.color || "#2563EB");
+      particle.setAttribute("class", "core-particle");
+      particle.setAttribute("data-i", String(i));
+      var mot = document.createElementNS(svgNS, "animateMotion");
+      mot.setAttribute("dur", (2.4 + i * 0.35) + "s");
+      mot.setAttribute("repeatCount", "indefinite");
+      mot.setAttribute("begin", (i * 0.4) + "s");
+      var mpath = document.createElementNS(svgNS, "mpath");
+      mpath.setAttributeNS("http://www.w3.org/1999/xlink", "href", "#" + id);
+      mpath.setAttribute("href", "#" + id);
+      mot.appendChild(mpath);
+      particle.appendChild(mot);
+      svg.appendChild(particle);
     });
-    var core = document.createElementNS(svgNS, "circle");
-    core.setAttribute("cx", cx);
-    core.setAttribute("cy", cy);
-    core.setAttribute("r", "28");
-    core.setAttribute("fill", "#F3F8FF");
-    core.setAttribute("stroke", "#1F6FE0");
-    core.setAttribute("stroke-width", "2");
-    svg.appendChild(core);
     host.appendChild(svg);
-    var lab = document.createElement("div");
-    lab.className = "core-label";
-    lab.textContent = coreName;
-    host.appendChild(lab);
+    // HTML nodes overlaid on the arc (names + dots)
+    var arc = document.createElement("div");
+    arc.className = "core-arc";
+    list.slice(0, 5).forEach(function (a, i) {
+      var p = pos[i];
+      var node = document.createElement("div");
+      node.className = "core-node" + (a.running ? " on" : "");
+      node.setAttribute("data-i", String(i));
+      node.style.setProperty("--agent", a.color || "#2563EB");
+      node.style.left = (p[0] / 320 * 100) + "%";
+      node.style.top = (p[1] / 210 * 100) + "%";
+      var lab = document.createElement("span");
+      lab.className = "core-node-name";
+      lab.textContent = a.name || "";
+      var bead = document.createElement("i");
+      bead.className = "core-bead";
+      node.appendChild(lab);
+      node.appendChild(bead);
+      arc.appendChild(node);
+    });
+    host.appendChild(arc);
+    var core = document.createElement("div");
+    core.className = "core-hub";
+    var logo = document.createElement("img");
+    logo.src = "icons/icon-192.png";
+    logo.alt = "";
+    logo.width = 36;
+    logo.height = 36;
+    var name = document.createElement("div");
+    name.className = "core-hub-name";
+    name.textContent = "SWIPE-KÄRNAN";
+    core.appendChild(logo);
+    core.appendChild(name);
+    host.appendChild(core);
+    __coreBuilt = true;
+    syncCoreMotion();
+  }
+
+  function syncCoreMotion() {
+    var host = $("swipe-core");
+    if (!host) return;
+    var off = reducedMotion() || document.hidden;
+    host.classList.toggle("paused", off);
+    var svg = host.querySelector("svg.core-svg");
+    if (svg) {
+      try {
+        if (off) svg.pauseAnimations();
+        else svg.unpauseAnimations();
+      } catch (e) {}
+    }
+  }
+
+  if (!window.__coreVisHook) {
+    window.__coreVisHook = true;
+    document.addEventListener("visibilitychange", syncCoreMotion);
   }
 
   function fillRecap(box) {
