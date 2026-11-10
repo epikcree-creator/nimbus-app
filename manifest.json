@@ -1,13 +1,13 @@
 {
-  "name": "Degen",
-  "short_name": "Degen",
-  "description": "Degen — pappershandel",
+  "name": "Sora",
+  "short_name": "Sora",
+  "description": "Sora — pappershandel",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#F3F8FF",
-  "theme_color": "#3E8FF2",
+  "background_color": "#170811",
+  "theme_color": "#170811",
   "icons": [
     {
       "src": "icons/icon-192.png",

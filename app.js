@@ -111,10 +111,11 @@
   function $(id) { return document.getElementById(id); }
   /* t170: product is Degen. Desk strings published before the 21:40 restart
      still say "Swipe Mode"; rename them on the client so every screen matches. */
-  function brandName() { return (window.NimbusBrand && NimbusBrand.name) || "Degen"; }
+  function brandName() { return (window.NimbusBrand && NimbusBrand.name) || "Sora"; }
   function brandText(v) {
     if (typeof v !== "string") return v;
-    return v.replace(/Swipe Mode/g, brandName()).replace(/Swipe-kärnan/g, brandName() + "-kärnan").replace(/SWIPE-KÄRNAN/g, brandName().toUpperCase() + "-KÄRNAN");
+    /* t190: product renamed Degen -> Sora; desk strings say Degen until its next restart. */
+    return v.replace(/\bDegen\b/g, brandName()).replace(/\bDEGEN\b/g, brandName().toUpperCase()).replace(/Swipe Mode/g, brandName()).replace(/Swipe-kärnan/g, brandName() + "-kärnan").replace(/SWIPE-KÄRNAN/g, brandName().toUpperCase() + "-KÄRNAN");
   }
   function brandDeep(o, depth) {
     if (depth > 12 || o == null) return o;
