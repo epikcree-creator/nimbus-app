@@ -16,7 +16,7 @@ window.NimbusChart = {
     var min = Math.min.apply(null, pts);
     var max = Math.max.apply(null, pts);
     var span = (max - min) || 1;
-    var col = color || "#9CFF2E";
+    var col = color || "#ff7a1a";
     var pad = 2;
     var coords = pts.map(function (v, i) {
       var x = pad + (i / Math.max(pts.length - 1, 1)) * (w - pad * 2);
@@ -176,7 +176,7 @@ window.NimbusChart = {
     }
   },
   _alpha: function (hex, a) {
-    var h = (hex || "#9CFF2E").replace("#", "");
+    var h = (hex || "#ff7a1a").replace("#", "");
     if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
     var n = parseInt(h, 16);
     var r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
