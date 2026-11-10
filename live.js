@@ -501,14 +501,25 @@
       particle.setAttribute("fill", a.color || "#2563EB");
       particle.setAttribute("class", "core-particle");
       particle.setAttribute("data-i", String(i));
+      // Parked at SVG (0,0) until animateMotion starts — keep invisible
+      // so a stray bead does not flash at the top-left of the arc.
+      particle.setAttribute("opacity", "0");
+      var begin = (i * 0.4) + "s";
+      var dur = (2.4 + i * 0.35) + "s";
+      var show = document.createElementNS(svgNS, "set");
+      show.setAttribute("attributeName", "opacity");
+      show.setAttribute("to", "1");
+      show.setAttribute("begin", begin);
+      show.setAttribute("fill", "freeze");
       var mot = document.createElementNS(svgNS, "animateMotion");
-      mot.setAttribute("dur", (2.4 + i * 0.35) + "s");
+      mot.setAttribute("dur", dur);
       mot.setAttribute("repeatCount", "indefinite");
-      mot.setAttribute("begin", (i * 0.4) + "s");
+      mot.setAttribute("begin", begin);
       var mpath = document.createElementNS(svgNS, "mpath");
       mpath.setAttributeNS("http://www.w3.org/1999/xlink", "href", "#" + id);
       mpath.setAttribute("href", "#" + id);
       mot.appendChild(mpath);
+      particle.appendChild(show);
       particle.appendChild(mot);
       svg.appendChild(particle);
     });

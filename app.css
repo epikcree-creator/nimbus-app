@@ -1573,27 +1573,37 @@ body.account-open { overflow: hidden; }
   text-transform: uppercase;
   color: var(--agent, #2563EB);
 }
-.agent-status { display: flex; align-items: baseline; min-width: 0; }
+.agent-status {
+  display: flex;
+  align-items: baseline;
+  min-width: 0;
+  max-width: 100%;
+}
 .agent-line, .agent-card code {
   font-family: var(--mono);
   font-size: 12px;
+  line-height: 1.25;
   color: var(--ink-3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
-  flex: 1;
+  /* Grow only if needed for ellipsis; never push the cursor to the far edge. */
+  flex: 0 1 auto;
 }
 .agent-cursor {
   flex: 0 0 auto;
   font-family: var(--mono);
   font-size: 12px;
+  line-height: 1.25;
   color: var(--ink-3);
   animation: cursor-blink 1s steps(1) infinite;
 }
 @keyframes cursor-blink { 50% { opacity: 0; } }
 .agent-src {
+  align-self: end;
   font-size: 12px;
+  line-height: 1.25;
   color: var(--ink-3);
   opacity: 0.75;
   white-space: nowrap;
@@ -1664,12 +1674,13 @@ body.account-open { overflow: hidden; }
   color: var(--sky-700);
   text-align: center;
 }
-.swipe-core.paused .core-particle,
+.swipe-core.paused .core-particle { opacity: 0 !important; }
 .swipe-core.paused .core-node.on .core-bead { animation: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .aktif-dot.on, .agent-card.on .agent-ico, .agent-cursor,
-  .core-pulse, .core-particle { animation: none !important; }
+  .core-pulse { animation: none !important; }
+  .core-particle { opacity: 0 !important; }
 }
 
 /* gates */
