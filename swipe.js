@@ -529,7 +529,7 @@
     if (!host) return;
     var list = (crew && crew.agents) || [];
     var title = $("core-title");
-    if (title) title.textContent = list.length + " agenter → " + ((global.NimbusBrand && NimbusBrand.name) || "C.C") + "-kärnan";
+    if (title) title.textContent = list.length + " agenter → " + ((global.NimbusBrand && NimbusBrand.name) || "Chairman") + "-kärnan";
     if (__coreN === list.length && host.querySelector("svg")) {
       list.forEach(function (a, i) {
         var n = host.querySelector('.core-node[data-i="' + i + '"]');
@@ -574,7 +574,7 @@
     var hub = el("div", "core-hub");
     var img = new Image(); img.src = "icons/icon-192.png"; img.alt = ""; img.width = 40; img.height = 40;
     hub.appendChild(img);
-    hub.appendChild(el("div", "core-hub-name", (((global.NimbusBrand && NimbusBrand.name) || "C.C").toUpperCase()) + "-KÄRNAN"));
+    hub.appendChild(el("div", "core-hub-name", (((global.NimbusBrand && NimbusBrand.name) || "Chairman").toUpperCase()) + "-KÄRNAN"));
     host.appendChild(hub);
     __coreN = list.length;
     syncMotion();

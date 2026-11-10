@@ -1,7 +1,7 @@
 {
-  "name": "C.C",
-  "short_name": "C.C",
-  "description": "C.C — pappershandel",
+  "name": "Chairman",
+  "short_name": "Chairman",
+  "description": "Chairman — pappershandel",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

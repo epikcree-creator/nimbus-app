@@ -452,8 +452,8 @@
     var host = $("swipe-core");
     if (!host) return;
     var list = (agentsBox && agentsBox.agents) || [];
-    var coreName = (agentsBox && agentsBox.core_sv) || "C.C-kärnan";
-    var title = (agentsBox && agentsBox.core_title_sv) || "5 agenter → C.C-kärnan";
+    var coreName = (agentsBox && agentsBox.core_sv) || "Chairman-kärnan";
+    var title = (agentsBox && agentsBox.core_title_sv) || "5 agenter → Chairman-kärnan";
     var cap = $("core-title");
     if (cap) cap.textContent = title;
     if (__coreBuilt && host.querySelector("svg.core-svg")) {
@@ -556,7 +556,7 @@
     logo.height = 36;
     var name = document.createElement("div");
     name.className = "core-hub-name";
-    name.textContent = "C.C-KÄRNAN";
+    name.textContent = "CHAIRMAN-KÄRNAN";
     core.appendChild(logo);
     core.appendChild(name);
     host.appendChild(core);
