@@ -1,6 +1,6 @@
 /* Shell cache. The product name comes from brand.js. */
 importScripts("./brand.js");
-var CACHE = "nimbus-shell-v42";
+var CACHE = "nimbus-shell-v43";
 var SHELL = [
   "./",
   "./index.html",
@@ -13,6 +13,8 @@ var SHELL = [
   "./icons/mark.png",
   "./chart.js",
   "./live.js",
+  "./swipe.js",
+  "./swipe.css",
   "./manifest.json",
   "./icons/favicon.png",
   "./icons/icon-192.png",

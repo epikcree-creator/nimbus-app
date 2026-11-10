@@ -1764,7 +1764,7 @@
           return;
         }
         var key = kind === "withdraw" ? "paper_withdraw" : "paper_deposit";
-        queueDeskWrite(key, String(amount));
+        var sent = queueDeskWrite(key, String(amount));
         // Optimistic local paint; desk publish is source of truth.
         try {
           var cur = paperCashAvailable(state);
@@ -1785,7 +1785,7 @@
           if (toastHost) {
             var n = document.createElement("div");
             n.className = "toast";
-            n.textContent = (kind === "withdraw" ? "Uttag" : "Insättning") + " $" + amount.toFixed(2) + " · PAPER · väntar på desk";
+            n.textContent = (kind === "withdraw" ? "Uttag" : "Insättning") + " $" + amount.toFixed(2) + " · PAPER · " + (sent ? "skickat, väntar på desk" : "inte skickat: logga in under Konto ⚙");
             toastHost.appendChild(n);
             setTimeout(function () { n.remove(); }, 3500);
           }
@@ -1799,11 +1799,16 @@
       var transport = transportOf(window.__nimbusLastState || {});
       var session = null;
       try { session = JSON.parse(localStorage.getItem("nimbus_owner_session") || "null"); } catch (e) {}
-      if (!transport || !transport.ready || !session || !session.access_token) return;
+      if (!transport || !transport.ready || !session || !session.access_token) return false;
       var box = { dataset: {}, textContent: "" };
       submitEntries(transport, session, [{ key: key, value: value }], box);
-    } catch (e) {}
+      return true;
+    } catch (e) { return false; }
   }
+  window.NimbusCash = {
+    open: function (kind) { openCashSheet(kind); },
+    available: function () { return paperCashAvailable(window.__nimbusLastState || {}); }
+  };
 
   function logJournalAction(action, event, amount, reason) {
     var payload = {
@@ -1893,18 +1898,21 @@
   }
 
   function showDeskTab(name) {
-    name = name || "utmaning";
-    if (name === "traders" || name === "board" || name === "tokens") name = "forslag";
+    name = name || "hem";
+    var legacyTab = { utmaning: "hem", live: "hem", forslag: "trades", traders: "trades", board: "trades", tokens: "trades", journal: "trades", insikt: "agenter", wallet: "planbok" };
+    if (legacyTab[name]) name = legacyTab[name];
     document.querySelectorAll(".desk-tab").forEach(function (button) {
       button.classList.toggle("on", button.getAttribute("data-tab") === name);
     });
     document.querySelectorAll(".tab-panel").forEach(function (panel) {
       panel.hidden = panel.getAttribute("data-panel") !== name;
     });
-    // Wallet card is decluttered; Insättning/Uttag live in the header.
     var wallet = $("wallet-card");
     if (wallet) wallet.hidden = true;
+    try { window.scrollTo(0, 0); } catch (eTop) {}
+    try { if (window.SwipeUI && SwipeUI.onTab) SwipeUI.onTab(name); } catch (eTab) {}
   }
+  window.__nimbusShowTab = function (name) { showDeskTab(name); };
   function showTraderTab(name) { showDeskTab(name); }
 
 
@@ -1978,6 +1986,30 @@
       card.appendChild(body);
       host.appendChild(card);
     });
+  }
+
+  /* restored t164: suggestion cards and challenge rows call this */
+  function coinArt(card, className) {
+    var wrap = document.createElement("div");
+    wrap.className = className || "coin-art";
+    var url = card && (card.image_url || card.image);
+    if (url && /^https:\/\/[^\s]+$/.test(String(url))) {
+      var img = document.createElement("img");
+      img.src = String(url);
+      img.alt = (card.symbol || card.name || "coin") + " logo";
+      img.loading = "lazy";
+      img.referrerPolicy = "no-referrer";
+      img.addEventListener("error", function () {
+        wrap.classList.add("placeholder");
+        wrap.textContent = (card.initials || (card.symbol || "?").slice(0, 2) || "??").toUpperCase();
+        img.remove();
+      });
+      wrap.appendChild(img);
+    } else {
+      wrap.classList.add("placeholder");
+      wrap.textContent = (card.initials || (card.symbol || "?").slice(0, 2) || "??").toUpperCase();
+    }
+    return wrap;
   }
 
   function renderSuggestions(state) {
@@ -2907,6 +2939,8 @@
     shownState = state;
     showBootEmpty(false);
     renderHeader(state);
+    bindCashActions();
+    syncCashActions(state);
     renderKillBanner(state);
     bindKillUnlock();
     renderSuggestions(state);
@@ -2917,11 +2951,12 @@
     renderClosed(state);
     if (!window.__deskTabInit) {
       window.__deskTabInit = true;
-      showDeskTab("utmaning");
+      showDeskTab("hem");
     }
     window.__nimbusLastState = state;
     renderAccount(state);
     renderGrok(state);
+    try { if (window.SwipeUI) SwipeUI.render(state); } catch (eSw) { if (window.console) console.error(eSw); }
   }
 
   function renderGrok(state) {
@@ -2956,7 +2991,11 @@
         if (!isFinite(want) || want < 3000) want = (ch.live_view || ch.status === "paused" || ch.status === "running") ? 5000 : POLL_MS;
         if (want !== __currentPollMs) schedulePoll(cfg, want);
       } catch (ePoll) {} })
-      .catch(function () { showBootEmpty(true); });
+      .catch(function (err) {
+        window.__nimbusLastError = String((err && err.stack) || err);
+        if (window.console) console.error(err);
+        if (!shownState) showBootEmpty(true);
+      });
   }
 
   // Extra CSS for audit rows (injected once)

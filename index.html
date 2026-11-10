@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-  <meta name="theme-color" content="#3E8FF2" />
+  <meta name="theme-color" content="#FFFFFF" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -11,15 +11,16 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="icons/favicon.png" />
-  <link rel="stylesheet" href="app.css?v=42" />
-  <script src="brand.js?v=42"></script>
+  <link rel="stylesheet" href="app.css?v=43" />
+  <link rel="stylesheet" href="swipe.css?v=43" />
+  <script src="brand.js?v=43"></script>
   <title></title>
   <script>
     document.title = NimbusBrand.name;
     document.querySelector('meta[name="apple-mobile-web-app-title"]').setAttribute("content", NimbusBrand.name);
   </script>
 </head>
-<body>
+<body class="sw">
   <p id="demo-banner" class="demo-banner" hidden>DEMO / SIMULERING · inte live-resultat</p>
   <div id="kill-banner" class="kill-banner compact" hidden role="alert">
     <div class="kill-banner-body">
@@ -29,17 +30,35 @@
     <button type="button" id="kill-unlock" class="kill-unlock">Lås upp…</button>
   </div>
 
-  <dialog id="cash-sheet" class="cash-sheet">
+  <div id="sw-notice" class="sw-notice" hidden role="status" aria-live="polite">
+    <img src="icons/icon-192.png" alt="" width="36" height="36" />
+    <div><strong id="sw-notice-title"></strong><span id="sw-notice-body"></span></div>
+    <em>nu</em>
+  </div>
+
+  <dialog id="cash-sheet" class="cash-sheet sw-sheet">
     <form method="dialog" id="cash-form">
+      <div class="sheet-handle" aria-hidden="true"></div>
       <h3 id="cash-sheet-title">Insättning</h3>
-      <p class="cash-sheet-note" id="cash-sheet-note">PAPER · papperspengar · Oscars manuella saldo (inte utmaningen)</p>
-      <label class="cash-amount-label">Belopp (USD)
-        <input id="cash-amount" type="number" inputmode="decimal" min="1" step="1" placeholder="t.ex. 25" required />
+      <p class="cash-sheet-note" id="cash-sheet-note">PAPER · papperspengar</p>
+      <label class="cash-big" for="cash-amount">
+        <span class="cash-big-k">Belopp</span>
+        <span class="cash-big-v"><i>$</i><input id="cash-amount" type="number" inputmode="decimal" min="1" step="1" placeholder="0" required /></span>
       </label>
+      <p class="cash-avail" id="cash-avail">Tillgängligt saknas</p>
+      <div class="cash-pills" id="cash-pills"></div>
+      <div class="cash-rows">
+        <div><span>Konto</span><b>Oscars papperssaldo</b></div>
+        <div><span>Avgift</span><b>$0.00 · PAPER</b></div>
+      </div>
       <p class="cash-sheet-error" id="cash-sheet-error" hidden></p>
+      <div class="slide" id="cash-slide" role="slider" aria-label="Dra för att bekräfta" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
+        <span class="slide-knob" id="cash-slide-knob" aria-hidden="true">→</span>
+        <span class="slide-text" id="cash-slide-text">Dra för att bekräfta ›››</span>
+      </div>
       <div class="cash-sheet-actions">
         <button type="submit" value="cancel" class="ghost">Avbryt</button>
-        <button type="submit" value="ok" id="cash-confirm">Bekräfta</button>
+        <button type="submit" value="ok" id="cash-confirm" hidden>Bekräfta</button>
       </div>
     </form>
   </dialog>
@@ -56,208 +75,197 @@
     </form>
   </dialog>
 
-  <main id="app" class="shell">
-    <header class="desk-head region-head">
-      <div class="brand-row">
-        <img class="brand-logo" src="icons/icon-192.png" alt="" width="48" height="48" />
-        <div class="brand-text">
-          <h1 class="col-title" data-app-name></h1>
-          <p class="col-sub" id="agents-sub">PAPER · papperspengar</p>
-          <div class="brand-badges">
-            <span class="mode-badge" id="mode-badge">PAPER</span>
-            <span class="live-dot" id="live-dot" hidden><i></i> Live</span>
-          </div>
-        </div>
+  <main id="app" class="shell sw-shell">
+    <header class="sw-top">
+      <img class="sw-logo" src="icons/icon-192.png" alt="" width="40" height="40" />
+      <div class="sw-title">
+        <h1 data-app-name></h1>
+        <p id="sw-sub">7 agenter · Solana spot</p>
       </div>
-      <div class="head-tools">
-        <button type="button" class="cash-btn" id="btn-deposit" data-cash="deposit">Insättning</button>
-        <button type="button" class="cash-btn ghost" id="btn-withdraw" data-cash="withdraw">Uttag</button>
-        <button type="button" class="icon-btn" id="btn-gear" aria-label="Kontoinställningar" title="Kontoinställningar">⚙</button>
-      </div>
+      <span class="sw-badge" id="mode-badge">PAPER</span>
+      <span class="live-dot sw-live" id="live-dot" hidden><i></i>Live</span>
+      <button type="button" class="sw-icon-btn" id="btn-gear" aria-label="Kontoinställningar" title="Kontoinställningar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
     </header>
 
     <div id="toasts" class="toasts region-toast" aria-live="polite"></div>
 
-    <div class="ticker-wrap" id="ticker-wrap" hidden>
-      <div class="ticker" id="ticker"></div>
-    </div>
-
-    <!-- Hidden: keep IDs for existing wallet renderers; Insättning/Uttag live in the header. -->
-    <div class="wallet-card region-wallet compact declutter-wallet" id="wallet-card" hidden>
-      <span class="pill" id="mode-pill">SIM</span>
-      <div class="balance" id="balance" data-value="0">$0.00</div>
-      <p class="cash-live-lock" id="cash-live-lock" hidden>Riktiga pengar är låsta</p>
-      <span class="status-pill" id="status-pill">Bot vilande</span>
-      <span class="pill" id="money-status">Papperspengar</span>
-      <span class="wm" id="wm">····</span>
-      <div class="stat-row" hidden>
-        <span>SKANNADE <b id="stat-scanned">–</b></span>
-        <span>ÖPPNA <b id="stat-open">–</b></span>
-        <span>VINST <b id="stat-win">saknas</b></span>
-        <span>RESULTAT <b id="stat-pnl">saknas</b></span>
-      </div>
-    </div>
-
-    <nav class="desk-tabs region-tabs order-tabs" aria-label="Vyer">
-      <button type="button" class="desk-tab on" data-tab="utmaning">Live</button>
-      <button type="button" class="desk-tab" data-tab="forslag">Förslag</button>
-      <button type="button" class="desk-tab" data-tab="insikt">Insikt</button>
-      <button type="button" class="desk-tab" data-tab="journal">Journal</button>
-    </nav>
-
-    <section class="suggestions region-swipe tab-panel" id="suggestions" data-panel="forslag" aria-label="Swipe Mode föreslår" hidden>
-      <div class="discovery-head">
-        <div>
-          <h2>Swipe Mode föreslår</h2>
-          <p id="suggestions-note">Scanner → STRICT → narrativ → förslag. Oscar bekräftar varje köp.</p>
-        </div>
-      </div>
-      <div id="suggestion-cards"></div>
-      <details class="stoppade-wrap rules-expander" id="stoppade" aria-label="Stoppade kort">
-        <summary>Stoppade <span class="count-orb" id="stoppade-count">0</span> · <span id="stoppade-strict-pill">STRICT på</span></summary>
-        <p id="stoppade-note" class="stoppade-note">Kort som STRICT-filtret dolde. Du kan öppna dem manuellt.</p>
-        <div id="stoppade-list"></div>
-      </details>
-      <!-- discovery-review reused for suggestion buy confirm -->
-      <section id="discovery-review" class="discovery-review" hidden>
-        <div id="discovery-review-image" class="review-image" hidden></div>
-        <h3 id="discovery-review-title">Köp</h3>
-        <p id="discovery-review-copy"></p>
-        <p class="discovery-safe" id="discovery-safe">Inget köp är gjort. Ingen order skickas och ingen plånbok öppnas.</p>
-        <p id="discovery-link"></p>
-        <button type="button" id="discovery-back">Tillbaka</button>
-      </section>
-    </section>
-
-    <section class="challenge-panel region-swipe tab-panel" id="challenge-panel" data-panel="utmaning" aria-label="Live">
-      <div class="challenge-toolbar">
-        <span id="challenge-status-pill" class="challenge-status-pill">Pausad</span>
-        <div class="challenge-countdown" id="challenge-countdown" aria-live="polite">—</div>
-        <button type="button" class="btn-recap" id="btn-recap">Recap</button>
-      </div>
-      <p id="challenge-note" class="setting-note" hidden>Ingen PAPER-utmaning körs.</p>
-      <p class="challenge-paper-tag" id="challenge-paper-tag">PAPER · simulerat · inga riktiga pengar</p>
-
-      <div class="live-hero" id="live-hero">
-        <div class="live-hero-top">
+    <!-- ============ HEM ============ -->
+    <section class="tab-panel sw-panel" data-panel="hem" id="panel-hem" aria-label="Hem">
+      <article class="sw-card bal-card" id="live-hero" role="button" title="Öppna sammanfattning">
+        <div class="bal-top">
+          <span class="bal-k">SALDO · PAPER-UTMANING</span>
           <span class="session-pill" id="session-pnl-pill">saknas</span>
         </div>
-        <div class="live-balance" id="live-balance">saknas</div>
-        <div class="hero-meta">
-          <span id="hero-put-in">in saknas · trades saknas</span>
-          <span class="mult-badge miss" id="hero-mult">saknas</span>
+        <div class="live-balance bal-v" id="live-balance">saknas</div>
+        <div class="bal-meta">
+          <span class="mult-badge" id="hero-mult">saknas</span>
+          <span id="hero-stats">saknas</span>
         </div>
-        <div class="hero-wl" id="hero-wl">saknas</div>
-        <div class="session-chart-wrap">
-          <canvas id="session-chart" width="360" height="120" aria-label="Sessionsgraf"></canvas>
-          <div class="chart-labels"><span id="chart-start">saknas</span><span id="chart-end">saknas</span></div>
+        <div class="bal-prog">
+          <div class="bal-prog-track"><i id="hero-prog-fill"></i></div>
+          <div class="bal-prog-lab"><span id="hero-prog-start">saknas</span><span>slut om <b class="challenge-countdown" id="challenge-countdown">—</b></span><span id="hero-prog-end">saknas</span></div>
         </div>
-      </div>
+      </article>
 
-      <h3 class="sec-title">Öppna positioner</h3>
-      <div id="challenge-open"></div>
+      <article class="sw-card chart-card">
+        <div class="chart-head"><strong>Saldo</strong><span id="chart-sub">live · Stockholm</span></div>
+        <div class="sw-chart" id="sw-chart" aria-label="Saldograf"></div>
+        <div class="chart-labels"><span id="chart-start">saknas</span><span id="chart-end">saknas</span></div>
+      </article>
 
-      <h3 class="sec-title">Senaste trades</h3>
-      <div class="recent-trades" id="recent-trades"></div>
-      <div id="challenge-events" hidden></div>
-      <div id="challenge-trades" hidden></div>
+      <article class="sw-card odo-card" id="hem-empty" hidden>
+        <div class="odo-cell"><span class="odo" id="odo-checks">0</span><span class="odo-k">kontroller idag</span></div>
+        <div class="odo-cell"><span class="odo" id="odo-perh">0</span><span class="odo-k">mynt skannade / h</span></div>
+        <div class="odo-cell"><span class="odo" id="odo-watch">0</span><span class="odo-k">på bevakning</span></div>
+        <p class="odo-note" id="odo-note">Inga trades än. Inget mynt har klarat alla filter.</p>
+      </article>
 
-      <section class="agents-panel" id="agents-panel" aria-label="Agenter">
-        <div class="agents-head">
-          <h3 id="agents-title">Agenter – arbetar ihop</h3>
-          <span class="agents-running" id="agents-running"><i class="aktif-dot"></i><span>saknas</span></span>
+      <div class="sec-row"><h2>Öppna positioner</h2><span id="hem-open-n">0 öppna</span></div>
+      <div class="sw-list" id="hem-open"></div>
+
+      <div class="sec-row"><h2>Stängda trades</h2><span id="hem-closed-n">0 totalt</span></div>
+      <div class="closed-strip" id="hem-closed"></div>
+
+      <article class="sw-card feed-card">
+        <div class="feed-head">
+          <img src="icons/icon-192.png" alt="" width="30" height="30" />
+          <div><strong data-app-name></strong><span id="hem-feed-sub">7 agenter</span></div>
         </div>
-        <div id="agents-list"></div>
-        <h3 class="core-heading" id="core-title">5 agenter → Swipe-kärnan</h3>
-        <div class="swipe-core" id="swipe-core" aria-label="Swipe-kärnan"></div>
+        <div class="feed-lines" id="hem-feed"></div>
+      </article>
+    </section>
+
+    <!-- ============ TRADES ============ -->
+    <section class="tab-panel sw-panel" data-panel="trades" id="panel-trades" hidden aria-label="Trades">
+      <section class="suggestions region-swipe" id="suggestions" aria-label="Swipe Mode föreslår">
+        <div class="sec-row"><h2>Förslag</h2><span>du bekräftar varje köp</span></div>
+        <p id="suggestions-note" class="sw-note">Skanner → STRICT → narrativ → förslag.</p>
+        <div id="suggestion-cards"></div>
+        <details class="stoppade-wrap rules-expander" id="stoppade" aria-label="Stoppade kort">
+          <summary>Stoppade <span class="count-orb" id="stoppade-count">0</span> · <span id="stoppade-strict-pill">STRICT på</span></summary>
+          <p id="stoppade-note" class="stoppade-note">Kort som STRICT-filtret dolde.</p>
+          <div id="stoppade-list"></div>
+        </details>
+        <section id="discovery-review" class="discovery-review" hidden>
+          <div id="discovery-review-image" class="review-image" hidden></div>
+          <h3 id="discovery-review-title">Köp</h3>
+          <p id="discovery-review-copy"></p>
+          <p class="discovery-safe" id="discovery-safe">Inget köp är gjort. Ingen order skickas och ingen plånbok öppnas.</p>
+          <p id="discovery-link"></p>
+          <button type="button" id="discovery-back">Tillbaka</button>
+        </section>
       </section>
 
-      <div class="last-gates-wrap">
-        <div id="last-gates"></div>
-      </div>
+      <div class="sec-row"><h2>Öppna</h2><span id="tr-open-n">0</span></div>
+      <div class="sw-list" id="tr-open"></div>
 
-      <details class="rules-expander" id="challenge-rules-wrap">
+      <div class="sec-row"><h2>Stängda</h2><span id="tr-closed-n">0</span></div>
+      <div class="sw-list" id="tr-closed"></div>
+
+      <div class="sec-row"><h2>Senaste kandidat</h2><span>7 grindar</span></div>
+      <div class="sw-card last-gates-wrap"><div id="last-gates"></div></div>
+
+      <details class="rules-expander sw-exp" id="challenge-rules-wrap">
         <summary>Regler</summary>
         <ul class="challenge-rules" id="challenge-rules"></ul>
       </details>
 
-      <!-- kept for renderChallenge leftover ids -->
-      <div id="challenge-stats" hidden>
-        <span>Status <b id="challenge-status-sv">—</b></span>
-        <span>Vinster <b id="challenge-wins">0</b></span>
-        <span>Resultat <b id="challenge-pnl">$0.00</b></span>
-        <span>Kassa <b id="challenge-cash">saknas</b></span>
-        <span>Oscars $200 <b id="challenge-oscar">orörd</b></span>
-      </div>
-    </section>
-
-    <section class="insikt-panel tab-panel" id="insikt-panel" data-panel="insikt" hidden>
-      <p id="insikt-note" class="setting-note">Insikt: brief, bevakning, narrativ och fakta. PAPER · Oscar bekräftar varje köp.</p>
-      <div class="insikt-habits" id="insikt-habits"></div>
-
-      <h2 class="sec-title">Morgonbrief</h2>
-      <p id="briefing-quiet" class="empty-hint" hidden></p>
-      <div id="briefing-list" class="insikt-list"></div>
-
-      <h2 class="sec-title">Marknadsförändringar</h2>
-      <p id="changes-quiet" class="empty-hint" hidden></p>
-      <div id="changes-list" class="insikt-list"></div>
-
-      <h2 class="sec-title">Bevakning</h2>
-      <p id="watch-note" class="setting-note">Lägg till mint från fakta-kort. Tyst när inget ändrats.</p>
-      <div class="watch-add">
-        <input id="watch-mint" type="text" inputmode="text" autocomplete="off" placeholder="Mint-adress (32–44 tecken)" />
-        <input id="watch-symbol" type="text" autocomplete="off" placeholder="Symbol (valfritt)" />
-        <button type="button" id="watch-add-btn" class="follow-btn">Bevaka</button>
-      </div>
-      <p id="watch-quiet" class="empty-hint" hidden></p>
-      <div id="watch-list" class="insikt-list"></div>
-
-      <h2 class="sec-title">Narrativ &amp; sentiment</h2>
-      <p id="sentiment-empty" class="empty-hint" hidden></p>
-      <div id="sentiment-list" class="insikt-list"></div>
-
-      <h2 class="sec-title">Faktadisk</h2>
-      <p id="research-empty" class="empty-hint" hidden></p>
-      <div id="research-list" class="insikt-list"></div>
-    </section>
-
-    <section class="journal-panel tab-panel" id="journal-panel" data-panel="journal" hidden>
-      <div class="journal-head">
-        <h2>Journal</h2>
+      <details class="rules-expander sw-exp journal-panel" id="journal-wrap">
+        <summary>Journal</summary>
         <p id="journal-note" class="journal-count" hidden></p>
-      </div>
-      <div id="journal-list"></div>
-      <details class="rules-expander" id="closed-expander">
-        <summary>Stängda trades <span class="count-orb" id="closed-count">0</span></summary>
-        <div class="closed-list" id="closed-list">
-          <p class="empty-hint">Inga stängda trades än</p>
-        </div>
+        <div id="journal-list"></div>
+        <details class="rules-expander" id="closed-expander">
+          <summary>Stängda (journal) <span class="count-orb" id="closed-count">0</span></summary>
+          <div class="closed-list" id="closed-list"><p class="empty-hint">Inga stängda trades än</p></div>
+        </details>
       </details>
     </section>
 
+    <!-- ============ AGENTER ============ -->
+    <section class="tab-panel sw-panel" data-panel="agenter" id="panel-agenter" hidden aria-label="Agenter">
+      <div class="crew-chips" id="crew-chips"></div>
+      <div class="crew-feed" id="crew-feed"></div>
+      <label class="crew-filter">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="crew-filter" type="search" autocomplete="off" placeholder="Filtrera flödet (mynt eller agent)" aria-label="Filtrera agentflödet" />
+      </label>
+      <p class="sw-note crew-filter-note">Bara filter. Agenterna tar inte emot chatt.</p>
 
-    <div class="card add-funds region-funds compact-funds" id="add-funds" hidden>
-      <div class="af-row">
-        <span class="af-label">Add funds · paper</span>
-        <div class="af-amount"><span id="af-display">$100</span></div>
+      <div class="sec-row"><h2 id="core-title">7 agenter → Swipe-kärnan</h2></div>
+      <div class="sw-card core-card"><div class="swipe-core" id="crew-core" aria-label="Swipe-kärnan"></div></div>
+
+      <details class="rules-expander sw-exp insikt-panel" id="insikt-panel">
+        <summary>Insikt</summary>
+        <p id="insikt-note" class="setting-note">Insikt: källor, backtest och bevakning.</p>
+        <div class="insikt-habits" id="insikt-habits"></div>
+        <h3 class="sec-title">Bevakning · Källor · Backtest</h3>
+        <div class="watch-add">
+          <input id="watch-mint" type="text" inputmode="text" autocomplete="off" placeholder="Mint-adress (32–44 tecken)" />
+          <input id="watch-symbol" type="text" autocomplete="off" placeholder="Symbol (valfritt)" />
+          <button type="button" id="watch-add-btn" class="follow-btn">Bevaka</button>
+        </div>
+        <p id="watch-note" class="setting-note" hidden></p>
+        <p id="watch-quiet" class="empty-hint" hidden></p>
+        <div id="watch-list" class="insikt-list"></div>
+        <h3 class="sec-title">Morgonbrief</h3>
+        <p id="briefing-quiet" class="empty-hint" hidden></p>
+        <div id="briefing-list" class="insikt-list"></div>
+        <h3 class="sec-title">Narrativ &amp; sentiment</h3>
+        <p id="sentiment-empty" class="empty-hint" hidden></p>
+        <div id="sentiment-list" class="insikt-list"></div>
+        <h3 class="sec-title">Faktadisk</h3>
+        <p id="research-empty" class="empty-hint" hidden></p>
+        <div id="research-list" class="insikt-list"></div>
+      </details>
+    </section>
+
+    <!-- ============ PLÅNBOK ============ -->
+    <section class="tab-panel sw-panel" data-panel="planbok" id="panel-planbok" hidden aria-label="Plånbok">
+      <article class="sw-card wal-card">
+        <div class="bal-top"><span class="bal-k">TOTALT PAPER-SALDO</span><span class="sw-badge">USD</span></div>
+        <div class="bal-v" id="wal-total">saknas</div>
+        <p class="wal-sub" id="wal-sub">saknas</p>
+      </article>
+      <div class="wal-btns">
+        <button type="button" class="wal-btn on" id="btn-deposit" data-cash="deposit"><i><svg viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></svg></i>Insättning</button>
+        <button type="button" class="wal-btn" id="btn-withdraw" data-cash="withdraw"><i><svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></i>Uttag</button>
+        <button type="button" class="wal-btn" id="btn-history"><i><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg></i>Historik</button>
       </div>
-      <div class="af-pills" id="af-pills">
-        <button type="button" class="amt" data-amt="25">$25</button>
-        <button type="button" class="amt" data-amt="50">$50</button>
-        <button type="button" class="amt selected" data-amt="100">$100</button>
-        <button type="button" class="amt" data-amt="250">$250</button>
-      </div>
-      <div class="af-source" id="af-source">
-        <span class="src-left">Från pappersaldo</span>
-        <span class="src-right" id="af-source-right">simulering</span>
-      </div>
-      <a class="af-btn" id="af-btn" href="https://t.me/NimbusMobileBot?text=%2Fbankroll%20100" target="_blank" rel="noopener">Sätt paper-saldo $100</a>
+      <p class="cash-live-lock" id="cash-live-lock" hidden>Riktiga pengar är låsta</p>
+      <article class="sw-card desk-banner" id="desk-banner">
+        <div class="desk-banner-top"><strong>SWIPE DESK · 7 AGENTER</strong><span class="state-badge" id="desk-state">saknas</span></div>
+        <div class="desk-banner-row"><span class="crew-dots" id="desk-dots"></span><span id="desk-line">saknas</span></div>
+      </article>
+      <div class="sec-row"><h2>Tillgångar</h2></div>
+      <div class="sw-card" id="wal-assets"></div>
+      <div class="sec-row" id="wal-activity-head"><h2>Aktivitet</h2></div>
+      <div class="sw-card" id="wal-activity"></div>
+    </section>
+
+    <!-- Legacy ids that older renderers still write to; never shown. -->
+    <div hidden aria-hidden="true" id="legacy-sink">
+      <div id="wallet-card"><span id="mode-pill"></span><div id="balance" data-value="0"></div><span id="status-pill"></span><span id="money-status"></span><span id="wm"></span>
+        <b id="stat-scanned"></b><b id="stat-open"></b><b id="stat-win"></b><b id="stat-pnl"></b></div>
+      <span id="challenge-status-pill"></span><button type="button" id="btn-recap"></button>
+      <p id="challenge-note"></p><p id="challenge-paper-tag"></p>
+      <span id="hero-put-in"></span><span id="hero-wl"></span>
+      <div id="recent-trades"></div>
+      <b id="challenge-status-sv"></b><b id="challenge-wins"></b><b id="challenge-pnl"></b><b id="challenge-cash"></b><b id="challenge-oscar"></b>
+      <p id="changes-quiet"></p><div id="changes-list"></div>
+      <span id="agents-sub"></span>
+      <div id="add-funds"><span id="af-display"></span><span id="af-source-right"></span><a id="af-btn" href="#"></a></div>
     </div>
-    </div>
 
+    <nav class="sw-nav" aria-label="Vyer">
+      <button type="button" class="desk-tab on" data-tab="hem"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Hem</span></button>
+      <button type="button" class="desk-tab" data-tab="trades"><svg viewBox="0 0 24 24"><path d="M7 4v16M3 8l4-4 4 4M17 20V4M13 16l4 4 4-4"/></svg><span>Trades</span></button>
+      <button type="button" class="desk-tab" data-tab="agenter"><svg viewBox="0 0 24 24"><path d="M12 2l2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2z"/></svg><span>Agenter</span></button>
+      <button type="button" class="desk-tab" data-tab="planbok"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18M16 15h2"/></svg><span>Plånbok</span></button>
+    </nav>
 
-    <dialog id="recap-sheet" class="recap-sheet">
+    <dialog id="recap-sheet" class="recap-sheet sw-sheet">
       <div class="recap-inner">
         <div class="recap-handle" aria-hidden="true"></div>
         <div class="recap-hero">
@@ -269,7 +277,7 @@
           <div class="recap-cell"><span class="k">Trades</span><span class="v" id="recap-trades">saknas</span></div>
           <div class="recap-cell"><span class="k">Mynt</span><span class="v" id="recap-coins">saknas</span></div>
           <div class="recap-cell"><span class="k">Källor</span><span class="v" id="recap-sources">saknas</span></div>
-          <div class="recap-cell"><span class="k">Agenter</span><span class="v" id="recap-agents">5</span></div>
+          <div class="recap-cell"><span class="k">Agenter</span><span class="v" id="recap-agents">7</span></div>
         </div>
         <div class="recap-bestworst">
           <div>Bäst · <strong id="recap-best">saknas</strong></div>
@@ -281,7 +289,6 @@
         </menu>
       </div>
     </dialog>
-
   </main>
 
   <section id="sell-confirm" class="sell-confirm" hidden>
@@ -343,10 +350,11 @@
     </div>
   </div>
 
-  <script src="settings.js?v=42"></script>
-  <script src="discovery.js?v=42"></script>
-  <script src="chart.js?v=42"></script>
-  <script src="live.js?v=42"></script>
-  <script src="app.js?v=42"></script>
+  <script src="settings.js?v=43"></script>
+  <script src="discovery.js?v=43"></script>
+  <script src="chart.js?v=43"></script>
+  <script src="live.js?v=43"></script>
+  <script src="app.js?v=43"></script>
+  <script src="swipe.js?v=43"></script>
 </body>
 </html>
