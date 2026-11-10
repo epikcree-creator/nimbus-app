@@ -2772,8 +2772,11 @@
     }
     if (cd) {
       var showCd = status === "running" || status === "paused" || status === "aborting";
-      cd.textContent = showCd ? formatCountdown(box.countdown_seconds) : (status === "finished" || status === "aborted" ? "Klar" : "—");
+      var done = status === "finished" || status === "aborted";
+      cd.textContent = showCd ? formatCountdown(box.countdown_seconds) : (done ? "Avslutad" : "—");
       cd.dataset.endsAt = showCd && box.ends_at ? box.ends_at : "";
+      var cdLab = $("challenge-cd-lab");
+      if (cdLab) cdLab.textContent = showCd ? "slut om" : (done ? "utmaning" : "slut om");
     }
     if (wins) {
       if (box.wins_label_sv) {

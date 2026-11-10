@@ -222,7 +222,9 @@
       var showCd = box.status === "running" || box.status === "paused" || box.status === "aborting";
       // leave existing formatCountdown from app.js if present
       if (typeof global.formatCountdownLive === "function") {
-        cd.textContent = showCd ? global.formatCountdownLive(box.countdown_seconds) : (box.status === "finished" || box.status === "aborted" ? "Klar" : "—");
+        cd.textContent = showCd ? global.formatCountdownLive(box.countdown_seconds) : (box.status === "finished" || box.status === "aborted" ? "Avslutad" : "—");
+        var cdLab = document.getElementById("challenge-cd-lab");
+        if (cdLab) cdLab.textContent = showCd ? "slut om" : ((box.status === "finished" || box.status === "aborted") ? "utmaning" : "slut om");
       }
       cd.dataset.endsAt = showCd && box.ends_at ? box.ends_at : "";
     }
