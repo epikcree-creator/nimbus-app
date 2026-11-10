@@ -343,3 +343,6 @@ body.dg { background:
   linear-gradient(180deg, #170811 0%, #1E0A1C 60%, #220C1E 100%) fixed !important; }
 .dg-agent { background: linear-gradient(180deg, rgba(48,13,30,.86), rgba(36,10,27,.86)); }
 .dg-agentsp { background: radial-gradient(100% 35% at 50% 0%, rgba(150,40,25,.22), rgba(150,40,25,0) 70%); }
+body.dg .boot-empty { background: radial-gradient(70% 45% at 85% 0%, rgba(214,78,40,.4), rgba(214,78,40,0) 70%), linear-gradient(180deg, #170811, #220C1E) !important; color: #fff !important; }
+body.dg .boot-empty h1 { color: #fff !important; }
+body.dg .boot-empty p { color: var(--dg-ink2) !important; }

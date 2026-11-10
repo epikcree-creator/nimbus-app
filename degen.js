@@ -299,8 +299,8 @@
     var host = $("dg-tokens"); if (!host) return;
     host.innerHTML = "";
     var tiles = [
-      { ico: "$", cls: "usd", name: "USD · utmaning", sub: usd(box.cash_usd) + " kassa", v: usd(box.cash_usd), d: "—" },
-      { ico: "logo", name: "Oscars USD", sub: "papperssaldo · orört", v: usd(oscar), d: "—" }
+      { ico: "$", cls: "usd", name: "USD", sub: "utmaningskassa", v: usd(box.cash_usd), d: "—" },
+      { ico: "logo", name: "Oscar", sub: "papperssaldo", v: usd(oscar), d: "—" }
     ];
     (box.open || []).forEach(function (r) {
       var size = num(r.size_usd), p = num(r.pnl_usd);
