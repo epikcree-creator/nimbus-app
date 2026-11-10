@@ -39,7 +39,7 @@ body.dg .dg-page > .tab-panel[hidden], body.dg .dg-page > .sw-panel[hidden] { di
   display: flex; width: 100vw; height: 100dvh;
   overflow-x: auto; overflow-y: hidden;
   scroll-snap-type: x mandatory; scroll-behavior: auto;
-  overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: none; -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
 .dg-pager::-webkit-scrollbar { display: none; }
@@ -346,3 +346,5 @@ body.dg { background:
 body.dg .boot-empty { background: radial-gradient(70% 45% at 85% 0%, rgba(214,78,40,.4), rgba(214,78,40,0) 70%), linear-gradient(180deg, #170811, #220C1E) !important; color: #fff !important; }
 body.dg .boot-empty h1 { color: #fff !important; }
 body.dg .boot-empty p { color: var(--dg-ink2) !important; }
+/* t186: a right swipe on the first page must not trigger browser back navigation */
+html:has(body.dg), body.dg { overscroll-behavior-x: none; }

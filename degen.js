@@ -195,6 +195,15 @@
     var raf = 0;
     p.addEventListener("scroll", function () { if (raf) return; raf = requestAnimationFrame(function () { raf = 0; paintDots(); }); }, { passive: true });
     g.addEventListener("resize", paintDots);
+    /* t186: a right swipe on the first page would otherwise trigger Chrome's swipe-back navigation. */
+    var tx = null, ty = null;
+    p.addEventListener("touchstart", function (e) { var t = e.touches[0]; tx = t.clientX; ty = t.clientY; }, { passive: true });
+    p.addEventListener("touchmove", function (e) {
+      if (tx == null) return;
+      var t = e.touches[0], dx = t.clientX - tx, dy = t.clientY - ty;
+      if (p.scrollLeft <= 0 && dx > 0 && Math.abs(dx) > Math.abs(dy) && e.cancelable) e.preventDefault();
+    }, { passive: false });
+    p.addEventListener("touchend", function () { tx = ty = null; }, { passive: true });
     paintDots();
     /* app.js tab changes (recap, legacy links) move the pager instead of hiding panels. */
     g.__nimbusShowTab = function (name) { goPage(PAGES.indexOf(name) >= 0 ? name : (ALIAS[name] || "hem")); };
