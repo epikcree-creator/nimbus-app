@@ -3,7 +3,7 @@
   var POLL_MS = 15000;
   var LS_BASE = "nimbus_data_base";
   var LS_TOKEN = "nimbus_app_token";
-  var SIGNUP_URL = "https://fomo.family/r/savipww";
+  var SIGNUP_URL = "https://fomo.family";
   var CHAIN_ID = { solana: 1399811149, robinhood: 4663, base: 8453, bnb: 56 };
   var AGENTS = [
     { id: "scanner", name: "Scanner", sub: "Graduationer · PumpPortal", color: "#64d2ff", icon: "𝒮" },
@@ -72,11 +72,11 @@
     chain = chain || "solana";
     if (!address || !(chain in CHAIN_ID)) return SIGNUP_URL;
     return "https://fomo.family/coin?address=" + encodeURIComponent(address) +
-      "&chainId=" + CHAIN_ID[chain] + "&r=savipww&source=share_link";
+      "&chainId=" + CHAIN_ID[chain];
   }
   function profileUrl(handle) {
     var h = String(handle || "").replace(/^@/, "");
-    return "https://fomo.family/profile/" + encodeURIComponent(h) + "?source=share_link&r=savipww";
+    return "https://fomo.family/profile/" + encodeURIComponent(h);
   }
   function bankrollLink(amt) {
     return "https://t.me/NimbusMobileBot?text=" + encodeURIComponent("/bankroll " + amt);
