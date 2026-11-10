@@ -1893,7 +1893,7 @@
   }
 
   function showDeskTab(name) {
-    name = name || "forslag";
+    name = name || "utmaning";
     if (name === "traders" || name === "board" || name === "tokens") name = "forslag";
     document.querySelectorAll(".desk-tab").forEach(function (button) {
       button.classList.toggle("on", button.getAttribute("data-tab") === name);
@@ -1901,11 +1901,9 @@
     document.querySelectorAll(".tab-panel").forEach(function (panel) {
       panel.hidden = panel.getAttribute("data-panel") !== name;
     });
-    // Wallet stays under header on every tab (compact PAPER balance).
+    // Wallet card is decluttered; Insättning/Uttag live in the header.
     var wallet = $("wallet-card");
-    var kicker = document.querySelector(".wallet-kicker");
-    if (wallet) wallet.hidden = false;
-    if (kicker) kicker.hidden = false;
+    if (wallet) wallet.hidden = true;
   }
   function showTraderTab(name) { showDeskTab(name); }
 
@@ -2163,6 +2161,12 @@
         el.appendChild(problem);
       }
       el.appendChild(actions);
+      if (card.gates && window.NimbusLive && NimbusLive.renderGates) {
+        var gwrap = document.createElement("div");
+        gwrap.className = "suggestion-gates";
+        NimbusLive.renderGates(gwrap, card.gates);
+        el.appendChild(gwrap);
+      }
       host.appendChild(el);
     });
   }
@@ -2489,6 +2493,28 @@
       }
       wl.appendChild(elCard("Lärdomar", lTxt, "desk.lessons"));
     }
+    var ga = (intel && intel.gate_audit) || {};
+    if (ga) {
+      function gateLines(rows, empty) {
+        rows = rows || [];
+        if (!rows.length) return empty;
+        return rows.slice(0, 8).map(function (r) {
+          var chg = r.later_chg_pct;
+          var chgTxt = (chg == null || !isFinite(Number(chg))) ? "saknas" : ((Number(chg) >= 0 ? "+" : "") + Number(chg).toFixed(1) + "%");
+          return (r.symbol || (r.mint || "").slice(0, 6) || "saknas") + " · " + chgTxt;
+        }).join(" · ");
+      }
+      wl.appendChild(elCard(
+        "Avvisad som sedan sprang",
+        gateLines(ga.rejected_then_ran, ga.empty_sv || "Ingen ännu."),
+        "desk.gate_audit"
+      ));
+      wl.appendChild(elCard(
+        "Passerade som sedan ruggade",
+        gateLines(ga.passed_then_rugged, ga.empty_sv || "Ingen ännu."),
+        "desk.gate_audit"
+      ));
+    }
 
       }
       merged.forEach(function (card) {
@@ -2648,6 +2674,11 @@
 
   function renderChallenge(state) {
     var box = (state && state.challenge) || {};
+    if (window.NimbusLive && typeof NimbusLive.render === "function") {
+      window.formatCountdownLive = formatCountdown;
+      NimbusLive.render(state);
+    }
+
     var note = $("challenge-note");
     var cd = $("challenge-countdown");
     var wins = $("challenge-wins");
@@ -2886,7 +2917,7 @@
     renderClosed(state);
     if (!window.__deskTabInit) {
       window.__deskTabInit = true;
-      showDeskTab("forslag");
+      showDeskTab("utmaning");
     }
     window.__nimbusLastState = state;
     renderAccount(state);
