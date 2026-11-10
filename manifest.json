@@ -1,13 +1,13 @@
 {
-  "name": "Sora",
-  "short_name": "Sora",
-  "description": "Sora — pappershandel",
+  "name": "C.C",
+  "short_name": "C.C",
+  "description": "C.C — pappershandel",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#170811",
-  "theme_color": "#170811",
+  "background_color": "#061007",
+  "theme_color": "#061007",
   "icons": [
     {
       "src": "icons/icon-192.png",
