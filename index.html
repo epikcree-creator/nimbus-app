@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-  <meta name="theme-color" content="#FFFFFF" />
+  <meta name="theme-color" content="#12050D" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -11,16 +11,20 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" href="icons/favicon.png" />
-  <link rel="stylesheet" href="app.css?v=46" />
-  <link rel="stylesheet" href="swipe.css?v=46" />
-  <script src="brand.js?v=46"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" />
+  <link rel="stylesheet" href="app.css?v=47" />
+  <link rel="stylesheet" href="swipe.css?v=47" />
+  <link rel="stylesheet" href="degen.css?v=47" />
+  <script src="brand.js?v=47"></script>
   <title></title>
   <script>
     document.title = NimbusBrand.name;
     document.querySelector('meta[name="apple-mobile-web-app-title"]').setAttribute("content", NimbusBrand.name);
   </script>
 </head>
-<body class="sw">
+<body class="sw dg">
   <p id="demo-banner" class="demo-banner" hidden>DEMO / SIMULERING · inte live-resultat</p>
   <div id="kill-banner" class="kill-banner compact" hidden role="alert">
     <div class="kill-banner-body">
@@ -91,6 +95,78 @@
 
     <div id="toasts" class="toasts region-toast" aria-live="polite"></div>
 
+
+    <div id="dg-pager" class="dg-pager" aria-label="Sidor · svep i sidled">
+      <!-- ============ PLÅNBOK (vänster kolumn i referensen) ============ -->
+      <section class="dg-page dg-wallet" data-page="wallet" aria-label="Plånbok">
+        <div class="dg-moon" aria-hidden="true"></div>
+        <header class="dg-whead">
+          <img class="dg-mini-logo" src="icons/icon-192.png" alt="" width="26" height="26" />
+          <div class="dg-wtools">
+            <button type="button" data-dg-go="hem" aria-label="Utmaning"><svg viewBox="0 0 24 24"><path d="M4 17l5-5 4 3 7-8"/></svg></button>
+            <button type="button" id="dg-more" aria-label="Konto"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+          </div>
+          <h1>Plånbok</h1>
+          <p>Handelsplånbok · Solana · PAPER</p>
+        </header>
+        <article class="dg-wcard">
+          <div class="dg-wcard-top">
+            <img src="icons/icon-192.png" alt="" width="24" height="24" />
+            <strong><span data-app-name></span> Wallet</strong>
+            <span class="dg-wtag">SOL</span><span class="dg-wtag w">PAPER</span>
+          </div>
+          <span class="dg-wk">Tillgängligt att handla</span>
+          <div class="dg-balance" id="dg-balance">saknas</div>
+          <div class="dg-wcard-bot">
+            <span class="dg-pnl up" id="dg-pnl" hidden>—</span>
+            <span class="dg-status" id="dg-status">saknas</span>
+            <span class="dg-live-lock" title="Riktiga pengar är låsta">•••• LIVE 🔒</span>
+          </div>
+        </article>
+        <div class="dg-sec"><h2>Sätt in</h2><button type="button" class="dg-link" id="dg-withdraw">Ta ut</button></div>
+        <label class="dg-amount">
+          <span>Belopp</span>
+          <span class="dg-amount-row"><i>$</i><input id="dg-amount" type="text" inputmode="decimal" value="100" aria-label="Belopp i USD" /></span>
+          <em>USD</em>
+        </label>
+        <div class="dg-pills" id="dg-pills"></div>
+        <button type="button" class="dg-from" data-dg-go="planbok">
+          <span class="dg-from-ico">$</span>
+          <span class="dg-from-mid"><strong>Till Oscars papperssaldo</strong><span id="dg-from-sub">saknas</span></span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+        <button type="button" class="dg-deposit" id="dg-deposit">Sätt in $100</button>
+        <div class="dg-sec"><h2>Tokens</h2><button type="button" class="dg-icon" id="dg-tok-search" aria-label="Sök token"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button></div>
+        <input id="dg-tok-filter" class="dg-tok-filter" type="search" placeholder="Sök token" hidden />
+        <div class="dg-tokens" id="dg-tokens"></div>
+      </section>
+
+      <!-- ============ AGENTER (höger kolumn i referensen) ============ -->
+      <section class="dg-page dg-agentsp" data-page="agents" aria-label="Agenter">
+        <header class="dg-ahead">
+          <img class="dg-mini-logo" src="icons/icon-192.png" alt="" width="34" height="34" />
+          <div class="dg-ahead-t"><h1 data-app-name></h1><p id="dg-ag-sub">saknas</p></div>
+          <div class="dg-since"><span>sedan<br />start</span><b id="dg-mult">—</b></div>
+          <div class="dg-auto-w"><span>Auto-trade<small>PAPER · vinst → plånbok</small></span><button type="button" class="dg-toggle" id="dg-auto" role="switch" aria-checked="false" aria-label="Auto-trade (styrs av desken)"><i></i></button></div>
+          <button type="button" class="dg-icon dg-gear" id="dg-gear" aria-label="Inställningar"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+        </header>
+        <div class="dg-agents" id="dg-agents"></div>
+        <article class="dg-closedc">
+          <div class="dg-closed-h"><strong>Stängda</strong><span class="dg-count" id="dg-closed-n">0</span><em>↑ till plånbok</em></div>
+          <div class="dg-closed" id="dg-closed"></div>
+        </article>
+        <div class="dg-goal" id="dg-goal">
+          <span class="dg-goal-k">MÅL <b>10×</b></span>
+          <div class="dg-goal-track"><i id="dg-goal-fill"></i>
+            <span class="dg-tick" data-x="2" style="left:30.1%"><em>2×</em></span>
+            <span class="dg-tick" data-x="5" style="left:69.9%"><em>5×</em></span>
+            <span class="dg-tick big" data-x="10" style="left:100%"><em>10×</em></span>
+          </div>
+          <b class="dg-goal-pct" id="dg-goal-pct">—</b>
+        </div>
+      </section>
+
+      <div class="dg-page dg-extra" data-page="hem">
     <!-- ============ HEM ============ -->
     <section class="tab-panel sw-panel" data-panel="hem" id="panel-hem" aria-label="Hem">
       <article class="sw-card bal-card" id="live-hero" role="button" title="Öppna sammanfattning">
@@ -146,6 +222,8 @@
       </article>
     </section>
 
+      </div>
+      <div class="dg-page dg-extra" data-page="trades">
     <!-- ============ TRADES ============ -->
     <section class="tab-panel sw-panel" data-panel="trades" id="panel-trades" hidden aria-label="Trades">
       <section class="suggestions region-swipe" id="suggestions" aria-label="Degen föreslår">
@@ -192,6 +270,8 @@
       </details>
     </section>
 
+      </div>
+      <div class="dg-page dg-extra" data-page="agenter">
     <!-- ============ AGENTER ============ -->
     <section class="tab-panel sw-panel" data-panel="agenter" id="panel-agenter" hidden aria-label="Agenter">
       <div class="crew-chips" id="crew-chips"></div>
@@ -230,6 +310,8 @@
       </details>
     </section>
 
+      </div>
+      <div class="dg-page dg-extra" data-page="planbok">
     <!-- ============ PLÅNBOK ============ -->
     <section class="tab-panel sw-panel" data-panel="planbok" id="panel-planbok" hidden aria-label="Plånbok">
       <article class="sw-card wal-card">
@@ -252,6 +334,9 @@
       <div class="sec-row" id="wal-activity-head"><h2>Aktivitet</h2></div>
       <div class="sw-card" id="wal-activity"></div>
     </section>
+
+      </div>
+    </div>
 
     <!-- Legacy ids that older renderers still write to; never shown. -->
     <div hidden aria-hidden="true" id="legacy-sink">
@@ -299,6 +384,9 @@
       </div>
     </dialog>
   </main>
+
+  <nav class="dg-dots" id="dg-dots" aria-label="Sidor"></nav>
+  <div class="dg-toasts" id="dg-toasts" aria-live="polite"></div>
 
   <section id="sell-confirm" class="sell-confirm" hidden>
     <div class="sell-card">
@@ -359,11 +447,12 @@
     </div>
   </div>
 
-  <script src="settings.js?v=46"></script>
-  <script src="discovery.js?v=46"></script>
-  <script src="chart.js?v=46"></script>
-  <script src="live.js?v=46"></script>
-  <script src="app.js?v=46"></script>
-  <script src="swipe.js?v=46"></script>
+  <script src="settings.js?v=47"></script>
+  <script src="discovery.js?v=47"></script>
+  <script src="chart.js?v=47"></script>
+  <script src="live.js?v=47"></script>
+  <script src="app.js?v=47"></script>
+  <script src="swipe.js?v=47"></script>
+  <script src="degen.js?v=47"></script>
 </body>
 </html>
