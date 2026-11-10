@@ -334,7 +334,10 @@
   }
   function closedPct(t) {
     var p = num(t.pnl_usd), s = num(t.size_usd);
-    return p != null && s ? (p / s) * 100 : null;
+    if (p != null && s) return (p / s) * 100;
+    /* t186: size_usd is 0 on some challenge rows; fall back to the real entry/exit prices. */
+    var en = num(t.entry_price), ex = num(t.exit_price);
+    return en && ex != null ? (ex / en - 1) * 100 : null;
   }
   function renderOpen(hostId, nId, box) {
     var host = $(hostId);

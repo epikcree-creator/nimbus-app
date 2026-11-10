@@ -14,10 +14,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" />
-  <link rel="stylesheet" href="app.css?v=48" />
-  <link rel="stylesheet" href="swipe.css?v=48" />
-  <link rel="stylesheet" href="degen.css?v=48" />
-  <script src="brand.js?v=48"></script>
+  <link rel="stylesheet" href="app.css?v=49" />
+  <link rel="stylesheet" href="swipe.css?v=49" />
+  <link rel="stylesheet" href="degen.css?v=49" />
+  <script src="brand.js?v=49"></script>
   <title></title>
   <script>
     document.title = NimbusBrand.name;
@@ -226,24 +226,6 @@
       <div class="dg-page dg-extra" data-page="trades">
     <!-- ============ TRADES ============ -->
     <section class="tab-panel sw-panel" data-panel="trades" id="panel-trades" hidden aria-label="Trades">
-      <section class="suggestions region-swipe" id="suggestions" aria-label="Degen föreslår">
-        <div class="sec-row"><h2>Förslag</h2><span>du bekräftar varje köp</span></div>
-        <p id="suggestions-note" class="sw-note">Skanner → STRICT → narrativ → förslag.</p>
-        <div id="suggestion-cards"></div>
-        <details class="stoppade-wrap rules-expander" id="stoppade" aria-label="Stoppade kort">
-          <summary>Stoppade <span class="count-orb" id="stoppade-count">0</span> · <span id="stoppade-strict-pill">STRICT på</span></summary>
-          <p id="stoppade-note" class="stoppade-note">Kort som STRICT-filtret dolde.</p>
-          <div id="stoppade-list"></div>
-        </details>
-        <section id="discovery-review" class="discovery-review" hidden>
-          <div id="discovery-review-image" class="review-image" hidden></div>
-          <h3 id="discovery-review-title">Köp</h3>
-          <p id="discovery-review-copy"></p>
-          <p class="discovery-safe" id="discovery-safe">Inget köp är gjort. Ingen order skickas och ingen plånbok öppnas.</p>
-          <p id="discovery-link"></p>
-          <button type="button" id="discovery-back">Tillbaka</button>
-        </section>
-      </section>
 
       <div class="sec-row"><h2>Öppna</h2><span id="tr-open-n">0</span></div>
       <div class="sw-list" id="tr-open"></div>
@@ -251,8 +233,6 @@
       <div class="sec-row"><h2>Stängda</h2><span id="tr-closed-n">0</span></div>
       <div class="sw-list" id="tr-closed"></div>
 
-      <div class="sec-row"><h2>Senaste kandidat</h2><span>7 grindar</span></div>
-      <div class="sw-card last-gates-wrap"><div id="last-gates"></div></div>
 
       <details class="rules-expander sw-exp" id="challenge-rules-wrap">
         <summary>Regler</summary>
@@ -271,7 +251,56 @@
     </section>
 
       </div>
-      <div class="dg-page dg-extra" data-page="agenter">
+      <div class="dg-page dg-extra" data-page="planbok">
+    <!-- ============ PLÅNBOK ============ -->
+    <section class="tab-panel sw-panel" data-panel="planbok" id="panel-planbok" hidden aria-label="Plånbok">
+      <article class="sw-card wal-card">
+        <div class="bal-top"><span class="bal-k">TOTALT PAPER-SALDO</span><span class="sw-badge">USD</span></div>
+        <div class="bal-v" id="wal-total">saknas</div>
+        <p class="wal-sub" id="wal-sub">saknas</p>
+      </article>
+      <div class="wal-btns">
+        <button type="button" class="wal-btn on" id="btn-deposit" data-cash="deposit"><i><svg viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></svg></i>Insättning</button>
+        <button type="button" class="wal-btn" id="btn-withdraw" data-cash="withdraw"><i><svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></i>Uttag</button>
+        <button type="button" class="wal-btn" id="btn-history"><i><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg></i>Historik</button>
+      </div>
+      <p class="cash-live-lock" id="cash-live-lock" hidden>Riktiga pengar är låsta</p>
+      <article class="sw-card desk-banner" id="desk-banner">
+        <div class="desk-banner-top"><strong>DEGEN DESK · 7 AGENTER</strong><span class="state-badge" id="desk-state">saknas</span></div>
+        <div class="desk-banner-row"><span class="crew-dots" id="desk-dots"></span><span id="desk-line">saknas</span></div>
+      </article>
+      <div class="sec-row"><h2>Tillgångar</h2></div>
+      <div class="sw-card" id="wal-assets"></div>
+      <div class="sec-row" id="wal-activity-head"><h2>Aktivitet</h2></div>
+      <div class="sw-card" id="wal-activity"></div>
+    </section>
+
+      </div>
+    </div>
+
+    <!-- Legacy ids that older renderers still write to; never shown. -->
+    <div hidden aria-hidden="true" id="legacy-sink">
+      <!-- t186: removed from view (Oscar): manual Förslag cards, 7-grind panel, Flöde page. Kept hidden so renderers find their ids. -->
+      <section class="suggestions region-swipe" id="suggestions" aria-label="Degen föreslår">
+        <div class="sec-row"><h2>Förslag</h2><span>du bekräftar varje köp</span></div>
+        <p id="suggestions-note" class="sw-note">Skanner → STRICT → narrativ → förslag.</p>
+        <div id="suggestion-cards"></div>
+        <details class="stoppade-wrap rules-expander" id="stoppade" aria-label="Stoppade kort">
+          <summary>Stoppade <span class="count-orb" id="stoppade-count">0</span> · <span id="stoppade-strict-pill">STRICT på</span></summary>
+          <p id="stoppade-note" class="stoppade-note">Kort som STRICT-filtret dolde.</p>
+          <div id="stoppade-list"></div>
+        </details>
+        <section id="discovery-review" class="discovery-review" hidden>
+          <div id="discovery-review-image" class="review-image" hidden></div>
+          <h3 id="discovery-review-title">Köp</h3>
+          <p id="discovery-review-copy"></p>
+          <p class="discovery-safe" id="discovery-safe">Inget köp är gjort. Ingen order skickas och ingen plånbok öppnas.</p>
+          <p id="discovery-link"></p>
+          <button type="button" id="discovery-back">Tillbaka</button>
+        </section>
+      </section>
+      <div class="sec-row"><h2>Senaste kandidat</h2><span>7 grindar</span></div>
+      <div class="sw-card last-gates-wrap"><div id="last-gates"></div></div>
     <!-- ============ AGENTER ============ -->
     <section class="tab-panel sw-panel" data-panel="agenter" id="panel-agenter" hidden aria-label="Agenter">
       <div class="crew-chips" id="crew-chips"></div>
@@ -310,36 +339,7 @@
       </details>
     </section>
 
-      </div>
-      <div class="dg-page dg-extra" data-page="planbok">
-    <!-- ============ PLÅNBOK ============ -->
-    <section class="tab-panel sw-panel" data-panel="planbok" id="panel-planbok" hidden aria-label="Plånbok">
-      <article class="sw-card wal-card">
-        <div class="bal-top"><span class="bal-k">TOTALT PAPER-SALDO</span><span class="sw-badge">USD</span></div>
-        <div class="bal-v" id="wal-total">saknas</div>
-        <p class="wal-sub" id="wal-sub">saknas</p>
-      </article>
-      <div class="wal-btns">
-        <button type="button" class="wal-btn on" id="btn-deposit" data-cash="deposit"><i><svg viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></svg></i>Insättning</button>
-        <button type="button" class="wal-btn" id="btn-withdraw" data-cash="withdraw"><i><svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></i>Uttag</button>
-        <button type="button" class="wal-btn" id="btn-history"><i><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg></i>Historik</button>
-      </div>
-      <p class="cash-live-lock" id="cash-live-lock" hidden>Riktiga pengar är låsta</p>
-      <article class="sw-card desk-banner" id="desk-banner">
-        <div class="desk-banner-top"><strong>DEGEN DESK · 7 AGENTER</strong><span class="state-badge" id="desk-state">saknas</span></div>
-        <div class="desk-banner-row"><span class="crew-dots" id="desk-dots"></span><span id="desk-line">saknas</span></div>
-      </article>
-      <div class="sec-row"><h2>Tillgångar</h2></div>
-      <div class="sw-card" id="wal-assets"></div>
-      <div class="sec-row" id="wal-activity-head"><h2>Aktivitet</h2></div>
-      <div class="sw-card" id="wal-activity"></div>
-    </section>
-
-      </div>
-    </div>
-
-    <!-- Legacy ids that older renderers still write to; never shown. -->
-    <div hidden aria-hidden="true" id="legacy-sink">
+      
       <div id="wallet-card"><span id="mode-pill"></span><div id="balance" data-value="0"></div><span id="status-pill"></span><span id="money-status"></span><span id="wm"></span>
         <b id="stat-scanned"></b><b id="stat-open"></b><b id="stat-win"></b><b id="stat-pnl"></b></div>
       <span id="challenge-status-pill"></span><button type="button" id="btn-recap"></button>
@@ -447,12 +447,12 @@
     </div>
   </div>
 
-  <script src="settings.js?v=48"></script>
-  <script src="discovery.js?v=48"></script>
-  <script src="chart.js?v=48"></script>
-  <script src="live.js?v=48"></script>
-  <script src="app.js?v=48"></script>
-  <script src="swipe.js?v=48"></script>
-  <script src="degen.js?v=48"></script>
+  <script src="settings.js?v=49"></script>
+  <script src="discovery.js?v=49"></script>
+  <script src="chart.js?v=49"></script>
+  <script src="live.js?v=49"></script>
+  <script src="app.js?v=49"></script>
+  <script src="swipe.js?v=49"></script>
+  <script src="degen.js?v=49"></script>
 </body>
 </html>

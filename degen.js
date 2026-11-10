@@ -156,8 +156,9 @@
   }
 
   /* ---------- pager ---------- */
-  var PAGES = ["wallet", "agents", "hem", "trades", "agenter", "planbok"];
-  var LABEL = { wallet: "Plånbok", agents: "Agenter", hem: "Utmaning", trades: "Trades", agenter: "Flöde", planbok: "Konto" };
+  var PAGES = ["wallet", "agents", "hem", "trades", "planbok"]; /* t186: Flöde page removed */
+  var LABEL = { wallet: "Plånbok", agents: "Agenter", hem: "Utmaning", trades: "Trades", planbok: "Konto" };
+  var ALIAS = { agenter: "agents", wallet: "wallet", planbok: "planbok" };
   function pager() { return $("dg-pager"); }
   function pageEl(name) { return document.querySelector('.dg-page[data-page="' + name + '"]'); }
   function goPage(name, smooth) {
@@ -196,10 +197,10 @@
     g.addEventListener("resize", paintDots);
     paintDots();
     /* app.js tab changes (recap, legacy links) move the pager instead of hiding panels. */
-    g.__nimbusShowTab = function (name) { goPage(PAGES.indexOf(name) >= 0 ? name : "hem"); };
+    g.__nimbusShowTab = function (name) { goPage(PAGES.indexOf(name) >= 0 ? name : (ALIAS[name] || "hem")); };
     if (g.SwipeUI) {
       var orig = g.SwipeUI.onTab;
-      g.SwipeUI.onTab = function (name) { try { if (orig) orig(name); } catch (e) {} if (state0) goPage(name); };
+      g.SwipeUI.onTab = function (name) { try { if (orig) orig(name); } catch (e) {} if (state0) goPage(PAGES.indexOf(name) >= 0 ? name : (ALIAS[name] || "hem")); };
     }
     document.querySelectorAll("[data-dg-go]").forEach(function (b) { b.addEventListener("click", function () { goPage(b.getAttribute("data-dg-go")); }); });
   }
