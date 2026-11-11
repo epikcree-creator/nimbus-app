@@ -290,7 +290,13 @@ body.dg .sw-sheet input, body.dg .account-panel input { color: var(--dg-ink); }
 body.dg .recap-sheet .recap-cell, body.dg .recap-sheet .recap-hero > div { background: #F3F8EA !important; color: var(--dg-ink) !important; border-color: var(--dg-line) !important; }
 body.dg .recap-sheet .k { color: var(--dg-ink2) !important; }
 body.dg .recap-sheet .v { color: var(--dg-ink) !important; }
-body.dg .recap-sheet button, body.dg .sw-sheet .ghost { color: var(--dg-ink) !important; border-color: var(--dg-line) !important; background: transparent !important; }
+body.dg .recap-sheet button, body.dg .recap-sheet .ghost, body.dg .sw-sheet .ghost {
+  color: var(--dg-ink) !important; border: 1px solid var(--dg-line) !important;
+  background: #FFFFFF !important; outline: none !important; box-shadow: none !important;
+}
+body.dg .recap-sheet button:focus, body.dg .recap-sheet button:focus-visible {
+  border-color: var(--dg-sub) !important;
+}
 body.dg dialog::backdrop { background: rgba(18, 33, 12, .35); }
 .dg-agentsp > * { flex-shrink: 0; }
 @media (min-width: 900px) { .dg-chart { height: 54px; } .dg-agent { min-height: 0; } }
