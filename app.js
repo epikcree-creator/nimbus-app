@@ -570,39 +570,46 @@
     });
   }
 
-  function applyControlValue(field, value) {
-    var root = document.querySelector('[data-setting="' + field.key + '"]');
-    if (!root || accountDirty[field.key]) return;
-    if (field.kind === "number") {
-      var num = root.querySelector("input.exact");
-      var slider = root.querySelector('input[type="range"]');
-      if (num && document.activeElement !== num) num.value = value;
-      if (slider && value != null && value !== "" && !isNaN(Number(value))) {
-        var n = Number(value);
-        if (n >= Number(field.min) && n <= Number(field.max)) slider.value = String(n);
-      }
-      return;
-    }
+  function formatSettingValue(field, value) {
+    if (value == null || value === "") return "saknas";
     if (field.kind === "bool") {
       var on = value === true || value === "true" || value === 1 || value === "1";
-      root.querySelectorAll(".bool-btn").forEach(function (btn) {
-        btn.classList.toggle("on", (btn.getAttribute("data-value") === "true") === on);
-      });
-      return;
+      return on ? "På" : "Av";
+    }
+    if (field.kind === "number") {
+      var n = Number(value);
+      if (!isFinite(n)) return "saknas";
+      var decimals = field.decimals != null ? Number(field.decimals) : 0;
+      var s;
+      if (decimals > 0 && Math.abs(n - Math.round(n)) >= 1e-9) {
+        s = n.toFixed(decimals).replace(/0+$/, "").replace(/\.$/, "").replace(".", ",");
+      } else {
+        s = String(Math.round(n));
+      }
+      var parts = s.split(",");
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, "\u00a0");
+      return parts.join(",");
     }
     if (field.kind === "enum") {
-      root.querySelectorAll(".choice").forEach(function (btn) {
-        btn.classList.toggle("on", btn.getAttribute("data-value") === String(value));
-      });
-      return;
+      var opts = field.options || [];
+      for (var i = 0; i < opts.length; i++) {
+        if (String(opts[i].value) === String(value)) return opts[i].label || String(value);
+      }
+      return String(value);
     }
+    return String(value);
+  }
+
+  function applyControlValue(field, value) {
+    var root = document.querySelector('[data-setting="' + field.key + '"]');
+    if (!root) return;
     if (field.kind === "readonly") {
       var pill = root.querySelector(".readonly-pill");
       if (pill) pill.textContent = String(value || "PAPER");
       return;
     }
-    var input = root.querySelector("input");
-    if (input && document.activeElement !== input) input.value = value == null ? "" : value;
+    var ev = root.querySelector(".setting-value");
+    if (ev) ev.textContent = formatSettingValue(field, value);
   }
 
   function buildAccountForm() {
@@ -624,7 +631,7 @@
         current.el = section;
       }
       var card = document.createElement("div");
-      card.className = "setting";
+      card.className = "setting setting-readonly";
       card.setAttribute("data-setting", field.key);
       var label = document.createElement("div");
       label.className = "setting-label";
@@ -651,105 +658,26 @@
         pill.className = "readonly-pill";
         pill.textContent = "PAPER";
         card.appendChild(pill);
-      } else if (field.kind === "number") {
-        var controls = document.createElement("div");
-        controls.className = "setting-controls";
-        var slider = document.createElement("input");
-        slider.type = "range";
-        slider.min = String(field.min);
-        slider.max = String(field.max);
-        slider.step = String(field.step || 1);
-        slider.setAttribute("aria-label", field.label);
-        var num = document.createElement("input");
-        num.type = "text";
-        num.className = "exact";
-        num.inputMode = "decimal";
-        num.setAttribute("aria-label", field.label + " exakt");
-        slider.addEventListener("input", function () {
-          accountDirty[field.key] = true;
-          num.value = slider.value;
-          setFieldError(field, "");
-          renderTicketBanner();
-        });
-        num.addEventListener("input", function () {
-          accountDirty[field.key] = true;
-          var checked = window.NimbusSettings.validateField(field, num.value);
-          setFieldError(field, checked.ok ? "" : checked.message);
-          if (checked.ok) slider.value = String(checked.value);
-          renderTicketBanner();
-        });
-        controls.appendChild(slider);
-        controls.appendChild(num);
-        card.appendChild(controls);
-        var hint = document.createElement("p");
-        hint.className = "setting-hint";
-        hint.textContent = "Tillåtet " + window.NimbusSettings.fmtBound(field.min) + "–" + window.NimbusSettings.fmtBound(field.max);
-        card.appendChild(hint);
-      } else if (field.kind === "bool") {
-        var bools = document.createElement("div");
-        bools.className = "bool-row";
-        [["true", "På"], ["false", "Av"]].forEach(function (pair) {
-          var btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "bool-btn";
-          btn.setAttribute("data-value", pair[0]);
-          btn.textContent = pair[1];
-          btn.addEventListener("click", function () {
-            accountDirty[field.key] = true;
-            bools.querySelectorAll(".bool-btn").forEach(function (b) { b.classList.toggle("on", b === btn); });
-            setFieldError(field, "");
-            renderTicketBanner();
-          });
-          bools.appendChild(btn);
-        });
-        card.appendChild(bools);
-      } else if (field.kind === "enum") {
-        var choices = document.createElement("div");
-        choices.className = "choice-row";
-        (field.options || []).forEach(function (opt) {
-          var btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "choice";
-          btn.setAttribute("data-value", opt.value);
-          btn.textContent = opt.label;
-          btn.addEventListener("click", function () {
-            accountDirty[field.key] = true;
-            choices.querySelectorAll(".choice").forEach(function (b) { b.classList.toggle("on", b === btn); });
-            setFieldError(field, "");
-            renderTicketBanner();
-          });
-          choices.appendChild(btn);
-        });
-        card.appendChild(choices);
       } else {
-        var text = document.createElement("input");
-        text.type = field.kind === "time" ? "text" : "text";
-        text.inputMode = field.kind === "time" ? "numeric" : "text";
-        text.placeholder = field.kind === "time" ? "08:00" : "";
-        text.setAttribute("aria-label", field.label);
-        text.addEventListener("input", function () {
-          accountDirty[field.key] = true;
-          var checked = window.NimbusSettings.validateField(field, text.value);
-          setFieldError(field, checked.ok ? "" : checked.message);
-          renderTicketBanner();
-        });
-        card.appendChild(text);
+        var shown = document.createElement("div");
+        shown.className = "setting-value";
+        shown.textContent = "saknas";
+        card.appendChild(shown);
       }
       if (field.note && field.kind !== "secret") {
-        var note = document.createElement("p");
-        note.className = "setting-note";
-        note.textContent = field.note;
-        card.appendChild(note);
+        var fieldNote = document.createElement("p");
+        fieldNote.className = "setting-note";
+        fieldNote.textContent = field.note;
+        card.appendChild(fieldNote);
       }
-      var err = document.createElement("p");
-      err.className = "setting-error";
-      card.appendChild(err);
       current.el.appendChild(card);
     });
     var note = $("account-write-note");
     if (note) {
-      note.textContent = (accountCatalog.write && accountCatalog.write.reason_sv) || window.NimbusSettings.WRITE_REASON_SV;
+      note.textContent = "Filter hanteras av Chairman. Du kan inte ändra dem i appen.";
     }
+    var saveBtn = $("account-save");
+    if (saveBtn) saveBtn.hidden = true;
     accountBuilt = true;
   }
 

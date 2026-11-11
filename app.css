@@ -831,6 +831,19 @@ body.account-open { overflow: hidden; }
 }
 .save-result { margin: 8px 0 0; font-size: 0.8rem; line-height: 1.45; }
 .save-result:empty { display: none; }
+
+.filter-chairman-note {
+  margin: 12px 0 0; padding: 12px 14px;
+  background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r-md);
+  font-size: 0.82rem; line-height: 1.45; color: var(--ink);
+}
+.setting-readonly { display: flex; flex-direction: column; gap: 6px; }
+.setting-value {
+  margin: 0; font-size: 1.05rem; font-weight: 650;
+  font-variant-numeric: tabular-nums; color: var(--ink);
+}
+.account-save[hidden] { display: none !important; }
+
 .readonly-pill {
   display: inline-block; margin-top: 8px; padding: 6px 12px; border-radius: 999px;
   font-weight: 650; letter-spacing: 0.04em; color: var(--sky-900); background: var(--fill-2);
