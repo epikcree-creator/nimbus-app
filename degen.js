@@ -253,6 +253,7 @@
     });
     var more = $("dg-more"); if (more) more.addEventListener("click", function () { var gear = $("btn-gear"); if (gear) gear.click(); });
     var gear2 = $("dg-gear"); if (gear2) gear2.addEventListener("click", function () { var gear = $("btn-gear"); if (gear) gear.click(); });
+    var gear3 = $("dg-konto-gear"); if (gear3) gear3.addEventListener("click", function () { var gear = $("btn-gear"); if (gear) gear.click(); });
     var tog = $("dg-auto"); if (tog) tog.addEventListener("click", function () { toast({ title: "Auto-trade styrs av desken", sub: "PAPER · LIVE låst · ändras inte här", ms: 3200 }); });
     var sbtn = $("dg-tok-search"), sin = $("dg-tok-filter");
     if (sbtn && sin) {

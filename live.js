@@ -252,7 +252,7 @@
     if (startEl) startEl.textContent = startL;
     if (endEl) endEl.textContent = endL;
     NimbusChart.session(canvas, points, isFinite(baseline) ? baseline : null, {
-      color: "#1F6FE0",
+      color: "#8BD21F",
       startLabel: startL,
       endLabel: endL
     });

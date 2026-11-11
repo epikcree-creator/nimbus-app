@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-  <meta name="theme-color" content="#12050D" />
+  <meta name="theme-color" content="#F7FBF2" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -14,10 +14,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" />
-  <link rel="stylesheet" href="app.css?v=54" />
-  <link rel="stylesheet" href="swipe.css?v=54" />
-  <link rel="stylesheet" href="degen.css?v=54" />
-  <script src="brand.js?v=54"></script>
+  <link rel="stylesheet" href="app.css?v=56" />
+  <link rel="stylesheet" href="swipe.css?v=56" />
+  <link rel="stylesheet" href="degen.css?v=56" />
+  <script src="brand.js?v=56"></script>
   <title></title>
   <script>
     document.title = NimbusBrand.name;
@@ -99,7 +99,6 @@
     <div id="dg-pager" class="dg-pager" aria-label="Sidor · svep i sidled">
       <!-- ============ PLÅNBOK (vänster kolumn i referensen) ============ -->
       <section class="dg-page dg-wallet" data-page="wallet" aria-label="Plånbok">
-        <div class="dg-moon" aria-hidden="true"></div>
         <header class="dg-whead">
           <img class="dg-mini-logo" src="icons/icon-192.png" alt="" width="26" height="26" />
           <div class="dg-wtools">
@@ -120,7 +119,6 @@
           <div class="dg-wcard-bot">
             <span class="dg-pnl up" id="dg-pnl" hidden>—</span>
             <span class="dg-status" id="dg-status">saknas</span>
-            <span class="dg-live-lock" title="Riktiga pengar är låsta">•••• LIVE 🔒</span>
           </div>
         </article>
         <div class="dg-sec"><h2>Sätt in</h2><button type="button" class="dg-link" id="dg-withdraw">Ta ut</button></div>
@@ -253,7 +251,13 @@
       </div>
       <div class="dg-page dg-extra" data-page="planbok">
     <!-- ============ PLÅNBOK ============ -->
-    <section class="tab-panel sw-panel" data-panel="planbok" id="panel-planbok" hidden aria-label="Plånbok">
+    <section class="tab-panel sw-panel" data-panel="planbok" id="panel-planbok" hidden aria-label="Konto">
+      <header class="dg-konto-head">
+        <h1>Konto</h1>
+        <button type="button" class="dg-icon" id="dg-konto-gear" aria-label="Inställningar">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        </button>
+      </header>
       <article class="sw-card wal-card">
         <div class="bal-top"><span class="bal-k">TOTALT PAPER-SALDO</span><span class="sw-badge">USD</span></div>
         <div class="bal-v" id="wal-total">saknas</div>
@@ -447,12 +451,12 @@
     </div>
   </div>
 
-  <script src="settings.js?v=54"></script>
-  <script src="discovery.js?v=54"></script>
-  <script src="chart.js?v=54"></script>
-  <script src="live.js?v=54"></script>
-  <script src="app.js?v=54"></script>
-  <script src="swipe.js?v=54"></script>
-  <script src="degen.js?v=54"></script>
+  <script src="settings.js?v=56"></script>
+  <script src="discovery.js?v=56"></script>
+  <script src="chart.js?v=56"></script>
+  <script src="live.js?v=56"></script>
+  <script src="app.js?v=56"></script>
+  <script src="swipe.js?v=56"></script>
+  <script src="degen.js?v=56"></script>
 </body>
 </html>
