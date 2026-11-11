@@ -16,7 +16,7 @@ window.NimbusChart = {
     var min = Math.min.apply(null, pts);
     var max = Math.max.apply(null, pts);
     var span = (max - min) || 1;
-    var col = color || "#ff7a1a";
+    var col = color || "#8BD21F";
     var pad = 2;
     var coords = pts.map(function (v, i) {
       var x = pad + (i / Math.max(pts.length - 1, 1)) * (w - pad * 2);
@@ -76,7 +76,7 @@ window.NimbusChart = {
     var y = Math.floor(h * 0.55);
     ctx.beginPath();
     ctx.setLineDash([4, 4]);
-    ctx.strokeStyle = color || "rgba(255,255,255,0.18)";
+    ctx.strokeStyle = color || "rgba(18,33,12,0.18)";
     ctx.lineWidth = 1.2;
     ctx.moveTo(4, y);
     ctx.lineTo(w - 4, y);
@@ -84,7 +84,7 @@ window.NimbusChart = {
     ctx.setLineDash([]);
   },
   draw: function (canvas, series) {
-    this.spark(canvas, series, "#9b6bff");
+    this.spark(canvas, series, "#8BD21F");
   },
 
   session: function (canvas, points, baseline, opts) {
@@ -99,7 +99,7 @@ window.NimbusChart = {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     var w = cssW, h = cssH;
     ctx.clearRect(0, 0, w, h);
-    var col = opts.color || "#1F6FE0";
+    var col = opts.color || "#8BD21F";
     var padL = 6, padR = 6, padT = 8, padB = 8;
     var vals = (points || []).map(function (p) { return typeof p === "number" ? p : Number(p && p.v); }).filter(function (v) { return isFinite(v); });
     var base = (baseline == null || !isFinite(Number(baseline))) ? null : Number(baseline);
@@ -176,7 +176,7 @@ window.NimbusChart = {
     }
   },
   _alpha: function (hex, a) {
-    var h = (hex || "#ff7a1a").replace("#", "");
+    var h = (hex || "#8BD21F").replace("#", "");
     if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
     var n = parseInt(h, 16);
     var r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
