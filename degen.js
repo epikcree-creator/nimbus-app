@@ -156,8 +156,8 @@
   }
 
   /* ---------- pager ---------- */
-  var PAGES = ["wallet", "agents", "hem", "trades", "planbok"]; /* t186: Flöde page removed */
-  var LABEL = { wallet: "Plånbok", agents: "Agenter", hem: "Utmaning", trades: "Trades", planbok: "Konto" };
+  var PAGES = ["hav", "wallet", "agents", "hem", "trades", "planbok"]; /* t186: Flöde page removed; t263: djuphav Hem first */
+  var LABEL = { hav: "Hem", wallet: "Plånbok", agents: "Agenter", hem: "Utmaning", trades: "Trades", planbok: "Konto" };
   var ALIAS = { agenter: "agents", wallet: "wallet", planbok: "planbok" };
   function pager() { return $("dg-pager"); }
   function pageEl(name) { return document.querySelector('.dg-page[data-page="' + name + '"]'); }
@@ -500,7 +500,7 @@
     try { renderAgents(state, box); } catch (e2) { if (g.console) console.error(e2); }
     try { renderFunnel(state); } catch (e3) { if (g.console) console.error(e3); }
     watch(box);
-    if (!state0) { state0 = state; goPage("wallet", false); }
+    if (!state0) { state0 = state; goPage(pageEl("hav") ? "hav" : "wallet", false); }
     paintDots();
   }
   g.DegenUI = { render: render, go: goPage, current: currentPage, toast: toast };

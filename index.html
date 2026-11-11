@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-  <meta name="theme-color" content="#F7FBF2" />
+  <meta name="theme-color" content="#2BB4FB" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
@@ -14,17 +14,24 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" />
-  <link rel="stylesheet" href="app.css?v=56" />
-  <link rel="stylesheet" href="swipe.css?v=56" />
-  <link rel="stylesheet" href="degen.css?v=56" />
-  <script src="brand.js?v=56"></script>
+  <link rel="stylesheet" href="app.css?v=57" />
+  <link rel="stylesheet" href="swipe.css?v=57" />
+  <link rel="stylesheet" href="degen.css?v=57" />
+  <link rel="stylesheet" href="ocean.css?v=57" />
+  <script src="brand.js?v=57"></script>
   <title></title>
   <script>
     document.title = NimbusBrand.name;
     document.querySelector('meta[name="apple-mobile-web-app-title"]').setAttribute("content", NimbusBrand.name);
   </script>
 </head>
-<body class="sw dg">
+<body class="sw dg oc">
+  <div class="oc-sea" id="oc-sea" aria-hidden="true">
+    <div class="oc-rays"><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="oc-bubbles" id="oc-bubbles"></div>
+    <svg class="oc-weed l" viewBox="0 0 80 400" preserveAspectRatio="none"><path d="M18 400 C 4 330, 34 290, 16 230 S 30 140, 12 80" /><path d="M44 400 C 58 340, 30 300, 50 250 S 34 170, 52 120" /></svg>
+    <svg class="oc-weed r" viewBox="0 0 80 400" preserveAspectRatio="none"><path d="M60 400 C 76 330, 46 290, 64 230 S 50 150, 68 90" /><path d="M34 400 C 22 350, 48 310, 30 260 S 46 190, 28 150" /></svg>
+  </div>
   <p id="demo-banner" class="demo-banner" hidden>DEMO / SIMULERING · inte live-resultat</p>
   <div id="kill-banner" class="kill-banner compact" hidden role="alert">
     <div class="kill-banner-body">
@@ -97,6 +104,30 @@
 
 
     <div id="dg-pager" class="dg-pager" aria-label="Sidor · svep i sidled">
+      <!-- ============ HEM (t263: djuphav efter Oscars X-video) ============ -->
+      <section class="dg-page oc-home" id="oc-home" data-page="hav" aria-label="Hem">
+        <header class="oc-head">
+          <span class="oc-av"><svg viewBox="0 0 40 40" aria-hidden="true"><defs><radialGradient id="ocbody" cx="40%" cy="32%" r="70%"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".75" stop-color="#F1EEFF"/><stop offset="1" stop-color="#D9D3F5"/></radialGradient></defs><circle cx="20" cy="21" r="17" fill="url(#ocbody)"/><ellipse cx="14.6" cy="21" rx="2.4" ry="3.3" fill="#141433"/><ellipse cx="25.4" cy="21" rx="2.4" ry="3.3" fill="#141433"/><circle cx="15.3" cy="19.8" r=".8" fill="#fff"/><circle cx="26.1" cy="19.8" r=".8" fill="#fff"/></svg></span>
+          <div class="oc-title"><h1 data-app-name></h1><p id="oc-sub">saknas</p></div>
+          <span class="oc-pill oc-mode" id="oc-mode">PAPER</span>
+          <span class="oc-pill oc-live done" id="oc-live"><i></i><span>saknas</span></span>
+        </header>
+        <div class="oc-balwrap" id="oc-balwrap" role="button" tabindex="0" aria-label="Öppna sammanfattning">
+          <span class="oc-k">SALDO</span>
+          <div class="oc-bal" id="oc-bal"><span class="oc-bal-i">saknas</span></div>
+          <div class="oc-chgrow"><span class="oc-chg up" id="oc-chg">saknas</span><span class="oc-mult" id="oc-mult">saknas</span></div>
+          <div class="oc-follow"><span class="oc-k2">POSITIONER</span><span class="oc-dots" id="oc-dots"></span><b id="oc-dots-n">saknas</b></div>
+        </div>
+        <div class="oc-stage" aria-hidden="true">
+          <p class="oc-say" id="oc-say-w"><span id="oc-say">Väntar på desken</span></p>
+          <div class="oc-radar"><i></i><i></i><i></i></div>
+          <span class="oc-bot"><svg viewBox="0 0 40 40" aria-hidden="true"><defs><radialGradient id="ocbody2" cx="40%" cy="32%" r="70%"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".75" stop-color="#F1EEFF"/><stop offset="1" stop-color="#D9D3F5"/></radialGradient></defs><circle cx="20" cy="21" r="17" fill="url(#ocbody2)"/><ellipse cx="14.6" cy="21" rx="2.4" ry="3.3" fill="#141433"/><ellipse cx="25.4" cy="21" rx="2.4" ry="3.3" fill="#141433"/><circle cx="15.3" cy="19.8" r=".8" fill="#fff"/><circle cx="26.1" cy="19.8" r=".8" fill="#fff"/></svg></span>
+        </div>
+        <div class="oc-cards" id="oc-cards"></div>
+        <div class="oc-acth"><h2>Aktivitet</h2><span id="oc-act-n">saknas</span></div>
+        <div class="oc-act" id="oc-act"></div>
+      </section>
+
       <!-- ============ PLÅNBOK (vänster kolumn i referensen) ============ -->
       <section class="dg-page dg-wallet" data-page="wallet" aria-label="Plånbok">
         <header class="dg-whead">
@@ -390,6 +421,30 @@
   </main>
 
   <nav class="dg-dots" id="dg-dots" aria-label="Sidor"></nav>
+  <nav class="oc-tabs" id="oc-tabs" aria-label="Vyer">
+    <button type="button" data-go="hav"><svg viewBox="0 0 24 24"><path d="M4 10.5L12 4l8 6.5V20H4z"/></svg><span>Hem</span></button>
+    <button type="button" data-go="agents"><svg viewBox="0 0 24 24"><circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M3 18c1-3 3-4.5 5-4.5s4 1.5 5 4.5M11 18c1-3 3-4.5 5-4.5s4 1.5 5 4.5"/></svg><span>Agenter</span></button>
+    <button type="button" data-go="trades"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg><span>Aktivitet</span></button>
+    <button type="button" data-go="wallet"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M15 12.5h3"/></svg><span>Plånbok</span></button>
+  </nav>
+  <div class="oc-sheet" id="oc-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="oc-sh-title">
+    <div class="oc-sheet-bd" id="oc-sheet-bd"></div>
+    <div class="oc-sheet-panel">
+      <button type="button" class="oc-sheet-handle" id="oc-sheet-handle" aria-label="Stäng"></button>
+      <span class="oc-sh-av"><svg viewBox="0 0 40 40" aria-hidden="true"><defs><radialGradient id="ocbody3" cx="40%" cy="32%" r="70%"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".75" stop-color="#F1EEFF"/><stop offset="1" stop-color="#D9D3F5"/></radialGradient></defs><circle cx="20" cy="21" r="17" fill="url(#ocbody3)"/><ellipse cx="14.6" cy="21" rx="2.4" ry="3.3" fill="#141433"/><ellipse cx="25.4" cy="21" rx="2.4" ry="3.3" fill="#141433"/><circle cx="15.3" cy="19.8" r=".8" fill="#fff"/><circle cx="26.1" cy="19.8" r=".8" fill="#fff"/></svg></span>
+      <h2 id="oc-sh-title">Sammanfattning.</h2>
+      <p class="oc-sh-sub" id="oc-sh-sub">saknas</p>
+      <div class="oc-sh-big" id="oc-sh-big">saknas</div>
+      <div class="oc-sh-from"><span id="oc-sh-from">saknas</span><b id="oc-sh-mult">saknas</b></div>
+      <div class="oc-sh-pills">
+        <span class="b"><b id="oc-sh-t">saknas</b> trades</span>
+        <span class="g"><b id="oc-sh-w">saknas</b> vinster</span>
+        <span class="r"><b id="oc-sh-l">saknas</b> förluster</span>
+      </div>
+      <button type="button" class="oc-sh-btn" id="oc-sh-btn">Ta ut · PAPER</button>
+      <p class="oc-sh-foot">PAPER · simulering</p>
+    </div>
+  </div>
   <div class="dg-toasts" id="dg-toasts" aria-live="polite"></div>
 
   <section id="sell-confirm" class="sell-confirm" hidden>
@@ -451,12 +506,13 @@
     </div>
   </div>
 
-  <script src="settings.js?v=56"></script>
-  <script src="discovery.js?v=56"></script>
-  <script src="chart.js?v=56"></script>
-  <script src="live.js?v=56"></script>
-  <script src="app.js?v=56"></script>
-  <script src="swipe.js?v=56"></script>
-  <script src="degen.js?v=56"></script>
+  <script src="settings.js?v=57"></script>
+  <script src="discovery.js?v=57"></script>
+  <script src="chart.js?v=57"></script>
+  <script src="live.js?v=57"></script>
+  <script src="app.js?v=57"></script>
+  <script src="swipe.js?v=57"></script>
+  <script src="degen.js?v=57"></script>
+  <script src="ocean.js?v=57"></script>
 </body>
 </html>
