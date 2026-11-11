@@ -15,7 +15,7 @@
   function sym(r) { var s = (r && (r.symbol || (r.mint || "").slice(0, 6))) || "saknas"; return s.charAt(0) === "$" ? s : "$" + s; }
   function reduced() { return !!(g.matchMedia && g.matchMedia("(prefers-reduced-motion: reduce)").matches); }
   function hm(iso) { var d = new Date(iso); if (!iso || isNaN(d)) return "saknas"; return new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Stockholm", hour: "2-digit", minute: "2-digit" }).format(d); }
-  function brand() { return (g.NimbusBrand && g.NimbusBrand.name) || "Degen"; }
+  function brand() { return (g.NimbusBrand && g.NimbusBrand.name) || "Chairman"; }
 
   /* Each real desk agent keeps one unique neon colour. */
   var AG = {
