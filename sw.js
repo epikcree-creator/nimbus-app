@@ -1,6 +1,6 @@
 /* Shell cache. The product name comes from brand.js. */
 importScripts("./brand.js");
-var CACHE = "nimbus-shell-v68";
+var CACHE = "nimbus-shell-v68"; /* v68-placement: mid-sky flock band */
 var SHELL = [
   "./",
   "./index.html",

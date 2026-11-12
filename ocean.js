@@ -466,7 +466,9 @@
     var kind = ev ? (ev.win ? "whale" : "shark") : (Math.random() < 0.78 ? "whale" : "shark");
     var color = WHALE[colorIx++ % WHALE.length];
     var dir = Math.random() < 0.5 ? 1 : -1;
-    var y = 0.09 + Math.random() * 0.12;
+    /* Mid-sky band: below home typography/speech bubble, above the bot;
+       below the agents goal slider, above the treeline. */
+    var y = 0.375 + Math.random() * 0.04;
     var depth = 0.68 + Math.random() * 0.32;
     var scale = (kind === "whale" ? (color.scale || 1) : 0.9) * depth;
     var w = Math.min(70, (color.w || 56) * scale);
@@ -486,7 +488,7 @@
     var rec = {
       el: wrap, ev: ev, kind: kind, dir: dir, x: startX, y: y, w: w,
       t0: performance.now(), mid: false, shot: false, dur: SWIM_MS + Math.round(Math.random() * 1400 - 200),
-      phase: Math.random() * Math.PI * 2, amp: 9 + Math.random() * 12, color: color
+      phase: Math.random() * Math.PI * 2, amp: 4 + Math.random() * 5, color: color
     };
     wrap.style.transform = "translate(" + rec.x.toFixed(1) + "px," + (rec.y * (fishHost.clientHeight || 844)).toFixed(1) + "px)";
     liveFish.push(rec);
