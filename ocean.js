@@ -230,171 +230,175 @@
 
   /* ---------- t274/t304 birds: decorative unless a real closed PAPER trade is supplied ---------- */
   var WHALE = [
-    { species: "gull", fill: "#E8EEF4", mid: "#8A96A4", scale: 1.05, w: 168, flap: 2.15 },
-    { species: "swallow", fill: "#C45A3A", mid: "#243040", scale: 0.92, w: 168, flap: 1.55 },
-    { species: "bullfinch", fill: "#D44A5A", mid: "#1A1A1C", scale: 0.88, w: 152, flap: 1.25 },
-    { species: "waxwing", fill: "#C4B49A", mid: "#5A4A3A", scale: 0.96, w: 160, flap: 1.7 },
-    { species: "crane", fill: "#8A8E96", mid: "#5A6068", scale: 1.42, w: 200, flap: 2.6 },
-    { species: "gull", fill: "#F2F5F8", mid: "#A8B4C0", scale: 1.22, w: 180, flap: 2.15 }
+    { species: "gull", fill: "#E8EEF4", mid: "#8A96A4", scale: 1, w: 62, flap: 2.2 },
+    { species: "swallow", fill: "#C45A3A", mid: "#243040", scale: 1, w: 58, flap: 1.65 },
+    { species: "bullfinch", fill: "#D44A5A", mid: "#1A1A1C", scale: 1, w: 48, flap: 1.35 },
+    { species: "waxwing", fill: "#C4B49A", mid: "#5A4A3A", scale: 1, w: 52, flap: 1.7 },
+    { species: "crane", fill: "#8A8E96", mid: "#5A6068", scale: 1, w: 70, flap: 2.7 },
+    { species: "gull", fill: "#F2F5F8", mid: "#A8B4C0", scale: 1, w: 56, flap: 2.2 }
   ];
-  var MAX_FISH = 3, SWIM_MS = 3600;
+  var MAX_FISH = 4, SWIM_MS = 4200;
   var fishHost = null, liveFish = [], fishRaf = 0, spawnTimer = 0;
   var seenTrade = {}, tradeQueue = [], colorIx = 0, fishPaused = false, pauseAt = 0, fishWired = false;
 
   function reducedMotion() {
     return !!(g.matchMedia && g.matchMedia("(prefers-reduced-motion: reduce)").matches);
   }
-function swallowSvg() {
-    return '<svg class="oc-critter oc-bird oc-swallow" viewBox="0 0 220 160" overflow="visible">' +
-      '<g transform="translate(128,74)"><g class="oc-wing-far">' +
-        '<path fill="#1A2836" d="M0 0 C -24 -28, -64 -62, -124 -74 L -132 -64 L -114 -64 L -136 -46 L -112 -50 L -128 -30 L -102 -36 L -112 -16 L -84 -24 C -50 -16, -18 -4, 0 0 Z"/>' +
-        '<path fill="#3A4A5C" d="M0 0 C -24 -28, -64 -62, -124 -74 L -98 -50 C -56 -42, -18 -12, 0 0 Z" opacity=".55"/>' +
-      '</g></g>' +
-      /* deeply forked tail: two thin streamers */
-      '<path fill="#1A2836" d="M92 78 L6 46 L70 78 Z"/>' +
-      '<path fill="#1A2836" d="M92 84 L2 126 L70 86 Z"/>' +
-      /* sleek body + cream underside */
-      '<ellipse cx="136" cy="82" rx="32" ry="8.5" fill="#243040" transform="rotate(-12 136 82)"/>' +
-      '<ellipse cx="140" cy="86" rx="22" ry="5" fill="#EDE3CE" transform="rotate(-12 140 86)"/>' +
-      '<ellipse cx="168" cy="72" rx="10" ry="7.2" fill="#243040"/>' +
-      '<ellipse cx="166" cy="76" rx="6" ry="3.4" fill="#C45A3A"/>' +
-      '<path d="M177 72 L200 68 L177 77 Z" fill="#1A1A18"/>' +
-      '<circle cx="170" cy="70" r="1.8" fill="#0A0A0A"/>' +
-      '<circle cx="170.6" cy="69.4" r=".6" fill="#fff"/>' +
-      '<g transform="translate(130,86)"><g class="oc-wing-near">' +
-        '<path fill="#15202C" d="M0 0 C -16 20, -60 52, -122 78 L -134 64 L -114 62 L -140 42 L -112 42 L -130 22 L -102 24 L -116 6 L -86 14 C -48 12, -16 4, 0 0 Z"/>' +
-        '<path fill="#3A4A5C" d="M0 0 C -16 20, -60 52, -122 78 L -96 52 C -54 34, -16 8, 0 0 Z" opacity=".4"/>' +
-      '</g></g></svg>';
+  var uid = 0;
+  function id(s) { return "v68b" + (++uid) + s; }
+  function wrap(cls, inner) {
+    return '<svg class="oc-critter oc-bird ' + cls + '" viewBox="0 0 160 100" overflow="visible">' + inner + "</svg>";
   }
-function gullSvg() {
-    return '<svg class="oc-critter oc-bird oc-gull" viewBox="0 0 220 160" overflow="visible">' +
-      '<g transform="translate(126,76)"><g class="oc-wing-far">' +
-        '<path fill="#8A96A4" d="M0 0 C -26 -22, -70 -52, -128 -62 L -138 -52 L -120 -52 L -144 -32 L -118 -36 L -136 -14 L -108 -20 L -120 -2 L -88 -10 C -52 -8, -18 -2, 0 0 Z"/>' +
-        '<path fill="#E4EAF0" d="M0 0 C -26 -22, -70 -52, -128 -62 L -100 -40 C -58 -32, -18 -8, 0 0 Z" opacity=".7"/>' +
-        '<path fill="#1C2228" d="M-108 -56 L-138 -52 L-120 -52 L-128 -42 Z"/>' +
-        '<path fill="#1C2228" d="M-118 -36 L-144 -32 L-124 -32 Z"/>' +
-      '</g></g>' +
-      '<path fill="#F0F4F8" d="M86 84 L40 72 L62 84 L38 102 L86 88 Z"/>' +
-      '<ellipse cx="134" cy="86" rx="34" ry="10" fill="#F7FAFC" transform="rotate(-7 134 86)"/>' +
-      '<ellipse cx="138" cy="90" rx="22" ry="5.5" fill="#FFFFFF" transform="rotate(-7 138 90)"/>' +
-      '<ellipse cx="170" cy="78" rx="11" ry="8" fill="#F7FAFC"/>' +
-      '<path d="M180 78 L208 73 L180 84 Z" fill="#E8C44A"/>' +
-      '<circle cx="192" cy="77" r="1.2" fill="#C43A3A"/>' +
-      '<circle cx="172" cy="76" r="1.9" fill="#0A0A0A"/>' +
-      '<circle cx="172.6" cy="75.4" r=".65" fill="#fff"/>' +
-      '<g transform="translate(128,90)"><g class="oc-wing-near">' +
-        '<path fill="#7A8694" d="M0 0 C -18 16, -66 48, -126 70 L -140 56 L -118 54 L -146 34 L -116 34 L -138 16 L -108 18 L -122 2 L -90 10 C -50 8, -16 4, 0 0 Z"/>' +
-        '<path fill="#C5CED6" d="M0 0 C -18 16, -66 48, -126 70 L -100 46 C -56 30, -16 8, 0 0 Z" opacity=".55"/>' +
-        '<path fill="#1C2228" d="M-108 62 L-140 56 L-118 54 L-128 48 Z"/>' +
-        '<path fill="#1C2228" d="M-120 34 L-146 34 L-126 28 Z"/>' +
-      '</g></g></svg>';
+  function eye(cx, cy) {
+    return '<circle cx="' + cx + '" cy="' + cy + '" r="1.3" fill="#12141A"/>' +
+      '<circle cx="' + (cx + 0.5) + '" cy="' + (cy - 0.45) + '" r="0.48" fill="#fff"/>';
   }
-function bullfinchSvg() {
-    return '<svg class="oc-critter oc-bird oc-bullfinch" viewBox="0 0 220 160" overflow="visible">' +
-      '<g transform="translate(124,80)"><g class="oc-wing-far">' +
-        '<path fill="#2A2A30" d="M0 0 C -18 -20, -46 -40, -82 -50 L -94 -38 L -80 -40 L -98 -24 L -76 -28 L -90 -10 L -68 -16 C -40 -10, -16 -2, 0 0 Z"/>' +
-        '<path fill="#F2F5F8" d="M-16 -6 L-54 -32 L-48 -16 L-16 -2 Z"/>' +
-      '</g></g>' +
-      '<path fill="#1A1A1C" d="M88 88 L50 78 L66 88 L48 104 L88 92 Z"/>' +
-      /* white rump */
-      '<ellipse cx="100" cy="88" rx="10" ry="7" fill="#F2F5F8" transform="rotate(-8 100 88)"/>' +
-      /* grey back */
-      '<ellipse cx="126" cy="90" rx="24" ry="13" fill="#8A96A0" transform="rotate(-8 126 90)"/>' +
-      /* rose breast and belly */
-      '<ellipse cx="140" cy="96" rx="18" ry="10" fill="#D44A5A" transform="rotate(-8 140 96)"/>' +
-      /* black cap + rose cheek */
-      '<ellipse cx="158" cy="82" rx="12.5" ry="10.5" fill="#1A1A1C"/>' +
-      '<ellipse cx="154" cy="88" rx="7.5" ry="5.5" fill="#D44A5A"/>' +
-      '<path d="M168 84 L184 87 L168 91 Z" fill="#1A1A1C"/>' +
-      '<circle cx="160" cy="80" r="1.9" fill="#0A0A0A"/>' +
-      '<circle cx="160.6" cy="79.4" r=".6" fill="#fff"/>' +
-      '<g transform="translate(126,94)"><g class="oc-wing-near">' +
-        '<path fill="#1A1A1C" d="M0 0 C -14 14, -44 34, -80 48 L -94 34 L -78 34 L -98 20 L -74 22 L -88 8 L -64 12 C -36 10, -14 4, 0 0 Z"/>' +
-        '<path fill="#F2F5F8" d="M-14 6 L-56 32 L-48 16 L-14 4 Z"/>' +
-      '</g></g></svg>';
+
+  /* Hand-tuned smooth wings, local coords, shoulder at 0,0.
+     Wide at the root so they read as one piece with the body. */
+  var WING = {
+    /* long, reasonably broad, 4 soft fingers — gull / raven-ish */
+    longUp: "M0 0 C -10 -8, -32 -24, -62 -30 C -74 -32, -80 -28, -78 -24 C -76 -25.5, -73 -24.5, -71 -23 C -75 -21, -72 -18, -68 -17 C -72 -15, -69 -12, -64 -12 C -42 -10, -16 -4, 0 0 Z",
+    longDn: "M0 0 C -10 8, -32 24, -62 30 C -74 32, -80 28, -78 24 C -76 25.5, -73 24.5, -71 23 C -75 21, -72 18, -68 17 C -72 15, -69 12, -64 12 C -42 10, -16 4, 0 0 Z",
+    /* swallow: longer, slimmer, pointed, still a surface */
+    scytheUp: "M0 0 C -14 -8, -40 -26, -76 -34 C -86 -36, -90 -32, -88 -28 C -84 -30, -80 -28, -78 -26 C -82 -24, -78 -20, -70 -19 C -48 -14, -18 -5, 0 0 Z",
+    scytheDn: "M0 0 C -14 8, -40 26, -76 34 C -86 36, -90 32, -88 28 C -84 30, -80 28, -78 26 C -82 24, -78 20, -70 19 C -48 14, -18 5, 0 0 Z",
+    /* short rounded — bullfinch / waxwing */
+    roundUp: "M0 0 C -8 -8, -24 -20, -48 -24 C -58 -25, -62 -21, -60 -18 C -58 -19.5, -55 -18.5, -53 -17 C -57 -15, -54 -12, -48 -12 C -32 -10, -12 -3, 0 0 Z",
+    roundDn: "M0 0 C -8 8, -24 20, -48 24 C -58 25, -62 21, -60 18 C -58 19.5, -55 18.5, -53 17 C -57 15, -54 12, -48 12 C -32 10, -12 3, 0 0 Z",
+    /* crane: broad, 5 gentle fingers */
+    broadUp: "M0 0 C -12 -10, -36 -28, -68 -34 C -80 -36, -86 -32, -84 -28 C -82 -29.5, -79 -28.5, -77 -27 C -81 -25, -78 -22, -74 -21 C -78 -19, -75 -16, -70 -16 C -74 -14, -71 -11, -66 -11 C -44 -10, -16 -4, 0 0 Z",
+    broadDn: "M0 0 C -12 10, -36 28, -68 34 C -80 36, -86 32, -84 28 C -82 29.5, -79 28.5, -77 27 C -81 25, -78 22, -74 21 C -78 19, -75 16, -70 16 C -74 14, -71 11, -66 11 C -44 10, -16 4, 0 0 Z"
+  };
+
+  function swallowSvg() {
+    var a = id("w"), b = id("bd");
+    return wrap("oc-swallow",
+      '<defs>' +
+        '<linearGradient id="' + a + '" x1="0" y1="0" x2="1" y2="1">' +
+          '<stop offset="0%" stop-color="#4A5A6C"/><stop offset="100%" stop-color="#1A2430"/>' +
+        '</linearGradient>' +
+        '<linearGradient id="' + b + '" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0%" stop-color="#2C3A48"/><stop offset="100%" stop-color="#1A2430"/>' +
+        '</linearGradient>' +
+      '</defs>' +
+      '<g transform="translate(78,48)"><g class="oc-wing-far"><path fill="url(#' + a + ')" d="' + WING.scytheUp + '"/></g></g>' +
+      /* slim body + two long streamers meeting at the rump */
+      '<path fill="url(#' + b + ')" d="M124 47 L116 44 C112 41 106 40 100 42 C90 40 78 43 68 48 C50 40 26 30 8 24 C12 30 40 46 68 50 C50 54 22 66 6 74 C14 68 42 56 68 52 C80 56 98 54 110 50 C116 49 120 48 124 49 Z"/>' +
+      '<path fill="#E8DCC8" d="M108 48 C98 51 84 52 74 50 C86 47 100 47 110 47 Z"/>' +
+      '<path fill="#C45A3A" d="M114 47 C110 50 106 50 102 48 C108 46 112 46 116 46 Z"/>' +
+      '<path fill="#1A1A18" d="M122 46 L134 44.5 L122 49.5 Z"/>' +
+      eye(114, 44.2) +
+      '<g transform="translate(80,50)"><g class="oc-wing-near"><path fill="url(#' + a + ')" d="' + WING.scytheDn + '"/></g></g>'
+    );
   }
-function waxwingSvg() {
-    return '<svg class="oc-critter oc-bird oc-waxwing" viewBox="0 0 220 160" overflow="visible">' +
-      '<g transform="translate(126,76)"><g class="oc-wing-far">' +
-        '<path fill="#6A5A48" d="M0 0 C -20 -24, -56 -52, -100 -62 L -114 -50 L -98 -50 L -118 -32 L -96 -36 L -112 -16 L -86 -22 C -50 -14, -18 -4, 0 0 Z"/>' +
-        '<path fill="#C4B49A" d="M0 0 C -20 -24, -56 -52, -100 -62 L -82 -42 C -48 -34, -18 -10, 0 0 Z" opacity=".5"/>' +
-        '<path fill="#E8D060" d="M-88 -56 L-114 -50 L-98 -48 Z"/>' +
-        '<path fill="#C43A3A" d="M-70 -36 L-78 -40 L-74 -32 Z"/>' +
-      '</g></g>' +
-      /* tail with yellow tip */
-      '<path fill="#5A4A3A" d="M86 86 L36 68 L60 86 L34 114 L86 92 Z"/>' +
-      '<path fill="#E8D060" d="M42 74 L36 68 L48 78 Z"/>' +
-      '<path fill="#E8D060" d="M40 108 L34 114 L50 104 Z"/>' +
-      '<ellipse cx="132" cy="88" rx="30" ry="12" fill="#C4B49A" transform="rotate(-8 132 88)"/>' +
-      '<ellipse cx="136" cy="93" rx="18" ry="6" fill="#E2D4BE" transform="rotate(-8 136 93)"/>' +
-      /* crest */
-      '<path d="M156 70 L176 50 L170 74 Z" fill="#A89478"/>' +
-      '<ellipse cx="162" cy="78" rx="12" ry="9" fill="#C4B49A"/>' +
-      /* black mask */
-      '<path fill="#1A1A1C" d="M152 76 C 156 72, 172 74, 176 80 L 168 82 C 164 78, 156 78, 152 80 Z"/>' +
-      '<path d="M174 78 L194 75 L174 84 Z" fill="#2A2218"/>' +
-      '<circle cx="166" cy="76" r="1.9" fill="#0A0A0A"/>' +
-      '<circle cx="166.6" cy="75.4" r=".6" fill="#fff"/>' +
-      '<g transform="translate(128,92)"><g class="oc-wing-near">' +
-        '<path fill="#5A4A3A" d="M0 0 C -16 18, -54 44, -102 62 L -116 48 L -98 46 L -122 28 L -96 30 L -112 12 L -84 16 C -48 12, -16 4, 0 0 Z"/>' +
-        '<path fill="#C4B49A" d="M0 0 C -16 18, -54 44, -102 62 L -82 40 C -46 26, -16 8, 0 0 Z" opacity=".45"/>' +
-        '<path fill="#E8D060" d="M-90 54 L-116 48 L-100 46 Z"/>' +
-        '<path fill="#C43A3A" d="M-68 28 L-76 32 L-70 22 Z"/>' +
-      '</g></g></svg>';
+
+  function gullSvg() {
+    var a = id("w"), b = id("bd");
+    return wrap("oc-gull",
+      '<defs>' +
+        '<linearGradient id="' + a + '" x1="0" y1="0" x2="1" y2="0.15">' +
+          '<stop offset="0%" stop-color="#F7FAFC"/><stop offset="58%" stop-color="#C5CED6"/><stop offset="100%" stop-color="#2A3238"/>' +
+        '</linearGradient>' +
+        '<linearGradient id="' + b + '" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#E4EAF0"/>' +
+        '</linearGradient>' +
+      '</defs>' +
+      '<g transform="translate(76,48)"><g class="oc-wing-far"><path fill="url(#' + a + ')" d="' + WING.longUp + '"/></g></g>' +
+      '<path fill="url(#' + b + ')" d="M126 48 L118 45 C114 41 108 41 102 43 C88 40 70 43 56 49 C48 51 42 50 40 52 C44 55 54 56 64 54 C80 58 100 55 114 51 C118 50 122 49 126 50 Z"/>' +
+      '<path fill="#E8C44A" d="M124 47 L138 45 L124 51 Z"/>' +
+      '<circle cx="131.5" cy="47.2" r="0.8" fill="#C43A3A"/>' +
+      eye(114, 45) +
+      '<g transform="translate(78,50)"><g class="oc-wing-near"><path fill="url(#' + a + ')" d="' + WING.longDn + '"/></g></g>'
+    );
   }
-function craneSvg() {
-    return '<svg class="oc-critter oc-bird oc-crane" viewBox="0 0 240 170" overflow="visible">' +
-      '<g transform="translate(122,84)"><g class="oc-wing-far">' +
-        '<path fill="#6A7078" d="M0 0 C -26 -28, -72 -68, -132 -80 L -148 -66 L -126 -66 L -154 -44 L -122 -50 L -148 -24 L -114 -32 L -132 -8 L -96 -16 C -56 -12, -20 -2, 0 0 Z"/>' +
-        '<path fill="#9AA0A8" d="M0 0 C -26 -28, -72 -68, -132 -80 L -106 -54 C -62 -44, -20 -10, 0 0 Z" opacity=".5"/>' +
-        '<path fill="#1A1A1C" d="M-114 -72 L-148 -66 L-126 -66 L-136 -54 L-118 -64 Z"/>' +
-        '<path fill="#1A1A1C" d="M-124 -50 L-154 -44 L-130 -44 Z"/>' +
-        '<path fill="#1A1A1C" d="M-130 -32 L-148 -24 L-126 -26 Z"/>' +
+
+  function bullfinchSvg() {
+    var a = id("w");
+    return wrap("oc-bullfinch",
+      '<defs>' +
+        '<linearGradient id="' + a + '" x1="0" y1="0" x2="1" y2="1">' +
+          '<stop offset="0%" stop-color="#3A3A44"/><stop offset="100%" stop-color="#1A1A20"/>' +
+        '</linearGradient>' +
+      '</defs>' +
+      '<g transform="translate(78,50)"><g class="oc-wing-far">' +
+        '<path fill="url(#' + a + ')" d="' + WING.roundUp + '"/>' +
+        '<path fill="#F2F5F8" d="M-10 -2 C -22 -9, -34 -14, -42 -15 Q -34 -7, -18 -3 Q -12 -1, -8 0 Z"/>' +
       '</g></g>' +
-      /* trailing legs */
-      '<path fill="none" stroke="#5A6068" stroke-width="2.1" stroke-linecap="round" d="M78 94 L4 108"/>' +
-      '<path fill="none" stroke="#5A6068" stroke-width="2.1" stroke-linecap="round" d="M80 98 L10 118"/>' +
-      '<ellipse cx="124" cy="92" rx="32" ry="11" fill="#8A8E96" transform="rotate(-6 124 92)"/>' +
-      '<ellipse cx="130" cy="96" rx="18" ry="5.5" fill="#B0B4BA" transform="rotate(-6 130 96)"/>' +
-      /* straight outstretched neck */
-      '<path stroke="#8A8E96" stroke-width="6.5" stroke-linecap="round" fill="none" d="M152 88 L206 66"/>' +
-      '<ellipse cx="210" cy="64" rx="9" ry="6.2" fill="#8A8E96"/>' +
-      '<circle cx="204" cy="58" r="3.1" fill="#C43A3A"/>' +
-      '<path d="M218 64 L242 59 L218 69 Z" fill="#1A1A1C"/>' +
-      '<circle cx="212" cy="62" r="1.55" fill="#0A0A0A"/>' +
-      '<circle cx="212.5" cy="61.5" r=".5" fill="#fff"/>' +
-      '<g transform="translate(124,96)"><g class="oc-wing-near">' +
-        '<path fill="#5A6068" d="M0 0 C -20 22, -70 58, -132 84 L -150 68 L -126 66 L -156 44 L -122 44 L -146 24 L -114 26 L -132 6 L -96 14 C -54 12, -18 4, 0 0 Z"/>' +
-        '<path fill="#9AA0A8" d="M0 0 C -20 22, -70 58, -132 84 L -106 56 C -60 38, -18 8, 0 0 Z" opacity=".45"/>' +
-        '<path fill="#1A1A1C" d="M-114 74 L-150 68 L-126 66 L-138 56 Z"/>' +
-        '<path fill="#1A1A1C" d="M-128 44 L-156 44 L-132 36 Z"/>' +
-        '<path fill="#1A1A1C" d="M-130 24 L-146 24 L-128 16 Z"/>' +
-      '</g></g></svg>';
+      '<path fill="#8A96A0" d="M122 50 L114 47 C112 41 106 38 99 40 C88 36 74 41 64 48 C56 51 50 53 50 55 C54 58 64 58 74 56 C88 62 106 60 114 54 C118 53 120 52 122 52 Z"/>' +
+      '<path fill="#F2F5F8" d="M64 48 C56 51 51 54 51 55 C55 57 64 56 70 53 Z"/>' +
+      '<path fill="#D44A5A" d="M114 50 C104 58 88 60 76 55 C90 52 104 50 114 49 Z"/>' +
+      '<path fill="#1A1A1C" d="M114 47 C112 41 106 38 99 40 C102 38 110 38 116 44 C118 46 118 48 116 49 Z"/>' +
+      '<path fill="#1A1A1C" d="M120 49.5 L130 51.2 L120 53.5 Z"/>' +
+      eye(110, 45.5) +
+      '<g transform="translate(80,52)"><g class="oc-wing-near">' +
+        '<path fill="url(#' + a + ')" d="' + WING.roundDn + '"/>' +
+        '<path fill="#F2F5F8" d="M-10 2 C -22 9, -34 14, -42 15 Q -34 7, -18 3 Q -12 1, -8 0 Z"/>' +
+      '</g></g>'
+    );
   }
-function ravenSvg() {
-    return '<svg class="oc-critter oc-raven" viewBox="0 0 220 160" overflow="visible">' +
-      '<g transform="translate(124,76)"><g class="oc-wing-far">' +
-        '<path class="oc-raven-wing" fill="#1A1A22" d="M0 0 C -22 -26, -62 -58, -116 -70 L -132 -56 L -112 -56 L -140 -34 L -110 -40 L -134 -16 L -102 -24 L -118 -2 L -86 -12 C -50 -10, -18 -2, 0 0 Z"/>' +
-        '<path fill="#2A2A36" d="M0 0 C -22 -26, -62 -58, -116 -70 L -92 -46 C -54 -38, -18 -10, 0 0 Z" opacity=".55"/>' +
-        '<path class="oc-raven-wing" fill="#0A0A10" d="M-100 -62 L-132 -56 L-112 -56 L-124 -46 Z"/>' +
-        '<path class="oc-raven-wing" fill="#0A0A10" d="M-108 -40 L-140 -34 L-116 -34 Z"/>' +
-        '<path class="oc-raven-wing" fill="#0A0A10" d="M-114 -24 L-134 -16 L-110 -18 Z"/>' +
-      '</g></g>' +
-      /* wedge / diamond tail */
-      '<path class="oc-raven-tail" fill="#14141C" d="M86 86 L24 70 L54 86 L20 122 L86 92 Z"/>' +
-      '<ellipse class="oc-raven-body" cx="128" cy="88" rx="32" ry="12" fill="#2A2A34" transform="rotate(-8 128 88)"/>' +
-      '<ellipse class="oc-raven-body" cx="162" cy="80" rx="13" ry="10" fill="#2A2A34"/>' +
-      /* shaggy throat */
-      '<path class="oc-raven-body" fill="#1A1A22" d="M150 86 C 148 96, 158 100, 166 90"/>' +
-      '<path d="M174 80 L206 72 L174 90 Z" fill="#0A0A0A"/>' +
-      '<circle cx="166" cy="77" r="2" fill="#000"/>' +
-      '<circle cx="166.7" cy="76.3" r=".65" fill="#fff"/>' +
-      '<g transform="translate(126,90)"><g class="oc-wing-near">' +
-        '<path class="oc-raven-wing" fill="#12121A" d="M0 0 C -18 20, -60 52, -118 74 L -136 58 L -114 56 L -142 34 L -110 36 L -132 16 L -100 18 L -116 0 L -84 8 C -48 10, -16 4, 0 0 Z"/>' +
-        '<path fill="#2A2A36" d="M0 0 C -18 20, -60 52, -118 74 L -92 48 C -52 32, -16 8, 0 0 Z" opacity=".45"/>' +
-        '<path class="oc-raven-wing" fill="#0A0A10" d="M-100 64 L-136 58 L-114 56 L-126 48 Z"/>' +
-        '<path class="oc-raven-wing" fill="#0A0A10" d="M-112 36 L-142 34 L-118 28 Z"/>' +
-      '</g></g></svg>';
+
+  function waxwingSvg() {
+    var a = id("w"), b = id("bd");
+    return wrap("oc-waxwing",
+      '<defs>' +
+        '<linearGradient id="' + a + '" x1="0" y1="0" x2="1" y2="1">' +
+          '<stop offset="0%" stop-color="#D0C0A4"/><stop offset="100%" stop-color="#5A4A3A"/>' +
+        '</linearGradient>' +
+        '<linearGradient id="' + b + '" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0%" stop-color="#D4C4A8"/><stop offset="100%" stop-color="#A89478"/>' +
+        '</linearGradient>' +
+      '</defs>' +
+      '<g transform="translate(78,49)"><g class="oc-wing-far"><path fill="url(#' + a + ')" d="' + WING.roundUp + '"/></g></g>' +
+      /* crest is a smooth bump on the head, yellow only at the tail tip */
+      '<path fill="url(#' + b + ')" d="M124 49 L116 46 C114 38 110 32 106 30 C104 34 102 38 100 41 C90 37 76 41 64 48 C54 50 46 49 42 51 C44 53 50 55 58 54 C50 58 44 63 40 66 C48 62 58 57 66 54 C80 60 102 58 114 52 C120 51 122 50 124 51 Z"/>' +
+      '<path fill="#E8D060" d="M46 50 L41 51 C43 54 50 55 58 54 C52 52 48 51 46 50 Z"/>' +
+      '<path fill="#1A1A1C" opacity=".9" d="M108 44 C112 44 120 46 124 49 L116 50 C112 47 108 46 106 46 Z"/>' +
+      '<path fill="#2A2218" d="M122 48 L134 46.5 L122 51.5 Z"/>' +
+      eye(114, 44.5) +
+      '<g transform="translate(80,51)"><g class="oc-wing-near"><path fill="url(#' + a + ')" d="' + WING.roundDn + '"/></g></g>'
+    );
+  }
+
+  function craneSvg() {
+    var a = id("w"), b = id("bd");
+    return wrap("oc-crane",
+      '<defs>' +
+        '<linearGradient id="' + a + '" x1="0" y1="0" x2="1" y2="0.15">' +
+          '<stop offset="0%" stop-color="#C8CCD2"/><stop offset="68%" stop-color="#7A8088"/><stop offset="100%" stop-color="#2A2C30"/>' +
+        '</linearGradient>' +
+        '<linearGradient id="' + b + '" x1="0" y1="0" x2="1" y2="1">' +
+          '<stop offset="0%" stop-color="#B0B4BA"/><stop offset="100%" stop-color="#7A8088"/>' +
+        '</linearGradient>' +
+      '</defs>' +
+      '<g transform="translate(70,50)"><g class="oc-wing-far"><path fill="url(#' + a + ')" d="' + WING.broadUp + '"/></g></g>' +
+      '<path fill="none" stroke="#5A6068" stroke-width="1.55" stroke-linecap="round" d="M54 54 C 34 60, 18 66, 6 70"/>' +
+      '<path fill="none" stroke="#5A6068" stroke-width="1.55" stroke-linecap="round" d="M56 56 C 38 64, 22 72, 10 78"/>' +
+      '<path fill="url(#' + b + ')" d="M146 38 L138 36 C136 34 134 33 132 34 C118 40 100 47 82 51 C68 49 58 51 50 55 C46 56 44 57 46 58 C54 59 68 57 80 56 C96 59 114 52 130 44 C136 42 142 40 146 40 Z"/>' +
+      '<circle cx="134" cy="33.5" r="2.2" fill="#C43A3A"/>' +
+      '<path fill="#1A1A1C" d="M144 37 L155 35 L144 40.5 Z"/>' +
+      eye(136, 36) +
+      '<g transform="translate(72,52)"><g class="oc-wing-near"><path fill="url(#' + a + ')" d="' + WING.broadDn + '"/></g></g>'
+    );
+  }
+
+  function ravenSvg() {
+    var a = id("w"), b = id("bd");
+    return wrap("oc-raven",
+      '<defs>' +
+        '<linearGradient id="' + a + '" x1="0" y1="0" x2="1" y2="1">' +
+          '<stop offset="0%" stop-color="#3A3A48"/><stop offset="100%" stop-color="#12121A"/>' +
+        '</linearGradient>' +
+        '<linearGradient id="' + b + '" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0%" stop-color="#2E2E3A"/><stop offset="100%" stop-color="#16161E"/>' +
+        '</linearGradient>' +
+      '</defs>' +
+      '<g transform="translate(76,48)"><g class="oc-wing-far"><path class="oc-raven-wing" fill="url(#' + a + ')" d="' + WING.longUp + '"/></g></g>' +
+      '<path class="oc-raven-body" fill="url(#' + b + ')" d="M128 48 L118 44 C114 40 108 40 102 42 C88 38 70 42 58 49 C46 47 34 50 28 54 C36 55 48 54 58 53 C50 58 36 66 26 72 C38 66 52 58 64 54 C78 60 100 57 114 52 C120 51 124 50 128 51 Z"/>' +
+      '<path fill="#0A0A0A" d="M126 47 L142 43 L126 53 Z"/>' +
+      eye(114, 44.5) +
+      '<g transform="translate(78,50)"><g class="oc-wing-near"><path class="oc-raven-wing" fill="url(#' + a + ')" d="' + WING.longDn + '"/></g></g>'
+    );
   }
   function whaleSvg(c) {
     var fn = { swallow: swallowSvg, gull: gullSvg, bullfinch: bullfinchSvg, waxwing: waxwingSvg, crane: craneSvg };
@@ -462,10 +466,10 @@ function ravenSvg() {
     var kind = ev ? (ev.win ? "whale" : "shark") : (Math.random() < 0.78 ? "whale" : "shark");
     var color = WHALE[colorIx++ % WHALE.length];
     var dir = Math.random() < 0.5 ? 1 : -1;
-    var y = Math.random() < 0.5 ? (0.12 + Math.random() * 0.12) : (0.28 + Math.random() * 0.14);
-    var depth = 0.74 + Math.random() * 0.46;
-    var scale = (kind === "whale" ? (color.scale || 1) : 0.96) * depth;
-    var w = (color.w || 168) * scale;
+    var y = 0.09 + Math.random() * 0.12;
+    var depth = 0.68 + Math.random() * 0.32;
+    var scale = (kind === "whale" ? (color.scale || 1) : 0.9) * depth;
+    var w = Math.min(70, (color.w || 56) * scale);
     var wrap = el("div", "oc-swimmer " + kind + (ev ? " ev" : " deco") + (color.species ? " sp-" + color.species : ""));
     wrap.style.width = w + "px";
     wrap.style.setProperty("--flap-dur", ((color.flap || 1.8) * (0.92 + Math.random() * 0.2)).toFixed(2) + "s");

@@ -247,13 +247,13 @@ body.oc dialog::backdrop, body.oc .account-backdrop { background: rgba(12, 18, 3
 
 /* t274/t304: birds, labels, badges, rider, scared eyes. Labels/badges only for real PAPER closes. */
 .oc-swimmer { position: absolute; top: 0; left: 0; will-change: transform; pointer-events: none; overflow: visible; }
-.oc-critter { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 4px 8px rgba(8, 16, 48, .28)); }
+.oc-critter { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 1px 2px rgba(8, 16, 48, .28)); }
 .oc-flab { position: absolute; z-index: 3; left: 50%; bottom: calc(100% + 2px); transform: translateX(-50%);
   background: rgba(10, 16, 40, .84); color: #FFFFFF; font: 700 10px/1 var(--dg-font); letter-spacing: .01em;
   padding: 3px 7px; border-radius: 999px; white-space: nowrap; box-shadow: 0 2px 8px rgba(8, 16, 48, .3); }
-.oc-rider { position: absolute; z-index: 2; left: 62%; bottom: 48%; width: 34px; height: 34px; opacity: 0; transform: translate(-50%, 8px) scale(.85); transition: opacity .12s, transform .12s; }
+.oc-rider { position: absolute; z-index: 2; left: 60%; bottom: 46%; width: 16px; height: 16px; opacity: 0; transform: translate(-50%, 4px) scale(.85); transition: opacity .12s, transform .12s; }
 .oc-swimmer.ride .oc-rider { opacity: 1; transform: translate(-50%, 0) scale(1); }
-.oc-rider-av { display: block; width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background: #0A2459; box-shadow: 0 0 0 2px rgba(255,255,255,.85), 0 3px 8px rgba(8,16,48,.35); }
+.oc-rider-av { display: block; width: 14px; height: 14px; border-radius: 50%; overflow: hidden; background: #0A2459; box-shadow: 0 0 0 1px rgba(255,255,255,.85), 0 2px 4px rgba(8,16,48,.35); }
 .oc-rider-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .oc-rider-face { position: absolute; inset: 0; pointer-events: none; }
 .oc-rider-face { background: rgba(8,16,48,.22); border-radius: 50%; }
@@ -265,27 +265,21 @@ body.oc dialog::backdrop, body.oc .account-backdrop { background: rgba(12, 18, 3
 .oc-swimmer.mad .oc-raven-wing, .oc-swimmer.mad .oc-raven-tail,
 .oc-swimmer.mad .oc-wing-near path, .oc-swimmer.mad .oc-wing-far path { fill: #C62828; }
 .oc-wing-near, .oc-wing-far { transform-origin: 0px 0px;
-  animation: ocFlapNear 1.8s ease-in-out infinite;
-  animation-duration: var(--flap-dur, 1.8s);
+  animation: ocFlapNear 2.2s ease-in-out infinite;
+  animation-duration: var(--flap-dur, 2.2s);
   animation-delay: var(--flap-delay, 0s); }
 .oc-wing-far { animation-name: ocFlapFar; }
 @keyframes ocFlapNear {
-  0% { transform: rotate(22deg); }
-  6% { transform: rotate(-38deg); }
-  12% { transform: rotate(20deg); }
-  18% { transform: rotate(-34deg); }
-  24% { transform: rotate(12deg); }
-  32% { transform: rotate(-16deg); }
-  42%, 100% { transform: rotate(-10deg); }
+  0%, 45%, 100% { transform: rotate(-6deg) scaleY(1); }
+  12% { transform: rotate(16deg) scaleY(.88); }
+  24% { transform: rotate(-18deg) scaleY(1.04); }
+  36% { transform: rotate(-4deg) scaleY(1); }
 }
 @keyframes ocFlapFar {
-  0% { transform: rotate(-18deg); }
-  6% { transform: rotate(30deg); }
-  12% { transform: rotate(-16deg); }
-  18% { transform: rotate(26deg); }
-  24% { transform: rotate(-8deg); }
-  32% { transform: rotate(10deg); }
-  42%, 100% { transform: rotate(8deg); }
+  0%, 45%, 100% { transform: rotate(6deg) scaleY(1); }
+  12% { transform: rotate(-14deg) scaleY(.88); }
+  24% { transform: rotate(16deg) scaleY(1.04); }
+  36% { transform: rotate(4deg) scaleY(1); }
 }
 .oc-fbadge { position: absolute; z-index: 5; padding: 5px 10px; border-radius: 999px; font: 800 12px/1 var(--dg-font);
   color: #04121F; white-space: nowrap; pointer-events: none; animation: ocBadge 1.5s ease-out forwards;
