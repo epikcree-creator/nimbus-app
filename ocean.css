@@ -1,71 +1,46 @@
-/* t304/t305: winter nature theme. Layout + colours only; data stays real.
-   Dusk-blue winter sky, snow-covered ground, falling snow, pine silhouettes,
-   flying birds (trade badges unchanged), a resting snow leopard and two reindeer.
-   Navy cards kept for contrast; icy accent; green #2EE6A0 / red #FE4A4A. */
+/* t308: northern lights in the mountains. Layout + colours only; data stays real.
+   Night sky, flowing aurora, alpine silhouettes, frozen lake, rim-lit leopard.
+   Trade badges ride shooting stars. Navy cards for contrast; mint accent. */
 body.dg.oc {
-  --oc-cyan: #7EC8E8; --oc-card: rgba(12, 18, 36, .82); --oc-card2: rgba(16, 22, 42, .64);
-  --oc-line: rgba(255, 255, 255, .10); --oc-ink2: rgba(225, 232, 255, .72); --oc-ink3: rgba(205, 214, 245, .52);
+  --oc-cyan: #7EF0D0; --oc-card: rgba(8, 10, 18, .82); --oc-card2: rgba(10, 14, 24, .68);
+  --oc-line: rgba(255, 255, 255, .10); --oc-ink2: rgba(225, 236, 245, .74); --oc-ink3: rgba(205, 220, 235, .52);
   --oc-up: #2EE6A0; --oc-down: #FE4A4A;
   --dg-bg: transparent; --dg-bg2: transparent; --dg-surf: var(--oc-card); --dg-surf2: rgba(255,255,255,.06);
   --dg-line: var(--oc-line); --dg-ink: #FFFFFF; --dg-ink2: var(--oc-ink2); --dg-ink3: var(--oc-ink3);
-  --dg-orange: var(--oc-cyan); --dg-orange2: var(--oc-cyan); --dg-sub: #B8D8EC; --dg-green: #00C88B;
-  --dg-up: var(--oc-up); --dg-down: var(--oc-down); --dg-on-accent: #06123A;
+  --dg-orange: var(--oc-cyan); --dg-orange2: var(--oc-cyan); --dg-sub: #B8EDE0; --dg-green: #00C88B;
+  --dg-up: var(--oc-up); --dg-down: var(--oc-down); --dg-on-accent: #06140F;
   --sw-bg: transparent; --sw-card: var(--oc-card); --sw-ink: #FFFFFF; --sw-ink2: var(--oc-ink2); --sw-ink3: var(--oc-ink3);
-  --sw-line: var(--oc-line); --sw-blue: var(--oc-cyan); --sw-blue-50: rgba(126,200,232,.14); --sw-up: var(--oc-up); --sw-down: var(--oc-down);
+  --sw-line: var(--oc-line); --sw-blue: var(--oc-cyan); --sw-blue-50: rgba(126,240,208,.14); --sw-up: var(--oc-up); --sw-down: var(--oc-down);
   --bg: transparent; --card: var(--oc-card); --sheet: #F9F7FF; --fg: #FFFFFF; --ink: #FFFFFF; --ink-2: var(--oc-ink2); --muted: var(--oc-ink2);
   --line: var(--oc-line); --border: var(--oc-line); --fill: rgba(255,255,255,.06); --accent: var(--oc-cyan);
   --green: var(--oc-up); --red: var(--oc-down); --buy: var(--oc-up);
-  background: #1A2744 !important; color: #FFFFFF;
+  background: #05060E !important; color: #FFFFFF;
 }
 
-/* ---------- winter sky + land ---------- */
+/* ---------- night sky + mountains ---------- */
 .oc-sea { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
   background:
-    radial-gradient(ellipse 70% 45% at 78% 12%, rgba(255, 236, 200, .42) 0%, rgba(255, 220, 160, .10) 28%, rgba(255, 220, 160, 0) 58%),
-    radial-gradient(120% 55% at 50% 100%, rgba(200, 220, 235, .55) 0%, rgba(200, 220, 235, 0) 62%),
-    linear-gradient(180deg, #1A2744 0%, #243656 16%, #2F4A68 32%, #3D5F82 48%, #5A7D9A 64%, #8BA5B8 78%, #C5D4E0 90%, #E8EEF4 100%); }
+    radial-gradient(ellipse 80% 40% at 50% 8%, rgba(90, 60, 160, .22) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 35% at 30% 22%, rgba(40, 180, 150, .10) 0%, transparent 55%),
+    linear-gradient(180deg, #05060E 0%, #070B16 28%, #0A1020 52%, #10182C 72%, #0C141C 100%); }
 body:not(.oc) .oc-sea, body:not(.oc) .oc-tabs { display: none; }
 body.oc[data-page]:not([data-page="hav"]) .oc-sea {
   background:
-    radial-gradient(ellipse 70% 50% at 72% 8%, rgba(180, 170, 230, .22) 0%, rgba(180, 170, 230, 0) 55%),
-    radial-gradient(120% 55% at 50% 100%, rgba(200, 210, 230, .45) 0%, rgba(200, 210, 230, 0) 62%),
-    linear-gradient(180deg, #161B33 0%, #243050 18%, #3A4A6A 42%, #5A6E88 62%, #8A9AAB 78%, #C5CED8 90%, #E2E6EC 100%); }
+    radial-gradient(ellipse 80% 42% at 58% 10%, rgba(110, 70, 180, .20) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 34% at 28% 24%, rgba(40, 160, 150, .08) 0%, transparent 55%),
+    linear-gradient(180deg, #05060E 0%, #070B16 28%, #0A1020 52%, #10182C 72%, #0C141C 100%); }
 .oc-sea { transition: background .6s; }
-.oc-sun { position: absolute; right: 12%; top: 8%; width: 86px; height: 86px; border-radius: 50%; z-index: 0;
-  background: radial-gradient(circle at 50% 50%, #FFF8E4 0%, #F0D59A 38%, rgba(240, 200, 130, 0) 70%);
-  box-shadow: 0 0 48px 12px rgba(255, 230, 180, .28); opacity: .9; }
-.oc-rays, .oc-bubbles, .oc-fish, .oc-hills, .oc-fore { position: absolute; inset: 0; }
-.oc-rays { z-index: 0; } .oc-hills { z-index: 1; } .oc-bubbles { z-index: 2; } .oc-fish { z-index: 3; overflow: hidden; } .oc-fore { z-index: 4; overflow: visible; }
+.oc-aurora { position: absolute; inset: 0; z-index: 0; pointer-events: none; display: block; }
+.oc-sun, .oc-rays { display: none !important; }
+.oc-bubbles, .oc-fish, .oc-hills, .oc-fore { position: absolute; inset: 0; }
+.oc-hills { z-index: 1; } .oc-bubbles { z-index: 2; } .oc-fish { z-index: 3; overflow: hidden; } .oc-fore { z-index: 4; overflow: visible; }
 .oc-hills, .oc-fore { inset: auto 0 0 0; width: 100%; height: auto; display: block; }
-.oc-rays i { position: absolute; top: -10%; height: 70%; width: 70px; transform-origin: top center; --rot: 8deg;
-  background: linear-gradient(180deg, rgba(255, 244, 220, .18), rgba(255, 244, 220, 0)); filter: blur(8px); animation: ocRay 11s ease-in-out infinite alternate; }
-.oc-rays i:nth-child(1) { left: 58%; --rot: 18deg; width: 90px; }
-.oc-rays i:nth-child(2) { left: 68%; --rot: 8deg; width: 46px; animation-delay: -3s; }
-.oc-rays i:nth-child(3) { left: 76%; --rot: -2deg; width: 110px; animation-delay: -5s; }
-.oc-rays i:nth-child(4) { left: 84%; --rot: -10deg; width: 60px; animation-delay: -1s; }
-.oc-rays i:nth-child(5) { left: 90%; --rot: -16deg; width: 80px; animation-delay: -7s; }
-@keyframes ocRay {
-  from { opacity: .35; transform: translateX(-18px) rotate(var(--rot)); }
-  to { opacity: .8; transform: translateX(18px) rotate(var(--rot)); }
+.oc-leo-tail { transform-origin: 0px 0px; animation: ocTail 6.2s ease-in-out infinite; }
+@keyframes ocTail {
+  0%, 100% { transform: rotate(0deg); }
+  40% { transform: rotate(7deg); }
+  72% { transform: rotate(-5deg); }
 }
-.oc-bubbles i { position: absolute; top: -16px; border-radius: 50%; border: none;
-  background: rgba(255,255,255,.92); box-shadow: 0 0 4px rgba(255,255,255,.55);
-  --o: .55; --drift: 0; animation: ocSnow 14s linear infinite; }
-@keyframes ocSnow {
-  0% { transform: translate(0, 0); opacity: 0; }
-  8% { opacity: var(--o); }
-  40% { transform: translate(calc(var(--drift) * 1px), 42vh); opacity: var(--o); }
-  70% { transform: translate(calc(var(--drift) * -0.6px), 74vh); opacity: calc(var(--o) * .85); }
-  100% { transform: translate(calc(var(--drift) * 0.4px), 108vh); opacity: 0; }
-}
-.oc-pine { transform-box: fill-box; transform-origin: 50% 100%; animation: ocPine 6.2s ease-in-out infinite alternate; }
-.oc-leopard, .oc-reindeer { filter: drop-shadow(0 1px 2px rgba(30, 40, 55, .35)); }
-.oc-pine:nth-child(even) { animation-duration: 7.4s; animation-delay: -2s; }
-@keyframes ocPine { from { transform: rotate(-1.6deg); } to { transform: rotate(1.8deg); } }
-
-body.oc .dg-pager { position: relative; z-index: 1; background: transparent !important; }
-body.oc .dg-page { background: transparent !important; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 96px); }
-body.oc .dg-dots { display: none !important; }
 
 /* ---------- Hem ---------- */
 .oc-home { display: flex; flex-direction: column; padding-left: 16px !important; padding-right: 16px !important; padding-top: calc(env(safe-area-inset-top, 0px) + 18px) !important; }
@@ -75,7 +50,7 @@ body.oc .dg-dots { display: none !important; }
 .oc-av { border-radius: 50%; }
 .oc-av img, .oc-bot img, .oc-sh-av img { width: 100%; height: 100%; display: block; object-fit: cover; border-radius: 50%; filter: drop-shadow(0 2px 6px rgba(9, 18, 69, .25)); }
 .oc-title { flex: 1; min-width: 0; }
-.oc-title h1 { margin: 0; font: 800 18px/1.15 var(--dg-font); color: #FFFFFF; letter-spacing: -.01em; text-shadow: 0 1px 8px rgba(10, 20, 40, .35); }
+.oc-title h1 { margin: 0; font: 800 18px/1.15 var(--dg-font); color: #FFFFFF; letter-spacing: -.01em; text-shadow: 0 1px 12px rgba(0, 0, 0, .55); }
 .oc-title p { margin: 2px 0 0; font: 500 12px/1.2 var(--dg-font); color: rgba(225, 240, 255, .78); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .oc-pill { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 12px; border-radius: 999px; font: 700 11px/1 var(--dg-font); white-space: nowrap; }
 .oc-mode { background: rgba(255, 255, 255, .16); color: rgba(255, 255, 255, .92); letter-spacing: .04em; }
@@ -86,7 +61,7 @@ body.oc .dg-dots { display: none !important; }
 @keyframes ocPulse { 50% { opacity: .25; transform: scale(.7); } }
 .oc-balwrap { margin-top: 16px; cursor: pointer; outline: none; }
 .oc-k { display: block; font: 700 11px/1 var(--dg-font); letter-spacing: .06em; color: rgba(225, 245, 255, .85); }
-.oc-bal { display: flex; align-items: baseline; margin-top: 6px; color: #FFFFFF; font: 900 52px/1 var(--dg-font); letter-spacing: -.035em; font-variant-numeric: tabular-nums; text-shadow: 0 2px 12px rgba(10, 20, 40, .4); }
+.oc-bal { display: flex; align-items: baseline; margin-top: 6px; color: #FFFFFF; font: 900 52px/1 var(--dg-font); letter-spacing: -.035em; font-variant-numeric: tabular-nums; text-shadow: 0 2px 16px rgba(0, 0, 0, .55); }
 .oc-bal-d { font-size: 34px; color: rgba(255, 255, 255, .55); letter-spacing: -.01em; }
 .oc-bal.miss { font-size: 34px; }
 .oc-chgrow { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
@@ -104,10 +79,10 @@ body.oc .dg-dots { display: none !important; }
 
 .oc-stage { position: relative; flex: 1 0 210px; min-height: 210px; display: grid; place-items: center; }
 .oc-bot { position: relative; z-index: 2; width: 66px; height: 66px; border-radius: 50%; padding: 5px; box-sizing: border-box;
-  background: rgba(255,255,255,.14); box-shadow: 0 0 0 3px rgba(67, 218, 246, .85), 0 0 26px rgba(67, 218, 246, .55); animation: ocBob 4s ease-in-out infinite; }
+  background: rgba(255,255,255,.12); box-shadow: 0 0 0 3px rgba(126, 240, 208, .7), 0 0 28px rgba(80, 220, 180, .4); animation: ocBob 4s ease-in-out infinite; }
 @keyframes ocBob { 50% { transform: translateY(-6px); } }
 .oc-radar { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
-.oc-radar i { position: absolute; width: 70vw; height: 70vw; max-width: 420px; max-height: 420px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, .45); animation: ocRadar 6s ease-out infinite; box-sizing: border-box; }
+.oc-radar i { position: absolute; width: 70vw; height: 70vw; max-width: 420px; max-height: 420px; border-radius: 50%; border: 1.5px solid rgba(200, 255, 230, .32); animation: ocRadar 6s ease-out infinite; box-sizing: border-box; }
 .oc-radar i:nth-child(2) { animation-delay: 2s; } .oc-radar i:nth-child(3) { animation-delay: 4s; }
 @keyframes ocRadar { from { transform: scale(.14); opacity: .85; } to { transform: scale(1); opacity: 0; } }
 .oc-say { position: absolute; z-index: 3; top: 12%; right: 4px; max-width: 62%; min-width: 120px; margin: 0; padding: 9px 13px; border-radius: 16px; background: #FFFFFF;
@@ -188,7 +163,7 @@ body.oc .dg-wtools, body.oc .dg-amount, body.oc .dg-pill, body.oc .dg-from, body
 body.oc .dg-agent, body.oc .dg-closedc, body.oc .dg-goal, body.oc .dg-funnel,
 body.oc .sw-card, body.oc .bal-card, body.oc .wal-card { background: var(--oc-card) !important; border-color: var(--oc-line) !important; color: #FFFFFF; box-shadow: none !important; }
 body.oc .dg-crow { background: rgba(255,255,255,.06); }
-body.oc .dg-wcard { background: radial-gradient(80% 90% at 0% 0%, rgba(255,255,255,.28) 0%, rgba(255,255,255,0) 55%), linear-gradient(135deg, #7EC8E8 0%, #5A8FBE 40%, #3D4A7A 100%);
+body.oc .dg-wcard { background: radial-gradient(80% 90% at 0% 0%, rgba(255,255,255,.22) 0%, rgba(255,255,255,0) 55%), linear-gradient(135deg, #3AAE9A 0%, #3A5A8A 45%, #2A1A48 100%);
   border-color: rgba(255,255,255,.18); box-shadow: 0 10px 28px rgba(5, 8, 40, .3); --dg-on-accent: #FFFFFF; }
 body.oc .dg-wcard .dg-wk, body.oc .dg-wcard .dg-status { color: rgba(255,255,255,.85); }
 body.oc .dg-wtag { color: #FFFFFF; background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.3); }
@@ -196,14 +171,14 @@ body.oc .dg-wtag.w { background: #0E113C; color: #FFFFFF; border-color: #0E113C;
 body.oc .dg-pill.on { background: var(--oc-cyan) !important; border-color: var(--oc-cyan) !important; color: #06123A; }
 body.oc .dg-deposit { background: var(--oc-cyan); border-color: var(--oc-cyan); color: #06123A; }
 body.oc .dg-pnl { background: #00C88B; color: #04121F; } body.oc .dg-pnl.down { background: #FE4A4A; color: #fff; }
-body.oc .dg-amount em { background: rgba(126,200,232,.16); color: #B8E0F2; }
+body.oc .dg-amount em { background: rgba(126,240,208,.16); color: #B8F5E4; }
 body.oc .dg-toggle { background: rgba(255,255,255,.18); }
 body.oc .dg-ag-tag { color: #CFE0FF; background: rgba(255,255,255,.10); }
 body.oc .dg-ag-tag.t-long { color: #FFD23F; background: rgba(255,210,63,.14); }
 body.oc .dg-ag-tag.t-vilar { color: var(--oc-ink3); background: rgba(255,255,255,.06); }
 body.oc .dg-tp { stroke: rgba(255,255,255,.18); }
 body.oc .dg-goal-track { background: rgba(255,255,255,.14); }
-body.oc .dg-goal-track > i { background: linear-gradient(90deg, #7EC8E8, #2EE6A0); }
+body.oc .dg-goal-track > i { background: linear-gradient(90deg, #7EF0D0, #2EE6A0); }
 body.oc .dg-tick { background: #0E113C; border-color: rgba(255,255,255,.3); }
 body.oc .dg-toast { background: rgba(12, 16, 58, .94); border-color: var(--oc-line); box-shadow: 0 8px 24px rgba(5,8,40,.4); }
 body.oc .dg-coin { background: rgba(255,255,255,.14); color: #FFFFFF; }
@@ -230,7 +205,7 @@ body.oc .kill-banner { background: rgba(80, 10, 40, .92) !important; border: 1px
 body.oc .kill-unlock { background: #FE4A4A !important; color: #fff !important; }
 body.oc .state-badge { background: rgba(255,255,255,.14) !important; color: #FFFFFF !important; border-color: rgba(255,255,255,.22) !important; }
 body.oc .state-badge.on { background: rgba(46,230,160,.16) !important; color: #2EE6A0 !important; }
-body.oc .boot-empty { background: linear-gradient(180deg, #3D5A7A, #1A2744) !important; color: #fff !important; }
+body.oc .boot-empty { background: radial-gradient(ellipse 80% 40% at 50% 18%, rgba(80, 200, 170, .16), transparent 60%), radial-gradient(ellipse 60% 30% at 60% 8%, rgba(140, 80, 220, .14), transparent 55%), linear-gradient(180deg, #0A1020, #05060E) !important; color: #fff !important; }
 body.oc .boot-empty h1 { color: #fff !important; } body.oc .boot-empty p { color: rgba(255,255,255,.8) !important; }
 
 /* Sheets and dialogs stay light, like the video's white bottom sheet. */
@@ -247,7 +222,7 @@ body.oc dialog::backdrop, body.oc .account-backdrop { background: rgba(12, 18, 3
 
 /* t274/t304: birds, labels, badges, rider, scared eyes. Labels/badges only for real PAPER closes. */
 .oc-swimmer { position: absolute; top: 0; left: 0; will-change: transform; pointer-events: none; overflow: visible; }
-.oc-critter { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 1px 2px rgba(8, 16, 48, .28)); }
+.oc-critter { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 0 6px rgba(200, 255, 230, .45)); }
 .oc-flab { position: absolute; z-index: 3; left: 50%; bottom: calc(100% + 2px); transform: translateX(-50%);
   background: rgba(10, 16, 40, .84); color: #FFFFFF; font: 700 10px/1 var(--dg-font); letter-spacing: .01em;
   padding: 3px 7px; border-radius: 999px; white-space: nowrap; box-shadow: 0 2px 8px rgba(8, 16, 48, .3); }
@@ -294,7 +269,7 @@ body.oc dialog::backdrop, body.oc .account-backdrop { background: rgba(12, 18, 3
 
 @media (prefers-reduced-motion: reduce) {
   .oc-rays i, .oc-bubbles i, .oc-radar i, .oc-bot, .oc-live.on i, .oc-row.in,
-  .oc-pine, .oc-wing-near, .oc-wing-far, .oc-bird-wing, .oc-raven-wing, .oc-swimmer, .oc-rider, .oc-fbadge { animation: none !important; transition: none !important; }
+  .oc-leo-tail, .oc-swimmer, .oc-rider, .oc-fbadge { animation: none !important; transition: none !important; }
   .oc-sheet-panel, .oc-sheet-bd, .oc-sea { transition: none !important; }
   .oc-fish, .oc-bubbles, .oc-radar, .oc-bot-eyes { display: none !important; }
   .oc-rays i { opacity: .5; transform: rotate(var(--rot, 8deg)); }

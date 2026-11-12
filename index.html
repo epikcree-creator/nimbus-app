@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-  <meta name="theme-color" content="#2C4568" />
+  <meta name="theme-color" content="#0A1020" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -14,11 +14,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" />
-  <link rel="stylesheet" href="app.css?v=68" />
-  <link rel="stylesheet" href="swipe.css?v=68" />
-  <link rel="stylesheet" href="degen.css?v=68" />
-  <link rel="stylesheet" href="ocean.css?v=68" />
-  <script src="brand.js?v=68"></script>
+  <link rel="stylesheet" href="app.css?v=69" />
+  <link rel="stylesheet" href="swipe.css?v=69" />
+  <link rel="stylesheet" href="degen.css?v=69" />
+  <link rel="stylesheet" href="ocean.css?v=69" />
+  <script src="brand.js?v=69"></script>
   <title>PAWS</title>
   <script>
     document.title = NimbusBrand.name;
@@ -27,151 +27,185 @@
 </head>
 <body class="sw dg oc">
   <div class="oc-sea" id="oc-sea" aria-hidden="true">
-    <div class="oc-sun"></div>
-    <div class="oc-rays"><i></i><i></i><i></i><i></i><i></i></div>
     <div class="oc-bubbles" id="oc-bubbles"></div>
     <div class="oc-fish" id="oc-fish" aria-hidden="true"></div>
-    <svg class="oc-hills" viewBox="0 0 390 260" preserveAspectRatio="xMidYMax meet">
-      <path fill="#3D566C" d="M0 132 C 36 118, 72 142, 120 120 C 168 98, 210 136, 268 114 C 318 96, 354 122, 390 108 L 390 260 L 0 260 Z"/>
-      <path fill="#8AA3B4" d="M0 158 C 48 144, 88 172, 148 152 C 206 134, 250 168, 318 148 C 354 138, 376 150, 390 146 L 390 260 L 0 260 Z"/>
-      <path fill="#C5D4E0" d="M0 186 C 54 172, 102 200, 168 180 C 228 162, 276 196, 340 176 C 366 168, 382 176, 390 174 L 390 260 L 0 260 Z"/>
-      <g fill="#1A3028" opacity=".85">
-        <path d="M46 150 L52 128 L58 150 Z"/><path d="M62 152 L67 134 L72 152 Z"/>
-        <path d="M118 142 L125 116 L132 142 Z"/><path d="M200 148 L205 132 L210 148 Z"/>
-        <path d="M248 140 L256 114 L264 140 Z"/><path d="M332 146 L338 128 L344 146 Z"/>
+  <svg class="oc-hills" viewBox="0 0 390 440" preserveAspectRatio="xMidYMax meet">
+    <defs>
+      <linearGradient id="oc-farMtn" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#2A3558"/>
+        <stop offset="55%" stop-color="#1A223C"/>
+        <stop offset="100%" stop-color="#13192C"/>
+      </linearGradient>
+      <linearGradient id="oc-midMtn" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#171E34"/>
+        <stop offset="55%" stop-color="#0C1220"/>
+        <stop offset="100%" stop-color="#080B14"/>
+      </linearGradient>
+      <linearGradient id="oc-nearMtn" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#0E131E"/>
+        <stop offset="100%" stop-color="#07090F"/>
+      </linearGradient>
+      <linearGradient id="oc-snowA" x1="0" y1="0" x2=".15" y2="1">
+        <stop offset="0%" stop-color="#F4F8FC"/>
+        <stop offset="50%" stop-color="#C8E8DE"/>
+        <stop offset="100%" stop-color="#6A8894"/>
+      </linearGradient>
+      <linearGradient id="oc-rimMint" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#A6FFE0" stop-opacity="0"/>
+        <stop offset="50%" stop-color="#D0FFF4" stop-opacity=".95"/>
+        <stop offset="100%" stop-color="#D0C4FF" stop-opacity=".45"/>
+      </linearGradient>
+    </defs>
+
+    <!-- far range: softer, lower, irregular -->
+    <path fill="url(#oc-farMtn)" d="M0 200
+      L 36 186 L 68 158 L 86 176 L 130 152 L 168 182
+      L 210 160 L 248 186 L 292 154 L 328 176 L 360 166 L 390 180
+      L 390 440 L 0 440 Z"/>
+    <path fill="url(#oc-snowA)" opacity=".4" d="M58 172 L68 158 L80 174 Z"/>
+    <path fill="url(#oc-snowA)" opacity=".36" d="M282 168 L292 154 L304 170 Z"/>
+
+    <!-- mid range: one hero horn, varied shoulders, not a sawtooth -->
+    <path fill="url(#oc-midMtn)" d="M0 252
+      L 28 244 L 58 208 L 78 228 L 118 168 L 142 206
+      L 168 192 L 214 108 L 244 178 L 268 164
+      L 304 214 L 338 190 L 368 214 L 390 222
+      L 390 440 L 0 440 Z"/>
+    <path fill="url(#oc-snowA)" opacity=".78" d="M104 188 L118 168 L134 198 L118 200 Z"/>
+    <path fill="url(#oc-snowA)" opacity=".92" d="M198 140 L214 108 L230 154 L210 156 Z"/>
+    <path fill="url(#oc-snowA)" opacity=".6" d="M50 222 L58 208 L68 224 Z"/>
+    <path fill="url(#oc-snowA)" opacity=".62" d="M326 202 L338 190 L350 208 Z"/>
+    <path fill="none" stroke="url(#oc-rimMint)" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round" opacity=".7"
+      d="M0 252 L 28 244 L 58 208 L 78 228 L 118 168 L 142 206
+         L 168 192 L 214 108 L 244 178 L 268 164
+         L 304 214 L 338 190 L 368 214 L 390 222"/>
+
+    <!-- near slopes, long and low, framing the lake -->
+    <path fill="url(#oc-nearMtn)" d="M0 328 L 22 304 L 52 292 L 84 314 L 108 348 L 70 378 L 0 386 Z"/>
+    <path fill="url(#oc-snowA)" opacity=".35" d="M40 304 L52 292 L64 308 Z"/>
+    <path fill="url(#oc-nearMtn)" d="M390 322 L 366 300 L 336 288 L 312 314 L 300 348 L 336 380 L 390 384 Z"/>
+    <path fill="url(#oc-snowA)" opacity=".38" d="M324 302 L336 288 L348 306 Z"/>
+  </svg>
+
+  <svg class="oc-fore" viewBox="0 0 390 440" preserveAspectRatio="xMidYMax meet">
+    <defs>
+      <linearGradient id="oc-shore" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#0B0F18"/>
+        <stop offset="100%" stop-color="#05070C"/>
+      </linearGradient>
+      <linearGradient id="oc-ice" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#0E1A2A" stop-opacity=".30"/>
+        <stop offset="45%" stop-color="#081014" stop-opacity=".58"/>
+        <stop offset="100%" stop-color="#05080E" stop-opacity=".86"/>
+      </linearGradient>
+      <linearGradient id="oc-iceGlow" x1=".35" y1="0" x2=".5" y2="1">
+        <stop offset="0%" stop-color="#9CFFE4" stop-opacity=".20"/>
+        <stop offset="40%" stop-color="#C9A6FF" stop-opacity=".10"/>
+        <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="oc-rockG" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#252A38"/>
+        <stop offset="100%" stop-color="#0C0F16"/>
+      </linearGradient>
+      <linearGradient id="oc-leoRim" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#E6FFF8"/>
+        <stop offset="100%" stop-color="#C8B6FF"/>
+      </linearGradient>
+    </defs>
+
+    <path fill="url(#oc-ice)" d="M40 336 C 92 314, 168 308, 222 322 C 276 336, 306 356, 278 374 C 238 396, 146 400, 80 382 C 46 372, 28 350, 40 336 Z"/>
+    <path fill="url(#oc-iceGlow)" d="M40 336 C 92 314, 168 308, 222 322 C 276 336, 306 356, 278 374 C 238 396, 146 400, 80 382 C 46 372, 28 350, 40 336 Z"/>
+    <path fill="none" stroke="rgba(200,236,226,.28)" stroke-width="0.85"
+      d="M68 332 C 120 318, 184 318, 236 334"/>
+
+    <path fill="url(#oc-shore)" d="M0 376 C 54 362, 118 384, 190 370 C 262 356, 328 380, 390 368 L 390 440 L 0 440 Z"/>
+
+    <g fill="#06080D" transform="translate(30,380)">
+      <path d="M0 -102 L17 -54 H-17 Z"/>
+      <path d="M0 -80 L22 -30 H-22 Z"/>
+      <path d="M0 -52 L26 -6 H-26 Z"/>
+      <rect x="-2" y="-8" width="4" height="12" rx="0.8"/>
+    </g>
+    <g fill="#06080D" transform="translate(56,386) scale(.7)">
+      <path d="M0 -92 L16 -50 H-16 Z"/>
+      <path d="M0 -72 L20 -28 H-20 Z"/>
+      <path d="M0 -46 L23 -4 H-23 Z"/>
+      <rect x="-1.8" y="-6" width="3.6" height="11" rx="0.7"/>
+    </g>
+    <g fill="#06080D" transform="translate(16,388) scale(.5)">
+      <path d="M0 -86 L14 -48 H-14 Z"/>
+      <path d="M0 -64 L18 -24 H-18 Z"/>
+      <path d="M0 -40 L20 -2 H-20 Z"/>
+    </g>
+    <path fill="none" stroke="rgba(180,255,230,.32)" stroke-width="0.9" stroke-linecap="round"
+      d="M30 278 L38 316 M30 278 L22 316"/>
+
+    <g fill="#06080D" transform="translate(364,378) scale(.6)">
+      <path d="M0 -92 L15 -50 H-15 Z"/>
+      <path d="M0 -72 L19 -28 H-19 Z"/>
+      <path d="M0 -46 L22 -4 H-22 Z"/>
+    </g>
+    <g fill="#06080D" transform="translate(380,384) scale(.42)">
+      <path d="M0 -80 L13 -44 H-13 Z"/>
+      <path d="M0 -56 L16 -20 H-16 Z"/>
+      <path d="M0 -34 L18 0 H-18 Z"/>
+    </g>
+
+    <g transform="translate(248,352)">
+      <ellipse cx="56" cy="40" rx="62" ry="8" fill="#000" opacity=".3"/>
+      <path fill="url(#oc-rockG)" d="M4 36 C 0 24, 14 12, 36 8 C 60 4, 96 10, 112 22 C 122 28, 120 38, 108 44 C 84 52, 30 50, 8 42 C 4 40, 4 36, 4 36 Z"/>
+      <path fill="none" stroke="rgba(200,236,226,.3)" stroke-width="1.05" stroke-linecap="round"
+        d="M20 14 C 48 6, 84 12, 108 24"/>
+    </g>
+
+    <!-- Sitting snow leopard, profile facing left. Tail trails back, not over the head. -->
+    <g class="oc-leopard" transform="translate(276,306) scale(1.12)">
+      <!-- paws -->
+      <path fill="#080A10" d="M16 56 C 15 62, 17 66, 21 66 C 25 66, 26 61, 25 56 Z"/>
+      <path fill="#080A10" d="M25 56 C 25 62, 27 66, 31 66 C 35 66, 36 61, 35 56 Z"/>
+      <path fill="#080A10" d="M50 56 C 50 62, 53 66, 58 66 C 62 66, 63 61, 61 56 Z"/>
+      <!-- haunch + back + chest -->
+      <path fill="#080A10" d="
+        M 24 56
+        C 16 52, 13 42, 16 32
+        C 16 26, 20 22, 26 22
+        C 32 14, 46 16, 56 26
+        C 66 32, 72 42, 68 54
+        C 64 62, 52 64, 38 62
+        C 32 61, 27 59, 24 56 Z"/>
+      <!-- head, slightly in front of the chest -->
+      <path fill="#080A10" d="
+        M 22 24
+        C 16 22, 8 24, 5 30
+        C 3 34, 5 38, 10 39
+        C 14 40, 18 37, 22 34
+        C 26 30, 26 26, 22 24 Z"/>
+      <!-- ears — larger, clearly pointed, part of the black silhouette -->
+      <path fill="#080A10" d="M17 16 L15 4 L26 15 Z"/>
+      <path fill="#080A10" d="M27 14 L31 3 L38 17 Z"/>
+      <!-- tail: from the haunch, back and down with a modest hook -->
+      <g transform="translate(66,44)">
+        <g class="oc-leo-tail">
+          <path fill="none" stroke="#080A10" stroke-width="5.4" stroke-linecap="round"
+            d="M0 0 C 14 2, 24 12, 26 24 C 26 32, 18 36, 12 32"/>
+          <path fill="none" stroke="url(#oc-leoRim)" stroke-width="1.3" stroke-linecap="round" opacity=".88"
+            d="M1 -1.6 C 15 0, 25 11, 27 23"/>
+        </g>
       </g>
-      <path fill="#D8E2EA" d="M0 214 C 70 200, 130 228, 200 210 C 270 192, 330 222, 390 208 L 390 260 L 0 260 Z"/>
-    </svg>
-    <svg class="oc-fore" viewBox="0 0 390 260" preserveAspectRatio="xMidYMax meet">
-      <path fill="#E8EEF4" d="M0 226 C 60 214, 120 238, 190 222 C 260 206, 320 234, 390 220 L 390 260 L 0 260 Z"/>
-      <!-- left pines -->
-      <g transform="translate(36,232)">
-        <g class="oc-pine">
-        <rect x="-3.5" y="-16" width="7" height="18" rx="1" fill="#4A3422"/>
-        <path fill="#16382C" d="M0 -118 L26 -62 H-26 Z"/>
-        <path fill="#1A4334" d="M0 -98 L30 -42 H-30 Z"/>
-        <path fill="#1E4A38" d="M0 -72 L34 -22 H-34 Z"/>
-        <path fill="#225640" d="M0 -44 L36 -4 H-36 Z"/>
-        <path fill="#F4F7FB" opacity=".9" d="M0 -118 L11 -98 L-8 -102 Z"/>
-        <path fill="#F4F7FB" opacity=".82" d="M-12 -68 L14 -66 L1 -78 Z"/>
-        <path fill="#F4F7FB" opacity=".78" d="M-14 -42 L16 -40 L0 -52 Z"/>
-        <path fill="#F4F7FB" opacity=".7" d="M-16 -18 L18 -16 L1 -28 Z"/>
-              </g>
-      </g>
-      <g transform="translate(74,236) scale(.72)">
-        <g class="oc-pine">
-        <rect x="-3" y="-16" width="6" height="18" rx="1" fill="#4A3422"/>
-        <path fill="#16382C" d="M0 -108 L24 -56 H-24 Z"/>
-        <path fill="#1A4334" d="M0 -88 L28 -36 H-28 Z"/>
-        <path fill="#1E4A38" d="M0 -64 L32 -16 H-32 Z"/>
-        <path fill="#225640" d="M0 -38 L34 0 H-34 Z"/>
-        <path fill="#F4F7FB" opacity=".9" d="M0 -108 L10 -90 L-7 -94 Z"/>
-        <path fill="#F4F7FB" opacity=".8" d="M-10 -58 L13 -56 L0 -68 Z"/>
-        <path fill="#F4F7FB" opacity=".75" d="M-12 -32 L15 -30 L0 -42 Z"/>
-              </g>
-      </g>
-      <g transform="translate(18,238) scale(.55)">
-        <g class="oc-pine">
-        <rect x="-3" y="-14" width="6" height="16" rx="1" fill="#4A3422"/>
-        <path fill="#1A4334" d="M0 -96 L22 -48 H-22 Z"/>
-        <path fill="#1E4A38" d="M0 -72 L26 -24 H-26 Z"/>
-        <path fill="#225640" d="M0 -44 L28 -2 H-28 Z"/>
-        <path fill="#F4F7FB" opacity=".88" d="M0 -96 L9 -80 L-7 -84 Z"/>
-        <path fill="#F4F7FB" opacity=".75" d="M-9 -48 L12 -46 L0 -58 Z"/>
-              </g>
-      </g>
-      <!-- right pines -->
-      <g transform="translate(358,230)">
-        <g class="oc-pine">
-        <rect x="-3.5" y="-16" width="7" height="18" rx="1" fill="#4A3422"/>
-        <path fill="#16382C" d="M0 -124 L27 -66 H-27 Z"/>
-        <path fill="#1A4334" d="M0 -102 L31 -44 H-31 Z"/>
-        <path fill="#1E4A38" d="M0 -76 L35 -22 H-35 Z"/>
-        <path fill="#225640" d="M0 -46 L37 -2 H-37 Z"/>
-        <path fill="#F4F7FB" opacity=".9" d="M0 -124 L11 -104 L-8 -108 Z"/>
-        <path fill="#F4F7FB" opacity=".82" d="M-13 -72 L15 -70 L1 -82 Z"/>
-        <path fill="#F4F7FB" opacity=".78" d="M-15 -44 L17 -42 L0 -54 Z"/>
-        <path fill="#F4F7FB" opacity=".7" d="M-16 -20 L18 -18 L1 -30 Z"/>
-              </g>
-      </g>
-      <g transform="translate(322,236) scale(.64)">
-        <g class="oc-pine">
-        <rect x="-3" y="-16" width="6" height="18" rx="1" fill="#4A3422"/>
-        <path fill="#16382C" d="M0 -108 L24 -56 H-24 Z"/>
-        <path fill="#1A4334" d="M0 -88 L28 -36 H-28 Z"/>
-        <path fill="#1E4A38" d="M0 -64 L32 -16 H-32 Z"/>
-        <path fill="#225640" d="M0 -38 L34 0 H-34 Z"/>
-        <path fill="#F4F7FB" opacity=".9" d="M0 -108 L10 -90 L-7 -94 Z"/>
-        <path fill="#F4F7FB" opacity=".8" d="M-10 -58 L13 -56 L0 -68 Z"/>
-        <path fill="#F4F7FB" opacity=".75" d="M-12 -32 L15 -30 L0 -42 Z"/>
-              </g>
-      </g>
-      <!-- two reindeer, left-of-center, on the snow -->
-      <g class="oc-reindeer" transform="translate(96,142)">
-        <ellipse cx="20" cy="36" rx="20" ry="4.2" fill="#8AA0B4" opacity=".3"/>
-        <path d="M6 16 L4 36" stroke="#4A3224" stroke-width="2.1" stroke-linecap="round"/>
-        <path d="M14 18 L14 36" stroke="#4A3224" stroke-width="2.1" stroke-linecap="round"/>
-        <path d="M26 18 L28 36" stroke="#3D2A1C" stroke-width="2.1" stroke-linecap="round"/>
-        <path d="M33 16 L37 36" stroke="#3D2A1C" stroke-width="2.1" stroke-linecap="round"/>
-        <ellipse cx="20" cy="14" rx="18" ry="9.5" fill="#6B4A36"/>
-        <ellipse cx="22" cy="16" rx="12" ry="6" fill="#7A5840" opacity=".45"/>
-        <path d="M34 10 C 42 6, 46 -2, 44 -6" stroke="#6B4A36" stroke-width="6.2" fill="none" stroke-linecap="round"/>
-        <ellipse cx="46" cy="-7" rx="7" ry="4.2" fill="#5A3C2A" transform="rotate(-16 46 -7)"/>
-        <ellipse cx="43" cy="-12" rx="2" ry="3.4" fill="#5A3C2A" transform="rotate(-22 43 -12)"/>
-        <ellipse cx="53" cy="-6" rx="1.8" ry="1.2" fill="#2A1A12"/>
-        <path d="M41 -11 C 39 -22, 32 -26, 26 -20 M39 -16 L30 -22 M41 -14 C 45 -28, 54 -26, 56 -18 M45 -20 L51 -24" fill="none" stroke="#3D2A20" stroke-width="1.55" stroke-linecap="round"/>
-        <ellipse cx="2" cy="12" rx="2.6" ry="2.1" fill="#5A3C2C"/>
-        <ellipse cx="18" cy="8" rx="7" ry="1.8" fill="#F0F4F8" opacity=".5"/>
-      </g>
-      <g class="oc-reindeer" transform="translate(148,150) scale(.78)">
-        <ellipse cx="20" cy="36" rx="20" ry="4.2" fill="#8AA0B4" opacity=".3"/>
-        <path d="M6 16 L5 36" stroke="#4A3224" stroke-width="2.1" stroke-linecap="round"/>
-        <path d="M14 18 L13 36" stroke="#4A3224" stroke-width="2.1" stroke-linecap="round"/>
-        <path d="M26 18 L29 36" stroke="#3D2A1C" stroke-width="2.1" stroke-linecap="round"/>
-        <path d="M33 16 L38 36" stroke="#3D2A1C" stroke-width="2.1" stroke-linecap="round"/>
-        <ellipse cx="20" cy="14" rx="18" ry="9.5" fill="#5E4030"/>
-        <ellipse cx="22" cy="16" rx="12" ry="6" fill="#6E5040" opacity=".45"/>
-        <path d="M34 12 C 40 14, 44 18, 46 16" stroke="#5E4030" stroke-width="6" fill="none" stroke-linecap="round"/>
-        <ellipse cx="50" cy="16" rx="7" ry="4" fill="#4E3426" transform="rotate(18 50 16)"/>
-        <ellipse cx="46" cy="11" rx="2" ry="3.2" fill="#4E3426" transform="rotate(-10 46 11)"/>
-        <ellipse cx="57" cy="17" rx="1.7" ry="1.1" fill="#2A1A12"/>
-        <path d="M44 8 C 42 -2, 36 -6, 30 0 M42 4 L34 -2 M46 7 C 50 -4, 58 -2, 60 6 M50 0 L56 -2" fill="none" stroke="#3D2A20" stroke-width="1.45" stroke-linecap="round"/>
-        <ellipse cx="2" cy="12" rx="2.6" ry="2.1" fill="#4E3426"/>
-        <ellipse cx="16" cy="8" rx="6" ry="1.6" fill="#F0F4F8" opacity=".45"/>
-      </g>
-      <!-- snow leopard, resting on the right snowbank, facing the reindeer -->
-      <g class="oc-leopard" transform="translate(250,138)">
-        <ellipse cx="28" cy="40" rx="30" ry="5" fill="#8AA0B4" opacity=".28"/>
-        <path d="M52 22 C 72 12, 80 30, 68 36 C 82 30, 70 8, 52 18" fill="#C4C0B8"/>
-        <circle cx="68" cy="34" r="4.6" fill="#C4C0B8"/>
-        <circle cx="70" cy="33" r="1.15" fill="#5A5650"/>
-        <circle cx="66" cy="36" r=".9" fill="#5A5650"/>
-        <ellipse cx="40" cy="26" rx="15" ry="13" fill="#C8C4BC"/>
-        <ellipse cx="22" cy="24" rx="20" ry="12" fill="#D2CEC6"/>
-        <ellipse cx="10" cy="26" rx="11" ry="10" fill="#D8D4CC"/>
-        <ellipse cx="8" cy="36" rx="6.5" ry="4.4" fill="#C8C4BC"/>
-        <ellipse cx="22" cy="37" rx="6" ry="4" fill="#C0BCB4"/>
-        <ellipse cx="42" cy="37" rx="6.5" ry="4.4" fill="#C4C0B8"/>
-        <ellipse cx="0" cy="16" rx="11.5" ry="10" fill="#D2CEC6"/>
-        <path d="M-8 8 L-10 -1 L-2 7 Z" fill="#C8C4BC"/>
-        <path d="M-8 7 L-9 2 L-4 8 Z" fill="#C4A090"/>
-        <path d="M6 8 L10 -1 L11 9 Z" fill="#C8C4BC"/>
-        <path d="M7 8 L10 2 L10.5 9 Z" fill="#C4A090"/>
-        <ellipse cx="-6" cy="15" rx="2" ry="1.85" fill="#2A2420"/>
-        <circle cx="-6.5" cy="14.4" r=".55" fill="#F4F0E8"/>
-        <path d="M-11 18 L-13.2 19 L-10.2 20 Z" fill="#5A4038"/>
-        <path d="M-10 16 L-5 15" stroke="#8A8680" stroke-width=".7" fill="none"/>
-        <ellipse cx="4" cy="20" rx="5.5" ry="4.5" fill="#E4E0D8"/>
-        <ellipse cx="18" cy="20" rx="2.2" ry="1.6" fill="#6A6660" opacity=".7"/>
-        <ellipse cx="28" cy="18" rx="1.9" ry="1.4" fill="#5A5650" opacity=".7"/>
-        <ellipse cx="22" cy="28" rx="1.7" ry="1.3" fill="#6A6660" opacity=".65"/>
-        <ellipse cx="34" cy="24" rx="2.1" ry="1.5" fill="#5A5650" opacity=".7"/>
-        <ellipse cx="38" cy="30" rx="1.5" ry="1.15" fill="#6A6660" opacity=".6"/>
-        <ellipse cx="12" cy="22" rx="1.4" ry="1.1" fill="#6A6660" opacity=".55"/>
-        <ellipse cx="44" cy="20" rx="1.6" ry="1.2" fill="#5A5650" opacity=".65"/>
-        <ellipse cx="48" cy="28" rx="1.3" ry="1" fill="#6A6660" opacity=".55"/>
-      </g>
-    </svg>
+      <!-- rim follows the silhouette tightly: muzzle, brow, back, haunch -->
+      <path fill="none" stroke="url(#oc-leoRim)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity=".9"
+        d="M6 30 C 11 25, 17 23, 24 18
+           C 34 14, 50 20, 64 36
+           C 70 44, 69 53, 62 58"/>
+      <!-- quiet ear-tip ticks, sitting on the ear edge -->
+      <path fill="none" stroke="url(#oc-leoRim)" stroke-width="1" stroke-linecap="round" opacity=".65"
+        d="M17 10 L16 5.5"/>
+      <path fill="none" stroke="url(#oc-leoRim)" stroke-width="1" stroke-linecap="round" opacity=".65"
+        d="M31 9 L31.5 5"/>
+      <circle cx="14.5" cy="28.5" r="0.9" fill="#F2FFFB" opacity=".95"/>
+    </g>
+  </svg>
+
   </div>
   <p id="demo-banner" class="demo-banner" hidden>DEMO / SIMULERING · inte live-resultat</p>
   <div id="kill-banner" class="kill-banner compact" hidden role="alert">
@@ -647,13 +681,13 @@
     </div>
   </div>
 
-  <script src="settings.js?v=68"></script>
-  <script src="discovery.js?v=68"></script>
-  <script src="chart.js?v=68"></script>
-  <script src="live.js?v=68"></script>
-  <script src="app.js?v=68"></script>
-  <script src="swipe.js?v=68"></script>
-  <script src="degen.js?v=68"></script>
-  <script src="ocean.js?v=68"></script>
+  <script src="settings.js?v=69"></script>
+  <script src="discovery.js?v=69"></script>
+  <script src="chart.js?v=69"></script>
+  <script src="live.js?v=69"></script>
+  <script src="app.js?v=69"></script>
+  <script src="swipe.js?v=69"></script>
+  <script src="degen.js?v=69"></script>
+  <script src="ocean.js?v=69"></script>
 </body>
 </html>

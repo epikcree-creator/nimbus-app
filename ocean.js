@@ -1,3 +1,352 @@
+/* Premium northern-lights canvas: stars, flowing aurora curtains, grain,
+   rare ambient shooting stars. ~30fps, pauses when the tab is hidden. No WebGL. */
+(function (g) {
+  "use strict";
+
+  function reducedMotion() {
+    return !!(g.matchMedia && g.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }
+
+  function mulberry32(a) {
+    return function () {
+      var t = a += 0x6D2B79F5;
+      t = Math.imul(t ^ t >>> 15, t | 1);
+      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  function buildGrain(size) {
+    var c = document.createElement("canvas");
+    c.width = c.height = size;
+    var x = c.getContext("2d"), img = x.createImageData(size, size), d = img.data;
+    var rnd = mulberry32(0xA0E0BA);
+    for (var i = 0; i < d.length; i += 4) {
+      var v = 235 + Math.floor(rnd() * 20);
+      d[i] = d[i + 1] = d[i + 2] = v;
+      d[i + 3] = 22 + Math.floor(rnd() * 18);
+    }
+    x.putImageData(img, 0, 0);
+    return c;
+  }
+
+  function bootAurora(host, opts) {
+    opts = opts || {};
+    if (!host) return { stop: function () {}, pause: function () {}, resume: function () {} };
+
+    var canvas = document.createElement("canvas");
+    canvas.className = "oc-aurora";
+    canvas.setAttribute("aria-hidden", "true");
+    host.insertBefore(canvas, host.firstChild);
+    var ctx = canvas.getContext("2d", { alpha: true });
+
+    var buf = document.createElement("canvas");
+    var bctx = buf.getContext("2d", { alpha: true });
+    var grain = buildGrain(128);
+
+    var stars = [];
+    var streaks = [];
+    var raf = 0, running = false, last = 0, acc = 0;
+    var t0 = 0, w = 0, h = 0, bw = 0, bh = 0, dpr = 1;
+    var reduce = reducedMotion();
+    var nextStreakAt = 0;
+
+    function resize() {
+      var r = host.getBoundingClientRect();
+      w = Math.max(1, Math.round(r.width));
+      h = Math.max(1, Math.round(r.height));
+      dpr = Math.min(opts.dpr || (g.devicePixelRatio || 1), 2);
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      canvas.style.width = w + "px";
+      canvas.style.height = h + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      /* Half-res buffer for soft aurora. */
+      bw = Math.max(1, Math.round(w * 0.55));
+      bh = Math.max(1, Math.round(h * 0.55));
+      buf.width = bw;
+      buf.height = bh;
+      seedStars();
+    }
+
+    function seedStars() {
+      var rnd = mulberry32(0x5EED + (w * 13 + h));
+      var n = Math.round(90 + w * 0.12);
+      stars = [];
+      for (var i = 0; i < n; i++) {
+        var bright = rnd() < 0.08;
+        stars.push({
+          x: rnd(),
+          y: rnd() * 0.72,
+          r: bright ? (1.15 + rnd() * 0.7) : (0.35 + rnd() * 0.55),
+          a: bright ? (0.7 + rnd() * 0.3) : (0.22 + rnd() * 0.45),
+          tw: 0.4 + rnd() * 1.6,
+          ph: rnd() * Math.PI * 2,
+          spark: bright && rnd() < 0.55
+        });
+      }
+    }
+
+    function ribbonY(x, t, layer, width) {
+      return layer.y * bh
+        + Math.sin(x * layer.f1 + t * layer.s1 + layer.p) * layer.a1
+        + Math.sin(x * layer.f2 + t * layer.s2 + layer.p * 1.7) * layer.a2
+        + Math.sin(x * layer.f3 + t * layer.s3) * layer.a3;
+    }
+
+    var LAYERS = [
+      /* back violet */
+      { y: 0.16, h: 0.42, a1: 22, a2: 12, a3: 6, f1: 0.011, f2: 0.023, f3: 0.041,
+        s1: 0.22, s2: 0.13, s3: 0.31, p: 0.4, fold: 10,
+        c0: "rgba(160, 90, 255, 0.00)", c1: "rgba(170, 95, 255, 0.14)", c2: "rgba(120, 70, 220, 0.03)" },
+      /* magenta edge */
+      { y: 0.10, h: 0.32, a1: 16, a2: 10, a3: 5, f1: 0.009, f2: 0.019, f3: 0.037,
+        s1: 0.16, s2: 0.21, s3: 0.11, p: 1.8, fold: 8,
+        c0: "rgba(255, 110, 190, 0.00)", c1: "rgba(232, 110, 210, 0.08)", c2: "rgba(180, 70, 160, 0.02)" },
+      /* teal */
+      { y: 0.20, h: 0.40, a1: 26, a2: 14, a3: 7, f1: 0.008, f2: 0.017, f3: 0.033,
+        s1: 0.19, s2: 0.27, s3: 0.14, p: 2.6, fold: 12,
+        c0: "rgba(60, 230, 210, 0.00)", c1: "rgba(70, 230, 210, 0.16)", c2: "rgba(40, 160, 170, 0.03)" },
+      /* green core */
+      { y: 0.18, h: 0.38, a1: 24, a2: 13, a3: 7, f1: 0.010, f2: 0.021, f3: 0.039,
+        s1: 0.17, s2: 0.23, s3: 0.29, p: 0.2, fold: 14,
+        c0: "rgba(61, 255, 176, 0.00)", c1: "rgba(80, 255, 190, 0.22)", c2: "rgba(40, 180, 130, 0.04)" },
+      /* lower soft green veil */
+      { y: 0.28, h: 0.30, a1: 18, a2: 9, a3: 5, f1: 0.007, f2: 0.016, f3: 0.029,
+        s1: 0.14, s2: 0.18, s3: 0.22, p: 3.4, fold: 9,
+        c0: "rgba(90, 255, 200, 0.00)", c1: "rgba(90, 255, 200, 0.10)", c2: "rgba(40, 160, 140, 0.03)" }
+    ];
+
+    function softGlow(x, y, rx, ry, color) {
+      var gdt = bctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
+      gdt.addColorStop(0, color);
+      gdt.addColorStop(1, "rgba(0,0,0,0)");
+      bctx.fillStyle = gdt;
+      bctx.save();
+      bctx.translate(x, y);
+      bctx.scale(rx / 100, ry / 100);
+      bctx.beginPath();
+      bctx.arc(0, 0, 100, 0, Math.PI * 2);
+      bctx.fill();
+      bctx.restore();
+    }
+
+    function drawAurora(t) {
+      bctx.clearRect(0, 0, bw, bh);
+      bctx.globalCompositeOperation = "lighter";
+      /* Soft volumes first, so ribbons sit in a glow rather than hard bands. */
+      var gx = bw * (0.42 + Math.sin(t * 0.11) * 0.06);
+      var gy = bh * (0.22 + Math.cos(t * 0.09) * 0.03);
+      softGlow(gx, gy, bw * 0.55, bh * 0.32, "rgba(70, 230, 190, 0.20)");
+      softGlow(gx + bw * 0.18, gy - bh * 0.04, bw * 0.40, bh * 0.24, "rgba(80, 255, 200, 0.16)");
+      softGlow(bw * (0.28 + Math.sin(t * 0.08 + 1) * 0.05), bh * 0.16,
+        bw * 0.38, bh * 0.22, "rgba(160, 90, 255, 0.16)");
+      softGlow(bw * (0.62 + Math.cos(t * 0.07) * 0.05), bh * 0.13,
+        bw * 0.34, bh * 0.20, "rgba(230, 110, 200, 0.10)");
+      softGlow(bw * 0.55, bh * 0.30, bw * 0.36, bh * 0.18, "rgba(50, 200, 210, 0.10)");
+      var step = 3;
+      for (var li = 0; li < LAYERS.length; li++) {
+        var L = LAYERS[li];
+        bctx.beginPath();
+        var started = false;
+        for (var x = -20; x <= bw + 20; x += step) {
+          var y = ribbonY(x, t, L);
+          if (!started) { bctx.moveTo(x, y); started = true; }
+          else bctx.lineTo(x, y);
+        }
+        for (var x2 = bw + 20; x2 >= -20; x2 -= step) {
+          var y2 = ribbonY(x2, t, L) + L.h * bh
+            + Math.sin(x2 * 0.018 + t * 0.2 + L.p) * 10;
+          bctx.lineTo(x2, y2);
+        }
+        bctx.closePath();
+        var gdt = bctx.createLinearGradient(0, L.y * bh - 20, 0, (L.y + L.h) * bh + 30);
+        gdt.addColorStop(0, L.c0);
+        gdt.addColorStop(0.22, L.c1);
+        gdt.addColorStop(0.72, L.c2);
+        gdt.addColorStop(1, "rgba(0,0,0,0)");
+        bctx.fillStyle = gdt;
+        bctx.fill();
+
+        /* curtain folds: faint vertical sheens along the ribbon */
+        bctx.save();
+        bctx.clip();
+        for (var k = 0; k < 5; k++) {
+          var fx = ((k * 0.23 + 0.08) + Math.sin(t * 0.05 + L.p + k * 1.3) * 0.06) * bw;
+          var hw = 22 + (k % 3) * 10;
+          var foldG = bctx.createLinearGradient(fx - hw, 0, fx + hw, 0);
+          foldG.addColorStop(0, "rgba(255,255,255,0)");
+          foldG.addColorStop(0.5, "rgba(255,255,255,0.028)");
+          foldG.addColorStop(1, "rgba(255,255,255,0)");
+          bctx.fillStyle = foldG;
+          bctx.fillRect(fx - hw, 0, hw * 2, bh);
+        }
+        bctx.restore();
+      }
+      bctx.globalCompositeOperation = "source-over";
+    }
+
+    function drawStars(ctx2, time, twinkle) {
+      for (var i = 0; i < stars.length; i++) {
+        var s = stars[i];
+        var a = s.a;
+        if (twinkle) a *= 0.72 + 0.28 * Math.sin(time * s.tw + s.ph);
+        var sx = s.x * w, sy = s.y * h;
+        ctx2.fillStyle = "rgba(230, 236, 255," + a.toFixed(3) + ")";
+        ctx2.beginPath();
+        ctx2.arc(sx, sy, s.r, 0, Math.PI * 2);
+        ctx2.fill();
+        if (s.spark) {
+          ctx2.strokeStyle = "rgba(230, 236, 255," + (a * 0.55).toFixed(3) + ")";
+          ctx2.lineWidth = 0.6;
+          ctx2.beginPath();
+          var arm = s.r * 3.2;
+          ctx2.moveTo(sx - arm, sy); ctx2.lineTo(sx + arm, sy);
+          ctx2.moveTo(sx, sy - arm); ctx2.lineTo(sx, sy + arm);
+          ctx2.stroke();
+        }
+      }
+    }
+
+    function maybeSpawnStreak(time) {
+      if (reduce || opts.noStreaks) return;
+      if (time < nextStreakAt) return;
+      nextStreakAt = time + 7 + Math.random() * 9;
+      var fromL = Math.random() < 0.6;
+      streaks.push({
+        x: fromL ? (-0.05 + Math.random() * 0.45) * w : (0.4 + Math.random() * 0.5) * w,
+        y: (0.06 + Math.random() * 0.22) * h,
+        vx: (fromL ? 1 : -1) * (220 + Math.random() * 160),
+        vy: 90 + Math.random() * 80,
+        life: 0,
+        dur: 0.7 + Math.random() * 0.45,
+        len: 70 + Math.random() * 50
+      });
+    }
+
+    function drawStreaks(dt, time) {
+      var keep = [];
+      for (var i = 0; i < streaks.length; i++) {
+        var s = streaks[i];
+        s.life += dt;
+        var p = s.life / s.dur;
+        if (p >= 1) continue;
+        var fade = p < 0.15 ? p / 0.15 : (1 - p);
+        var x = s.x + s.vx * s.life;
+        var y = s.y + s.vy * s.life;
+        var ang = Math.atan2(s.vy, s.vx);
+        var lx = x - Math.cos(ang) * s.len;
+        var ly = y - Math.sin(ang) * s.len;
+        var grd = ctx.createLinearGradient(lx, ly, x, y);
+        grd.addColorStop(0, "rgba(230,255,245,0)");
+        grd.addColorStop(0.65, "rgba(200,255,230," + (0.45 * fade).toFixed(3) + ")");
+        grd.addColorStop(1, "rgba(255,255,255," + (0.95 * fade).toFixed(3) + ")");
+        ctx.strokeStyle = grd;
+        ctx.lineWidth = 1.4;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(lx, ly);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        ctx.fillStyle = "rgba(255,255,255," + (0.9 * fade).toFixed(3) + ")";
+        ctx.beginPath();
+        ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+        keep.push(s);
+      }
+      streaks = keep;
+    }
+
+    function paint(time, dt) {
+      ctx.clearRect(0, 0, w, h);
+      var t = reduce ? 8.4 : time;
+      drawAurora(t);
+      /* Soft upscale of the aurora buffer. */
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      ctx.filter = "blur(10px)";
+      ctx.globalAlpha = 1;
+      ctx.drawImage(buf, 0, 0, w, h * 0.80);
+      ctx.filter = "none";
+
+      /* Very faint reflection in the lower third (lake will sit on top via SVG). */
+      ctx.save();
+      ctx.globalAlpha = 0.28;
+      ctx.translate(0, h * 0.86);
+      ctx.scale(1, -0.36);
+      ctx.filter = "blur(12px)";
+      ctx.drawImage(buf, 0, 0, w, h * 0.80);
+      ctx.filter = "none";
+      ctx.restore();
+      ctx.globalAlpha = 1;
+
+      drawStars(ctx, t, !reduce);
+      if (!reduce) {
+        maybeSpawnStreak(time);
+        drawStreaks(dt, time);
+      }
+
+      /* Grain to kill banding. */
+      var pat = ctx.createPattern(grain, "repeat");
+      if (pat) {
+        ctx.globalAlpha = 0.07;
+        ctx.fillStyle = pat;
+        ctx.fillRect(0, 0, w, h);
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    function frame(now) {
+      if (!running) return;
+      raf = g.requestAnimationFrame(frame);
+      if (!t0) t0 = now;
+      var time = (now - t0) / 1000;
+      if (!last) last = now;
+      var dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      acc += dt;
+      if (acc < 1 / 30) return;
+      acc -= 1 / 30;
+      paint(time, 1 / 30);
+    }
+
+    function start() {
+      if (running) return;
+      running = true;
+      last = 0;
+      raf = g.requestAnimationFrame(frame);
+    }
+    function stop() {
+      running = false;
+      if (raf) { g.cancelAnimationFrame(raf); raf = 0; }
+    }
+    function pause() { stop(); }
+    function resume() { if (!reduce) start(); }
+
+    resize();
+    if (reduce) {
+      paint(8.4, 0);
+    } else {
+      start();
+    }
+    if (typeof ResizeObserver !== "undefined") {
+      var ro = new ResizeObserver(function () {
+        resize();
+        if (reduce) paint(8.4, 0);
+      });
+      ro.observe(host);
+    }
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) pause();
+      else resume();
+    });
+
+    return { stop: stop, pause: pause, resume: resume, resize: resize, canvas: canvas };
+  }
+
+  g.AuroraSky = { boot: bootAurora };
+})(window);
+
 /* t263: "djuphav" layout after Oscar's X reference video (kursormaxx). Layout and colours only.
    Every number comes from state.json; missing values read "saknas". PAPER only, no orders,
    no wallet copying. The video's simulated numbers are never shown.
@@ -215,29 +564,18 @@
       /* The existing PAPER withdraw sheet (slide to confirm). No real order exists here. */
       if (g.NimbusCash) g.NimbusCash.open("withdraw");
     });
-    /* Snow: 26 flakes, 3–9 px, soft drift, none when reduced motion is on. */
-    var sea = $("oc-bubbles");
-    if (sea && !reducedMotion()) {
-      for (var i = 0; i < 26; i++) {
-        var b = el("i"); var s = 3 + (i * 5 % 7);
-        var drift = (i % 2 === 0 ? 1 : -1) * (8 + (i * 5) % 22);
-        b.style.cssText = "left:" + ((i * 37) % 100) + "%;width:" + s + "px;height:" + s + "px;--o:" + (0.35 + (i % 6) * 0.07).toFixed(2) + ";--drift:" + drift + ";animation-delay:-" + ((i * 1.3) % 16).toFixed(1) + "s;animation-duration:" + (11 + (i * 3) % 10) + "s";
-        sea.appendChild(b);
-      }
+    if (g.AuroraSky && $("oc-sea")) {
+      try { g.AuroraSky.boot($("oc-sea")); } catch (e) { if (g.console) console.error(e); }
     }
     bootFish();
   }
 
-  /* ---------- t274/t304 birds: decorative unless a real closed PAPER trade is supplied ---------- */
+  /* ---------- t274/t308 shooting stars: decorative unless a real closed PAPER trade is supplied ---------- */
   var WHALE = [
-    { species: "gull", fill: "#E8EEF4", mid: "#8A96A4", scale: 1, w: 62, flap: 2.2 },
-    { species: "swallow", fill: "#C45A3A", mid: "#243040", scale: 1, w: 58, flap: 1.65 },
-    { species: "bullfinch", fill: "#D44A5A", mid: "#1A1A1C", scale: 1, w: 48, flap: 1.35 },
-    { species: "waxwing", fill: "#C4B49A", mid: "#5A4A3A", scale: 1, w: 52, flap: 1.7 },
-    { species: "crane", fill: "#8A8E96", mid: "#5A6068", scale: 1, w: 70, flap: 2.7 },
-    { species: "gull", fill: "#F2F5F8", mid: "#A8B4C0", scale: 1, w: 56, flap: 2.2 }
+    { fill: "#7EF0D0", mid: "#3DFFB0", scale: 1, w: 132 },
+    { fill: "#C8B6FF", mid: "#B090FF", scale: 1, w: 120 }
   ];
-  var MAX_FISH = 4, SWIM_MS = 4200;
+  var MAX_FISH = 2, SWIM_MS = 1400;
   var fishHost = null, liveFish = [], fishRaf = 0, spawnTimer = 0;
   var seenTrade = {}, tradeQueue = [], colorIx = 0, fishPaused = false, pauseAt = 0, fishWired = false;
 
@@ -245,166 +583,29 @@
     return !!(g.matchMedia && g.matchMedia("(prefers-reduced-motion: reduce)").matches);
   }
   var uid = 0;
-  function id(s) { return "v68b" + (++uid) + s; }
-  function wrap(cls, inner) {
-    return '<svg class="oc-critter oc-bird ' + cls + '" viewBox="0 0 160 100" overflow="visible">' + inner + "</svg>";
+  function starSvg(kind) {
+    uid += 1;
+    var gid = "ocstar" + uid;
+    var tip, mid, core;
+    if (kind === "shark") {
+      tip = "#FFD0D8"; mid = "rgba(255,110,140,.75)"; core = "#FE4A4A";
+    } else {
+      tip = "#FFFFFF"; mid = "rgba(180,255,230,.8)"; core = "#E8FFF8";
+    }
+    return '<svg class="oc-critter oc-star" viewBox="0 0 160 28" overflow="visible">' +
+      '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="1" y2="0">' +
+      '<stop offset="0%" stop-color="' + mid + '" stop-opacity="0"/>' +
+      '<stop offset="72%" stop-color="' + mid + '" stop-opacity=".85"/>' +
+      '<stop offset="100%" stop-color="' + tip + '" stop-opacity="1"/>' +
+      "</linearGradient></defs>" +
+      '<path d="M4 14 L142 14" stroke="url(#' + gid + ')" stroke-width="2.2" stroke-linecap="round" fill="none"/>' +
+      '<path d="M20 14 L142 14" stroke="url(#' + gid + ')" stroke-width="5" stroke-linecap="round" fill="none" opacity=".28"/>' +
+      '<circle cx="148" cy="14" r="3.1" fill="' + tip + '"/>' +
+      '<circle cx="148" cy="14" r="6" fill="' + core + '" opacity=".28"/>' +
+      "</svg>";
   }
-  function eye(cx, cy) {
-    return '<circle cx="' + cx + '" cy="' + cy + '" r="1.3" fill="#12141A"/>' +
-      '<circle cx="' + (cx + 0.5) + '" cy="' + (cy - 0.45) + '" r="0.48" fill="#fff"/>';
-  }
-
-  /* Hand-tuned smooth wings, local coords, shoulder at 0,0.
-     Wide at the root so they read as one piece with the body. */
-  var WING = {
-    /* long, reasonably broad, 4 soft fingers — gull / raven-ish */
-    longUp: "M0 0 C -10 -8, -32 -24, -62 -30 C -74 -32, -80 -28, -78 -24 C -76 -25.5, -73 -24.5, -71 -23 C -75 -21, -72 -18, -68 -17 C -72 -15, -69 -12, -64 -12 C -42 -10, -16 -4, 0 0 Z",
-    longDn: "M0 0 C -10 8, -32 24, -62 30 C -74 32, -80 28, -78 24 C -76 25.5, -73 24.5, -71 23 C -75 21, -72 18, -68 17 C -72 15, -69 12, -64 12 C -42 10, -16 4, 0 0 Z",
-    /* swallow: longer, slimmer, pointed, still a surface */
-    scytheUp: "M0 0 C -14 -8, -40 -26, -76 -34 C -86 -36, -90 -32, -88 -28 C -84 -30, -80 -28, -78 -26 C -82 -24, -78 -20, -70 -19 C -48 -14, -18 -5, 0 0 Z",
-    scytheDn: "M0 0 C -14 8, -40 26, -76 34 C -86 36, -90 32, -88 28 C -84 30, -80 28, -78 26 C -82 24, -78 20, -70 19 C -48 14, -18 5, 0 0 Z",
-    /* short rounded — bullfinch / waxwing */
-    roundUp: "M0 0 C -8 -8, -24 -20, -48 -24 C -58 -25, -62 -21, -60 -18 C -58 -19.5, -55 -18.5, -53 -17 C -57 -15, -54 -12, -48 -12 C -32 -10, -12 -3, 0 0 Z",
-    roundDn: "M0 0 C -8 8, -24 20, -48 24 C -58 25, -62 21, -60 18 C -58 19.5, -55 18.5, -53 17 C -57 15, -54 12, -48 12 C -32 10, -12 3, 0 0 Z",
-    /* crane: broad, 5 gentle fingers */
-    broadUp: "M0 0 C -12 -10, -36 -28, -68 -34 C -80 -36, -86 -32, -84 -28 C -82 -29.5, -79 -28.5, -77 -27 C -81 -25, -78 -22, -74 -21 C -78 -19, -75 -16, -70 -16 C -74 -14, -71 -11, -66 -11 C -44 -10, -16 -4, 0 0 Z",
-    broadDn: "M0 0 C -12 10, -36 28, -68 34 C -80 36, -86 32, -84 28 C -82 29.5, -79 28.5, -77 27 C -81 25, -78 22, -74 21 C -78 19, -75 16, -70 16 C -74 14, -71 11, -66 11 C -44 10, -16 4, 0 0 Z"
-  };
-
-  function swallowSvg() {
-    var a = id("w"), b = id("bd");
-    return wrap("oc-swallow",
-      '<defs>' +
-        '<linearGradient id="' + a + '" x1="0" y1="0" x2="1" y2="1">' +
-          '<stop offset="0%" stop-color="#4A5A6C"/><stop offset="100%" stop-color="#1A2430"/>' +
-        '</linearGradient>' +
-        '<linearGradient id="' + b + '" x1="0" y1="0" x2="0" y2="1">' +
-          '<stop offset="0%" stop-color="#2C3A48"/><stop offset="100%" stop-color="#1A2430"/>' +
-        '</linearGradient>' +
-      '</defs>' +
-      '<g transform="translate(78,48)"><g class="oc-wing-far"><path fill="url(#' + a + ')" d="' + WING.scytheUp + '"/></g></g>' +
-      /* slim body + two long streamers meeting at the rump */
-      '<path fill="url(#' + b + ')" d="M124 47 L116 44 C112 41 106 40 100 42 C90 40 78 43 68 48 C50 40 26 30 8 24 C12 30 40 46 68 50 C50 54 22 66 6 74 C14 68 42 56 68 52 C80 56 98 54 110 50 C116 49 120 48 124 49 Z"/>' +
-      '<path fill="#E8DCC8" d="M108 48 C98 51 84 52 74 50 C86 47 100 47 110 47 Z"/>' +
-      '<path fill="#C45A3A" d="M114 47 C110 50 106 50 102 48 C108 46 112 46 116 46 Z"/>' +
-      '<path fill="#1A1A18" d="M122 46 L134 44.5 L122 49.5 Z"/>' +
-      eye(114, 44.2) +
-      '<g transform="translate(80,50)"><g class="oc-wing-near"><path fill="url(#' + a + ')" d="' + WING.scytheDn + '"/></g></g>'
-    );
-  }
-
-  function gullSvg() {
-    var a = id("w"), b = id("bd");
-    return wrap("oc-gull",
-      '<defs>' +
-        '<linearGradient id="' + a + '" x1="0" y1="0" x2="1" y2="0.15">' +
-          '<stop offset="0%" stop-color="#F7FAFC"/><stop offset="58%" stop-color="#C5CED6"/><stop offset="100%" stop-color="#2A3238"/>' +
-        '</linearGradient>' +
-        '<linearGradient id="' + b + '" x1="0" y1="0" x2="0" y2="1">' +
-          '<stop offset="0%" stop-color="#FFFFFF"/><stop offset="100%" stop-color="#E4EAF0"/>' +
-        '</linearGradient>' +
-      '</defs>' +
-      '<g transform="translate(76,48)"><g class="oc-wing-far"><path fill="url(#' + a + ')" d="' + WING.longUp + '"/></g></g>' +
-      '<path fill="url(#' + b + ')" d="M126 48 L118 45 C114 41 108 41 102 43 C88 40 70 43 56 49 C48 51 42 50 40 52 C44 55 54 56 64 54 C80 58 100 55 114 51 C118 50 122 49 126 50 Z"/>' +
-      '<path fill="#E8C44A" d="M124 47 L138 45 L124 51 Z"/>' +
-      '<circle cx="131.5" cy="47.2" r="0.8" fill="#C43A3A"/>' +
-      eye(114, 45) +
-      '<g transform="translate(78,50)"><g class="oc-wing-near"><path fill="url(#' + a + ')" d="' + WING.longDn + '"/></g></g>'
-    );
-  }
-
-  function bullfinchSvg() {
-    var a = id("w");
-    return wrap("oc-bullfinch",
-      '<defs>' +
-        '<linearGradient id="' + a + '" x1="0" y1="0" x2="1" y2="1">' +
-          '<stop offset="0%" stop-color="#3A3A44"/><stop offset="100%" stop-color="#1A1A20"/>' +
-        '</linearGradient>' +
-      '</defs>' +
-      '<g transform="translate(78,50)"><g class="oc-wing-far">' +
-        '<path fill="url(#' + a + ')" d="' + WING.roundUp + '"/>' +
-        '<path fill="#F2F5F8" d="M-10 -2 C -22 -9, -34 -14, -42 -15 Q -34 -7, -18 -3 Q -12 -1, -8 0 Z"/>' +
-      '</g></g>' +
-      '<path fill="#8A96A0" d="M122 50 L114 47 C112 41 106 38 99 40 C88 36 74 41 64 48 C56 51 50 53 50 55 C54 58 64 58 74 56 C88 62 106 60 114 54 C118 53 120 52 122 52 Z"/>' +
-      '<path fill="#F2F5F8" d="M64 48 C56 51 51 54 51 55 C55 57 64 56 70 53 Z"/>' +
-      '<path fill="#D44A5A" d="M114 50 C104 58 88 60 76 55 C90 52 104 50 114 49 Z"/>' +
-      '<path fill="#1A1A1C" d="M114 47 C112 41 106 38 99 40 C102 38 110 38 116 44 C118 46 118 48 116 49 Z"/>' +
-      '<path fill="#1A1A1C" d="M120 49.5 L130 51.2 L120 53.5 Z"/>' +
-      eye(110, 45.5) +
-      '<g transform="translate(80,52)"><g class="oc-wing-near">' +
-        '<path fill="url(#' + a + ')" d="' + WING.roundDn + '"/>' +
-        '<path fill="#F2F5F8" d="M-10 2 C -22 9, -34 14, -42 15 Q -34 7, -18 3 Q -12 1, -8 0 Z"/>' +
-      '</g></g>'
-    );
-  }
-
-  function waxwingSvg() {
-    var a = id("w"), b = id("bd");
-    return wrap("oc-waxwing",
-      '<defs>' +
-        '<linearGradient id="' + a + '" x1="0" y1="0" x2="1" y2="1">' +
-          '<stop offset="0%" stop-color="#D0C0A4"/><stop offset="100%" stop-color="#5A4A3A"/>' +
-        '</linearGradient>' +
-        '<linearGradient id="' + b + '" x1="0" y1="0" x2="0" y2="1">' +
-          '<stop offset="0%" stop-color="#D4C4A8"/><stop offset="100%" stop-color="#A89478"/>' +
-        '</linearGradient>' +
-      '</defs>' +
-      '<g transform="translate(78,49)"><g class="oc-wing-far"><path fill="url(#' + a + ')" d="' + WING.roundUp + '"/></g></g>' +
-      /* crest is a smooth bump on the head, yellow only at the tail tip */
-      '<path fill="url(#' + b + ')" d="M124 49 L116 46 C114 38 110 32 106 30 C104 34 102 38 100 41 C90 37 76 41 64 48 C54 50 46 49 42 51 C44 53 50 55 58 54 C50 58 44 63 40 66 C48 62 58 57 66 54 C80 60 102 58 114 52 C120 51 122 50 124 51 Z"/>' +
-      '<path fill="#E8D060" d="M46 50 L41 51 C43 54 50 55 58 54 C52 52 48 51 46 50 Z"/>' +
-      '<path fill="#1A1A1C" opacity=".9" d="M108 44 C112 44 120 46 124 49 L116 50 C112 47 108 46 106 46 Z"/>' +
-      '<path fill="#2A2218" d="M122 48 L134 46.5 L122 51.5 Z"/>' +
-      eye(114, 44.5) +
-      '<g transform="translate(80,51)"><g class="oc-wing-near"><path fill="url(#' + a + ')" d="' + WING.roundDn + '"/></g></g>'
-    );
-  }
-
-  function craneSvg() {
-    var a = id("w"), b = id("bd");
-    return wrap("oc-crane",
-      '<defs>' +
-        '<linearGradient id="' + a + '" x1="0" y1="0" x2="1" y2="0.15">' +
-          '<stop offset="0%" stop-color="#C8CCD2"/><stop offset="68%" stop-color="#7A8088"/><stop offset="100%" stop-color="#2A2C30"/>' +
-        '</linearGradient>' +
-        '<linearGradient id="' + b + '" x1="0" y1="0" x2="1" y2="1">' +
-          '<stop offset="0%" stop-color="#B0B4BA"/><stop offset="100%" stop-color="#7A8088"/>' +
-        '</linearGradient>' +
-      '</defs>' +
-      '<g transform="translate(70,50)"><g class="oc-wing-far"><path fill="url(#' + a + ')" d="' + WING.broadUp + '"/></g></g>' +
-      '<path fill="none" stroke="#5A6068" stroke-width="1.55" stroke-linecap="round" d="M54 54 C 34 60, 18 66, 6 70"/>' +
-      '<path fill="none" stroke="#5A6068" stroke-width="1.55" stroke-linecap="round" d="M56 56 C 38 64, 22 72, 10 78"/>' +
-      '<path fill="url(#' + b + ')" d="M146 38 L138 36 C136 34 134 33 132 34 C118 40 100 47 82 51 C68 49 58 51 50 55 C46 56 44 57 46 58 C54 59 68 57 80 56 C96 59 114 52 130 44 C136 42 142 40 146 40 Z"/>' +
-      '<circle cx="134" cy="33.5" r="2.2" fill="#C43A3A"/>' +
-      '<path fill="#1A1A1C" d="M144 37 L155 35 L144 40.5 Z"/>' +
-      eye(136, 36) +
-      '<g transform="translate(72,52)"><g class="oc-wing-near"><path fill="url(#' + a + ')" d="' + WING.broadDn + '"/></g></g>'
-    );
-  }
-
-  function ravenSvg() {
-    var a = id("w"), b = id("bd");
-    return wrap("oc-raven",
-      '<defs>' +
-        '<linearGradient id="' + a + '" x1="0" y1="0" x2="1" y2="1">' +
-          '<stop offset="0%" stop-color="#3A3A48"/><stop offset="100%" stop-color="#12121A"/>' +
-        '</linearGradient>' +
-        '<linearGradient id="' + b + '" x1="0" y1="0" x2="0" y2="1">' +
-          '<stop offset="0%" stop-color="#2E2E3A"/><stop offset="100%" stop-color="#16161E"/>' +
-        '</linearGradient>' +
-      '</defs>' +
-      '<g transform="translate(76,48)"><g class="oc-wing-far"><path class="oc-raven-wing" fill="url(#' + a + ')" d="' + WING.longUp + '"/></g></g>' +
-      '<path class="oc-raven-body" fill="url(#' + b + ')" d="M128 48 L118 44 C114 40 108 40 102 42 C88 38 70 42 58 49 C46 47 34 50 28 54 C36 55 48 54 58 53 C50 58 36 66 26 72 C38 66 52 58 64 54 C78 60 100 57 114 52 C120 51 124 50 128 51 Z"/>' +
-      '<path fill="#0A0A0A" d="M126 47 L142 43 L126 53 Z"/>' +
-      eye(114, 44.5) +
-      '<g transform="translate(78,50)"><g class="oc-wing-near"><path class="oc-raven-wing" fill="url(#' + a + ')" d="' + WING.longDn + '"/></g></g>'
-    );
-  }
-  function whaleSvg(c) {
-    var fn = { swallow: swallowSvg, gull: gullSvg, bullfinch: bullfinchSvg, waxwing: waxwingSvg, crane: craneSvg };
-    return (fn[c && c.species] || gullSvg)();
-  }
-  function sharkSvg() { return ravenSvg(); }
+  function whaleSvg() { return starSvg("whale"); }
+  function sharkSvg() { return starSvg("shark"); }
   function riderHtml() {
     return '<span class="oc-rider"><span class="oc-rider-av"><img src="icons/mark.png" alt="" width="28" height="28" /></span>' +
       '<span class="oc-rider-face"><i class="l"></i><i class="r"></i><b>^</b><b>^</b></span></span>';
@@ -463,32 +664,30 @@
     if (liveFish.length >= MAX_FISH) return false;
     var ev = event && event.symbol && event.pnl != null && isFinite(Number(event.pnl)) ? { symbol: String(event.symbol).replace(/^\$/, "").trim(), pnl: Number(event.pnl), win: event.win != null ? !!event.win : Number(event.pnl) >= 0, id: event.id } : null;
     if (ev && !ev.symbol) ev = null;
-    var kind = ev ? (ev.win ? "whale" : "shark") : (Math.random() < 0.78 ? "whale" : "shark");
+    if (!ev && Math.random() < 0.45) return false;
+    var kind = ev ? (ev.win ? "whale" : "shark") : "whale";
     var color = WHALE[colorIx++ % WHALE.length];
-    var dir = Math.random() < 0.5 ? 1 : -1;
-    /* Mid-sky band: below home typography/speech bubble, above the bot;
-       below the agents goal slider, above the treeline. */
-    var y = 0.375 + Math.random() * 0.04;
-    var depth = 0.68 + Math.random() * 0.32;
-    var scale = (kind === "whale" ? (color.scale || 1) : 0.9) * depth;
-    var w = Math.min(70, (color.w || 56) * scale);
-    var wrap = el("div", "oc-swimmer " + kind + (ev ? " ev" : " deco") + (color.species ? " sp-" + color.species : ""));
+    var dir = Math.random() < 0.62 ? 1 : -1;
+    /* Upper/mid sky, a short diagonal streak. Badge still fires at mid-screen. */
+    var y = 0.10 + Math.random() * 0.16;
+    var w = ev ? 150 : 108;
+    var wrap = el("div", "oc-swimmer " + kind + (ev ? " ev" : " deco"));
     wrap.style.width = w + "px";
-    wrap.style.setProperty("--flap-dur", ((color.flap || 1.8) * (0.92 + Math.random() * 0.2)).toFixed(2) + "s");
-    wrap.style.setProperty("--flap-delay", (-Math.random() * 2.2).toFixed(2) + "s");
-    if (depth < 0.9) wrap.style.opacity = (0.75 + depth * 0.22).toFixed(2);
+    wrap.style.opacity = ev ? "1" : "0.72";
     var html = ev ? ('<span class="oc-flab">' + sym(ev.symbol) + "</span>") : "";
-    html += kind === "whale" ? whaleSvg(color) : sharkSvg();
-    if (ev && kind === "whale") html += riderHtml();
+    html += kind === "whale" ? whaleSvg() : sharkSvg();
     wrap.innerHTML = html;
+    var fall = 70 + Math.random() * 80;
+    var travelGuess = (fishHost.clientWidth || g.innerWidth || 390) + w + 16;
+    var ang = Math.atan2(fall, travelGuess) * (180 / Math.PI);
     var critter = wrap.querySelector(".oc-critter");
-    if (dir < 0 && critter) critter.style.transform = "scaleX(-1)";
+    if (critter) critter.style.transform = "rotate(" + (dir > 0 ? ang : 180 - ang) + "deg)";
     fishHost.appendChild(wrap);
     var startX = dir > 0 ? -w - 8 : (fishHost.clientWidth || g.innerWidth || 390) + 8;
     var rec = {
-      el: wrap, ev: ev, kind: kind, dir: dir, x: startX, y: y, w: w,
-      t0: performance.now(), mid: false, shot: false, dur: SWIM_MS + Math.round(Math.random() * 1400 - 200),
-      phase: Math.random() * Math.PI * 2, amp: 4 + Math.random() * 5, color: color
+      el: wrap, ev: ev, kind: kind, dir: dir, x: startX, y: y, w: w, fall: fall,
+      t0: performance.now(), mid: false, shot: false, dur: SWIM_MS + Math.round(Math.random() * 500 - 100),
+      phase: 0, amp: 0, color: color
     };
     wrap.style.transform = "translate(" + rec.x.toFixed(1) + "px," + (rec.y * (fishHost.clientHeight || 844)).toFixed(1) + "px)";
     liveFish.push(rec);
@@ -505,7 +704,7 @@
       var f = liveFish[i], elapsed = now - f.t0, travel = W + f.w + 16;
       if (!f.shot) f.x = f.dir > 0 ? (-f.w + (elapsed / f.dur) * travel) : (W - (elapsed / f.dur) * travel);
       else f.x += f.dir * 22;
-      var ypx = f.y * H + Math.sin(f.phase + elapsed / 340) * f.amp;
+      var ypx = f.y * H + (elapsed / f.dur) * (f.fall || 0) + Math.sin(f.phase + elapsed / 340) * (f.amp || 0);
       f.el.style.transform = "translate(" + f.x.toFixed(1) + "px," + ypx.toFixed(1) + "px)";
       var cx = f.x + f.w / 2;
       if (!f.mid && ((f.dir > 0 && cx >= midX) || (f.dir < 0 && cx <= midX))) {
@@ -540,7 +739,7 @@
     function loop() {
       spawnTimer = 0;
       if (!fishPaused && !document.hidden) spawnOne(tradeQueue.shift() || null);
-      spawnTimer = setTimeout(loop, 3000 + Math.random() * 2000);
+      spawnTimer = setTimeout(loop, (tradeQueue.length ? 900 : 5000) + Math.random() * 3000);
     }
     spawnTimer = setTimeout(loop, 700);
   }
