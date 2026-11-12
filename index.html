@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-  <meta name="theme-color" content="#F2EFFA" />
+  <meta name="theme-color" content="#FFECF0" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -13,9 +13,9 @@
   <link rel="icon" type="image/svg+xml" href="icons/favicon.svg" />
   <link rel="icon" type="image/png" sizes="64x64" href="icons/favicon.png" />
   <link rel="shortcut icon" href="icons/favicon.ico" />
-  <link rel="preload" href="fonts/PlusJakartaSans-var.woff2?v=79" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="paws.css?v=79" />
-  <script src="brand.js?v=79"></script>
+  <link rel="preload" href="fonts/PlusJakartaSans-var.woff2?v=80c" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="paws.css?v=80c" />
+  <script src="brand.js?v=80c"></script>
   <title>PAWS</title>
   <script>
     document.title = NimbusBrand.name;
@@ -25,7 +25,7 @@
 <body>
   <div class="app" id="app">
     <header class="top">
-      <span class="logo-chip"><img src="icons/hydra.png?v=79" alt="" width="26" height="26" /></span>
+      <span class="logo-chip"><img src="icons/paw.png?v=80c" alt="" width="26" height="26" /></span>
       <span class="top-name">PAWS</span>
       <span class="top-sp"></span>
       <span class="live-chip" id="live-chip"><i></i><b id="live-txt">Ansluter</b></span>
@@ -39,16 +39,27 @@
       <!-- HEM -->
       <section class="page" data-page="home" aria-label="Hem">
         <div class="hero" id="hero">
-          <img class="wm" src="icons/hydra.png?v=79" alt="" aria-hidden="true" />
+          <img class="wm" src="icons/paw-lg.png?v=80c" alt="" aria-hidden="true" />
           <div class="hl">PAPER-saldo</div>
           <div class="bal" id="bal"><span class="bal-i">$—</span></div>
           <div class="pnl" id="pnl">saknas</div>
+          <div class="eq" id="eq" aria-label="Saldokurva">
+            <div class="eq-h"><span>Saldokurva</span><b id="eq-note">saknas</b></div>
+            <div class="eq-pl" id="eq-pl"></div>
+            <div class="eq-cap"><span id="eq-l">–</span><span id="eq-r">–</span></div>
+          </div>
           <dl class="hb">
             <div><dt>Kassa</dt><dd id="c-cash">–</dd></div>
             <div><dt>Multipel</dt><dd id="hs-mult">–</dd></div>
           </dl>
           <div class="hero-note" id="hero-note">PAPER · simulerat · inga riktiga pengar</div>
         </div>
+
+        <section class="sec" id="sec-pipe">
+          <header class="sec-head"><h2>Pipeline</h2><button class="link" id="to-agenter" type="button">Agenter ›</button></header>
+          <div class="card pipe" id="pipe" role="list"></div>
+          <p class="fnote pipe-note" id="pipe-note">saknas</p>
+        </section>
 
         <section class="sec" id="sec-challenge">
           <header class="sec-head"><h2>Utmaning</h2><span class="pill" id="ch-pill"><i></i><b>saknas</b></span></header>
@@ -96,41 +107,42 @@
         <div id="trades-list"></div>
       </section>
 
-      <!-- TEAM -->
-      <section class="page" data-page="team" aria-label="Team">
-        <div class="h-row"><h1>Team</h1><span class="sec-tag">10 botar</span></div>
-        <div class="boss" id="boss"></div>
-        <div class="roster" id="roster"></div>
-        <section class="sec">
-          <header class="sec-head"><h2>App-agenter</h2><span class="sec-tag" id="ag-tag2">saknas</span></header>
-          <div class="card strip" id="ag-strip2"></div>
-        </section>
-      </section>
-
-      <!-- FÖRSLAG -->
-      <section class="page" data-page="forslag" aria-label="Förslag">
-        <h1>PAWS föreslår</h1>
-        <p class="sub" id="fs-sub">saknas</p>
-        <div id="deck"></div>
+      <!-- AGENTER -->
+      <section class="page" data-page="agenter" aria-label="Agenter">
+        <div class="h-row"><h1>Agenter</h1><span class="sec-tag" id="ag-tag">saknas</span></div>
+        <p class="sub" id="ag-sub">Desk-stegen i ordning · PAPER</p>
+        <div class="agents" id="agents"></div>
       </section>
 
       </div>
       </div>
       <section class="boot" id="boot" hidden>
-        <span class="logo-chip big"><img src="icons/hydra.png?v=79" alt="" width="46" height="46" /></span>
+        <span class="logo-chip big"><img src="icons/paw.png?v=80c" alt="" width="46" height="46" /></span>
         <h3>Ingen datakälla</h3>
         <p>Öppna PAWS via sin länk så kopplas appen till desken.</p>
       </section>
     </main>
 
+    <div class="sheet-wrap" id="sheet" hidden>
+      <div class="scrim" id="sheet-scrim"></div>
+      <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" data-no-swipe>
+        <div class="grab" aria-hidden="true"></div>
+        <header class="sh-h">
+          <span id="sheet-av"></span>
+          <div class="sh-t"><h3 id="sheet-title">Varför</h3><p id="sheet-sub"></p></div>
+          <button class="sh-x" id="sheet-x" type="button" aria-label="Stäng">✕</button>
+        </header>
+        <div class="sh-body" id="sheet-body"></div>
+      </div>
+    </div>
+
     <nav class="tabs" aria-label="Vyer">
       <button class="tab on" data-tab="home" type="button"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Hem</span></button>
       <button class="tab" data-tab="trades" type="button"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg><span>Trades</span></button>
-      <button class="tab" data-tab="team" type="button"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.4"/><path d="M17 14c2.5 0 4.5 2 4.5 4.5"/></svg><span>Team</span></button>
-      <button class="tab" data-tab="forslag" type="button"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg><span>Förslag</span></button>
+      <button class="tab" data-tab="agenter" type="button"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/><path d="M7.2 12h2.6M14.2 12h2.6"/></svg><span>Agenter</span></button>
     </nav>
   </div>
 
-  <script src="paws.js?v=79"></script>
+  <script src="paws.js?v=80c"></script>
   </body>
 </html>

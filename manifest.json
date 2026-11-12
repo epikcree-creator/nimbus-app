@@ -6,8 +6,8 @@
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#F2EFFA",
-  "theme_color": "#F2EFFA",
+  "background_color": "#FFECF0",
+  "theme_color": "#FFECF0",
   "icons": [
     {
       "src": "icons/mark.svg",

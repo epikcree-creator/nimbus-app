@@ -1,4 +1,4 @@
-/* PAWS v79 — layout C "Ljus" on the v78 engine (same data contract, swipe pager, poll cadence). Originally v75: lean app. Reads state.json exactly like v72/v71 (same storage keys, same fragment #d=..&t=.., same poll cadence).
+/* PAWS v80c — v79 + pipeline row, saldokurva, Varför-ark, Agenter-flik (same data contract). Layout C "Ljus" on the v78 engine (same data contract, swipe pager, poll cadence). Originally v75: lean app. Reads state.json exactly like v72/v71 (same storage keys, same fragment #d=..&t=.., same poll cadence).
    Real desk data only; missing values read "saknas". PAPER only: there are no order buttons anywhere. */
 (function () {
   "use strict";
@@ -19,24 +19,6 @@
   }
   function sym(s) { if (!s) return "saknas"; return s.charAt(0) === "$" ? s : "$" + s; }
   function hbOk(v) { return typeof v === "string" && /^ok\b/i.test(v); }
-
-  var APP_AGENTS = [
-    { id: "scanner", n: "Scanner" }, { id: "auditor", n: "Auditor" }, { id: "analyst", n: "Analyst" },
-    { id: "executor", n: "Executor" }, { id: "risk", n: "Risk" }
-  ];
-  /* Team roster for Oscar's view. Role lines are descriptions only; status and last activity come from state.team[id] if the
-     desk ever publishes it, otherwise they read "saknas" (never invented). */
-  var TEAM = [
-    { id: "hunter", n: "Hunter", r: "Jagar strategier och nya köpregler" },
-    { id: "judge", n: "Judge", r: "Granskar och godkänner ändringar" },
-    { id: "engineer", n: "Engineer", r: "Bygger och driftsätter koden" },
-    { id: "sentinel", n: "Sentinel", r: "Vakar över desken och larmar" },
-    { id: "scout", n: "Scout", r: "Bevakar X och nya lanseringar" },
-    { id: "whale", n: "Whale Watcher", r: "Följer stora plånböcker", keys: ["whale_watcher", "whale"] },
-    { id: "auditor", n: "Auditor", r: "Kontrollerar data och resultat", keys: ["auditor_bot", "auditor_team"] },
-    { id: "risk", n: "Risk Manager", r: "Positionsstorlek och stop-loss", keys: ["risk_manager", "risk"] },
-    { id: "reporter", n: "Reporter", r: "Sammanfattar för Oscar" }
-  ];
 
   function loadConfig() {
     var hash = (location.hash || "").replace(/^#/, ""), frag = {};
@@ -72,7 +54,7 @@
   }
 
   /* ---------- render ---------- */
-var HUES = [["#7C5CF0","#B9A4FB"],["#5B6CF0","#9DB4FF"],["#9A5CF0","#E0A8F5"],["#6D5BD0","#A78BFA"],["#B05CD8","#F0A8D8"]];
+var HUES = [["#A23F69","#BE5A84"],["#8E3A5E","#B04F79"],["#B04A78","#C45F8E"],["#7D3354","#A64B73"],["#9A3D73","#B9568A"]];
   function hueOf(s) { var n = 0; s = String(s || "?"); for (var i = 0; i < s.length; i++) n += s.charCodeAt(i); return HUES[n % HUES.length]; }
   function avatar(row) {
     var a = el("span", "av");
@@ -100,7 +82,7 @@ var HUES = [["#7C5CF0","#B9A4FB"],["#5B6CF0","#9DB4FF"],["#9A5CF0","#E0A8F5"],["
     var pnl = num(p.pnl_usd), pct = num(p.pnl_pct);
     var v = el("div", "row-v " + (pnl == null ? "" : pnl < 0 ? "down" : "up"), pnl == null ? "pris saknas" : sUsd(pnl));
     if (pct != null) v.appendChild(el("small", null, sPct(pct)));
-    row.appendChild(v);
+    row.appendChild(v); tapify(row, "pid");
     var lo = num(p.stop_price), hi = num(p.take_profit_price), cur = num(p.current_price);
     if (lo != null && hi != null && cur != null && hi > lo) {
       var f = Math.max(0, Math.min(1, (cur - lo) / (hi - lo)));
@@ -122,30 +104,20 @@ var HUES = [["#7C5CF0","#B9A4FB"],["#5B6CF0","#9DB4FF"],["#9A5CF0","#E0A8F5"],["
     var sp = el("span");
     sp.appendChild(el("i", "badge" + (buy ? "" : kind === "sl" ? " sl" : " s"), buy ? "KÖP" : (e.kind && String(e.kind).toLowerCase() !== "sälj" ? String(e.kind).toUpperCase() : "SÄLJ")));
     sp.lastChild.style.fontStyle = "normal";
-    sp.appendChild(document.createTextNode(hm(e.ts) + " · " + (buy ? "PAPER-köp" : brand(e.reason_sv || "sälj"))));
+    sp.appendChild(document.createTextNode(hm(e.ts) + " · " + (buy ? "PAPER-köp" : (exitSv(e.reason_sv) || "sälj"))));
     m.appendChild(sp);
     row.appendChild(m);
     var v;
     if (buy) { v = el("div", "row-v", usd(e.amount_usd)); }
     else { var p = num(e.pnl_usd); v = el("div", "row-v " + (p == null ? "" : p < 0 ? "down" : "up"), sUsd(p)); if (num(e.amount_usd) != null) v.appendChild(el("small", null, usd(e.amount_usd))); }
-    row.appendChild(v);
+    row.appendChild(v); tapify(row, "ev");
     return row;
   }
     function fill(host, rows, emptyText) {
-    host.innerHTML = "";
-    if (!rows.length) { host.appendChild(el("div", "empty", emptyText)); return; }
-    rows.forEach(function (r) { host.appendChild(r); });
-  }
-  function chips(host, hb) {
-    host.innerHTML = "";
-    var ok = 0;
-    APP_AGENTS.forEach(function (a) {
-      var v = hb[a.id], live = hbOk(v); if (live) ok++;
-      var c = el("span", "chip" + (live ? " ok" : "")); c.appendChild(el("i")); c.appendChild(document.createTextNode(a.n));
-      c.appendChild(el("small", null, v == null ? "saknas" : live ? "igång" : String(v).slice(0, 14)));
-      host.appendChild(c);
-    });
-    return ok;
+    var tmp = document.createElement("div");
+    if (!rows.length) tmp.appendChild(el("div", "empty", emptyText)); else rows.forEach(function (r) { tmp.appendChild(r); });
+    if (tmp.innerHTML === host.innerHTML) return;
+    host.innerHTML = ""; while (tmp.firstChild) host.appendChild(tmp.firstChild);
   }
 function dayKey(iso) { var d = new Date(iso); if (!iso || isNaN(d)) return "okänd"; return new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Stockholm", year: "numeric", month: "2-digit", day: "2-digit" }).format(d); }
   function dayLabel(iso) {
@@ -156,119 +128,309 @@ function dayKey(iso) { var d = new Date(iso); if (!iso || isNaN(d)) return "okä
     return new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Stockholm", day: "numeric", month: "long" }).format(new Date(iso));
   }
   function fillGrouped(host, evs, emptyText) {
-    host.innerHTML = "";
-    if (!evs.length) { var l0 = el("div", "list"); l0.appendChild(el("div", "empty", emptyText)); host.appendChild(l0); return; }
-    var cur = null, list = null;
-    evs.forEach(function (e) {
-      var k = dayKey(e.ts);
-      if (k !== cur) { cur = k; host.appendChild(el("div", "dl", dayLabel(e.ts))); list = el("div", "list"); host.appendChild(list); }
-      list.appendChild(evRow(e, false));
-    });
-  }
-  function paintStatic() {
-    var boss = $("boss"); boss.innerHTML = "";
-    var im = el("img", "bimg"); im.src = "icons/hydra.png?v=79"; im.alt = ""; boss.appendChild(im);
-    var d = el("div"), h = el("h3", null, "PAWS"); h.appendChild(el("span", null, "CHEF")); d.appendChild(h);
-    d.appendChild(el("p", null, "Leder teamet och tar de slutliga besluten.")); boss.appendChild(d);
-    var host = $("roster"); host.innerHTML = "";
-    TEAM.forEach(function (b) {
-      var r = el("div", "bot"); r.id = "bot-" + b.id;
-      var a = el("div", "a");
-      var av = el("span", "av", b.n.split(/\s+/).map(function (w) { return w[0]; }).join("").slice(0, 2).toUpperCase());
-      var h2 = hueOf(b.n); av.style.setProperty("--h1", h2[0]); av.style.setProperty("--h2", h2[1]);
-      a.appendChild(av);
-      var m = el("div"); m.appendChild(el("strong", null, b.n)); m.appendChild(el("div", "st", "saknas")); a.appendChild(m);
-      r.appendChild(a);
-      r.appendChild(el("span", "role", b.r));
-      var l = el("span", "last", ""); l.hidden = true; r.appendChild(l);
-      host.appendChild(r);
-    });
-  }
-  function renderTeam(state) {
-    var team = (state && state.team) || {};
-    TEAM.forEach(function (b) {
-      var t = null; [b.id].concat(b.keys || []).forEach(function (k) { if (!t && team[k]) t = team[k]; });
-      var s = document.querySelector("#bot-" + b.id + " .st"), l = document.querySelector("#bot-" + b.id + " .last"); if (!s) return;
-      var status = t && (t.status_sv || t.status), act = t && (t.last_activity_sv || t.last_activity), at = t && (t.last_at || t.updated_at);
-      s.className = "st" + (status && /^(ok|aktiv|igång|live)/i.test(String(status)) ? " ok" : "");
-      s.textContent = status ? brand(String(status)).slice(0, 18) : "saknas";
-      var lt = act ? brand(String(act)).slice(0, 30) : at ? dm(at) : "";
-      l.textContent = lt ? "senast: " + lt : ""; l.hidden = !lt;
-    });
+    var tmp = document.createElement("div");
+    if (!evs.length) { var l0 = el("div", "list"); l0.appendChild(el("div", "empty", emptyText)); tmp.appendChild(l0); }
+    else {
+      var cur = null, list = null;
+      evs.forEach(function (e) {
+        var k = dayKey(e.ts);
+        if (k !== cur) { cur = k; tmp.appendChild(el("div", "dl", dayLabel(e.ts))); list = el("div", "list"); tmp.appendChild(list); }
+        list.appendChild(evRow(e, false));
+      });
+    }
+    if (tmp.innerHTML === host.innerHTML) return;
+    host.innerHTML = ""; while (tmp.firstChild) host.appendChild(tmp.firstChild);
   }
 
-  /* ---------- Förslag: real state.suggestions.cards only. Nothing is invented; missing values read "saknas". ---------- */
-  var deckIdx = 0, deckKey = "";
-  function compactUsd(n) { var a = Math.abs(n); return (n < 0 ? "-$" : "$") + (a >= 1e6 ? (a / 1e6).toFixed(1) + "M" : a >= 1e3 ? (a / 1e3).toFixed(1) + "k" : a.toFixed(a >= 10 ? 0 : 2)); }
-  function scoreVal(p) {
-    var v = p && p.value;
-    if (v == null || v === "" || v === "saknas") return null;
-    if (typeof v === "number") { if (/pct/.test(p.key || "")) return v.toFixed(1) + " %"; if (/usd/.test(p.key || "")) return compactUsd(v); return String(v); }
-    return brand(String(v));
+  /* ---------- helpers for v80 ---------- */
+  function tsMs(iso) { var s = String(iso || ""); if (!s) return NaN; if (/^\d{4}-\d\d-\d\d \d\d:\d\d/.test(s)) s = s.replace(" ", "T"); if (!/[zZ]|[+-]\d\d:?\d\d$/.test(s)) s += "Z"; return Date.parse(s); }
+  function ago(iso) { var t = tsMs(iso); if (!isFinite(t)) return ""; var d = Math.max(0, Date.now() - t) / 1000; if (d < 90) return "nyss"; if (d < 3600) return Math.round(d / 60) + " min sedan"; if (d < 86400) return Math.round(d / 3600) + " h sedan"; return dm(iso); }
+  function tapify(row, kind) {
+    row.classList.add("tap"); row.tabIndex = 0; row.setAttribute("role", "button"); row.setAttribute("aria-label", "Visa varför");
+    var s = document.createElementNS("http://www.w3.org/2000/svg", "svg"); s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("class", "chev");
+    s.innerHTML = '<path d="M9 6l6 6-6 6"/>'; row.appendChild(s);
   }
-  var CK = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>', CX = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>', CD = '<svg viewBox="0 0 24 24"><path d="M7 12h10"/></svg>';
-  function cardEl(c, i, n) {
-    var d = el("div", "dc");
-    var h = el("div", "h"); h.appendChild(avatar({ symbol: c.symbol || c.initials || "?" }));
-    var t = el("div"); t.appendChild(el("b", null, c.symbol ? sym(c.symbol) : "saknas")); t.appendChild(el("span", "n", c.name ? String(c.name) : "namn saknas")); h.appendChild(t);
-    var rating = c.rating ? String(c.rating) : null;
-    h.appendChild(el("span", "rt" + (rating === "Starkt" ? " ok" : rating === "Medel" ? " warn" : ""), rating || "betyg saknas"));
-    d.appendChild(h);
-    var parts = (c.score || []).filter(function (p) { return p && p.key !== "rating"; });
-    if (parts.length) {
-      var met = el("div", "met");
-      parts.slice(0, 4).forEach(function (p) {
-        var x = el("div"); x.appendChild(el("span", null, brand(p.label_sv || p.key || "")));
-        var v = scoreVal(p); x.appendChild(el("b", v == null ? "miss" : "", v == null ? "saknas" : v)); met.appendChild(x);
-      });
-      d.appendChild(met);
-    }
-    var gates = c.gates && c.gates.gates;
-    if (gates && gates.length) {
-      gates.forEach(function (g) {
-        var na = g.status === "saknas", ok = !!g.ok;
-        var row = el("div", "ck " + (ok ? "" : na ? "na" : "no")); var ic = el("i"); ic.innerHTML = ok ? CK : na ? CD : CX; row.appendChild(ic);
-        row.appendChild(el("span", null, brand(g.label_sv || g.code || "saknas")));
-        var dt = g.detail_sv && g.detail_sv !== "saknas" ? String(g.detail_sv) : null;
-        row.appendChild(el("b", dt ? "" : "miss", dt || "saknas")); d.appendChild(row);
-      });
-    } else { d.appendChild(el("p", "fnote", "Rug-filter: saknas")); }
-    var note = c.notes_missing ? null : c.notes; if (note) d.appendChild(el("p", "fnote", brand(String(note))));
-    if (c.rated_at) d.appendChild(el("p", "fnote", "Bedömd " + hm(c.rated_at)));
-    var acts = el("div", "acts");
-    if (n > 1) { var nx = el("button", "btn", "Nästa förslag"); nx.type = "button"; nx.dataset.next = "1"; acts.appendChild(nx); }
-    /* The app has no PAPER-buy path for proposals (state.json is read-only). The button is shown disabled; nothing is sent. */
-    var buy = el("button", "btn pri two"); buy.type = "button"; buy.disabled = true; buy.appendChild(document.createTextNode("Paper-köp")); buy.appendChild(el("small", null, "saknas"));
-    acts.appendChild(buy); d.appendChild(acts);
-    return d;
+
+  /* ---------- pipeline model: the 7 desk steps (Scanner → Rugfilter → Analyst → Sizer → Executor → Logger → Equity).
+     Everything is read from state.json (heartbeats, agents, pipeline, journal, suggestions, challenge); a missing value reads "saknas". ---------- */
+  var STEPS = [
+    { id: "scanner", n: "Scanner", r: "Hittar nya tokens", hb: "scanner" },
+    { id: "rugfilter", n: "Rugfilter", r: "Hårda stopp (rug-kontroller)", hb: "auditor" },
+    { id: "analyst", n: "Analyst", r: "Score och profil", hb: "analyst" },
+    { id: "sizer", n: "Sizer", r: "Storlek och stop-loss", hb: "risk" },
+    { id: "executor", n: "Executor", r: "PAPER-order", hb: "executor" },
+    { id: "logger", n: "Logger", r: "Orsak per beslut", hb: null },
+    { id: "equity", n: "Equity", r: "Saldo och kurva", hb: null }
+  ];
+  function stageN(pl, key) {
+    var s = ((pl && pl.stages) || []).filter(function (x) { return x && x.key === key; })[0];
+    return s ? num(s.n) : null;
   }
-  function renderSuggestions(state) {
-    var sg = state && state.suggestions, cards = (sg && sg.cards) || [], host = $("deck"), sub = $("fs-sub");
-    sub.textContent = sg && sg.note_sv ? brand(String(sg.note_sv)) : "saknas";
-    var key = cards.map(function (c) { return c.mint; }).join(",");
-    if (key !== deckKey) { deckKey = key; deckIdx = 0; }
-    if (deckIdx >= cards.length) deckIdx = 0;
-    host.innerHTML = "";
-    if (!cards.length) {
-      var e = el("div", "empty-card"); var lc = el("span", "logo-chip big"); var im = el("img"); im.src = "icons/hydra.png?v=79"; im.alt = ""; lc.appendChild(im); e.appendChild(lc);
-      e.appendChild(el("h3", null, sg ? "Inga förslag just nu" : "Förslag saknas"));
-      e.appendChild(el("p", null, sg && sg.note_sv ? brand(String(sg.note_sv)) : "Desken publicerar inga förslag."));
-      host.appendChild(e); return;
-    }
-    var deck = el("div", "deck");
-    var left = cards.length - 1;
-    if (left >= 2) deck.appendChild(el("div", "ghost g2"));
-    if (left >= 1) deck.appendChild(el("div", "ghost g1"));
-    deck.appendChild(cardEl(cards[deckIdx], deckIdx, cards.length));
-    host.appendChild(deck);
-    if (cards.length > 1) {
-      var dots = el("div", "dots");
-      cards.forEach(function (c, i) { dots.appendChild(el("i", i === deckIdx ? "on" : "")); });
-      host.appendChild(dots);
-    }
-    var nx = host.querySelector("[data-next]");
-    if (nx) nx.addEventListener("click", function () { deckIdx = (deckIdx + 1) % cards.length; renderSuggestions(last); });
+  function lastDecision(ag, key) {
+    var a = ag && ag[key], d = a && a.decisions && a.decisions[0];
+    if (!d) return null;
+    var txt = (d.title ? sym(d.title) + " · " : "") + (d.verdict ? String(d.verdict) : "") + (d.reason ? " · " + brand(String(d.reason)) : "");
+    return { text: txt.replace(/^ · /, ""), ts: d.ts };
   }
+  function hbState(hb, key) {
+    if (!key) return null;
+    var v = hb && hb[key];
+    if (v == null) return { s: "na", label: "saknas", ts: null };
+    if (hbOk(v)) { var m = /@\s*(.+)$/.exec(String(v)); return { s: "on", label: "igång", ts: m ? m[1] : null }; }
+    return { s: "off", label: "vilar", ts: null };
+  }
+  function pipeModel(state) {
+    var box = state.challenge || {}, hb = state.heartbeats || {}, ag = state.agents || {}, pl = state.pipeline || null, jr = state.journal || null, sug = state.suggestions || null;
+    var win = pl ? num(pl.window_min) : null, wtxt = win != null ? "senaste " + win + " min" : "";
+    var scan = stageN(pl, "scan"), strict = stageN(pl, "strict"), gates = stageN(pl, "gates"), gp = stageN(pl, "gates_pass"), fills = stageN(pl, "fills");
+    var cards = sug && sug.cards ? sug.cards.length : (sug && num(sug.count) != null ? num(sug.count) : null);
+    if (stageN(pl, "xrating") != null) cards = stageN(pl, "xrating");
+    var evs = (box.events || []).filter(function (e) { return e && (e.action === "Köp" || e.action === "Sälj"); });
+    var pts = validPoints(box), eq = num(box.equity_usd), put = num(box.put_in_usd != null ? box.put_in_usd : box.capital_usd);
+    var out = [];
+    STEPS.forEach(function (S) {
+      var o = { id: S.id, name: S.n, role: S.r, st: hbState(hb, S.hb), val: null, sub: "", count: "", last: null, extra: "" };
+      var ld = S.hb ? lastDecision(ag, S.hb) : null;
+      if (S.id === "scanner") {
+        o.val = scan; o.sub = win != null ? win + " min" : ""; o.count = scan == null ? "" : scan + " skannade " + wtxt;
+        o.last = ld;
+      } else if (S.id === "rugfilter") {
+        o.val = strict; o.sub = scan != null ? "av " + scan : ""; o.count = strict == null ? "" : strict + (scan != null ? " av " + scan : "") + " klarade STRICT " + wtxt;
+        var tb = pl && (pl.top_blocks || []).filter(function (b) { return b.stage === "STRICT"; })[0];
+        if (tb) o.extra = "Vanligaste stopp: " + brand(tb.label_sv) + " (" + tb.n + ")";
+        o.last = ld;
+      } else if (S.id === "analyst") {
+        o.val = cards; o.sub = "kort"; o.count = cards == null ? "" : cards + (cards === 1 ? " kort" : " kort") + " med färskt betyg just nu";
+        var c0 = sug && sug.cards && sug.cards[0];
+        o.last = ld || (c0 && c0.rated_at ? { text: sym(c0.symbol) + " · " + (c0.rating || "betyg saknas"), ts: c0.rated_at } : null);
+      } else if (S.id === "sizer") {
+        o.val = gp; o.sub = gates != null ? "av " + gates : ""; o.count = gp == null ? "" : gp + (gates != null ? " av " + gates : "") + " klarade grindarna " + wtxt;
+        var bits = []; if (num(box.ticket_usd) != null) bits.push("ticket " + usd(box.ticket_usd)); if (num(box.stop_loss_pct) != null) bits.push("stop-loss −" + num(box.stop_loss_pct) + " %"); if (num(box.max_open) != null) bits.push("max " + Math.round(box.max_open) + " öppna");
+        o.extra = bits.join(" · ");
+        o.last = ld;
+      } else if (S.id === "executor") {
+        o.val = fills; o.sub = "köp"; o.count = fills == null ? "" : fills + " PAPER-köp " + wtxt;
+        var e0 = evs[0];
+        o.last = e0 ? { text: (e0.action === "Köp" ? "Köp " : "Sälj ") + sym(e0.symbol) + (num(e0.amount_usd) != null ? " · " + usd(e0.amount_usd) : ""), ts: e0.ts } : ld;
+      } else if (S.id === "logger") {
+        var cn = jr ? num(jr.count) : null; o.val = cn; o.sub = "poster";
+        o.count = cn == null ? "" : cn + (cn === 1 ? " post" : " poster") + " i journalen";
+        o.st = cn == null ? { s: "na", label: "saknas" } : cn > 0 ? { s: "on", label: "har poster" } : { s: "off", label: "tom" };
+        var j0 = jr && jr.entries && jr.entries[0];
+        o.last = j0 ? { text: (j0.action ? j0.action + " " : "") + (j0.symbol ? sym(j0.symbol) : "") + (j0.reason_sv ? " · " + brand(String(j0.reason_sv)) : ""), ts: j0.ts } : null;
+      } else if (S.id === "equity") {
+        o.val = eq; o.money = true;
+        var pp = eq != null && put ? (eq - put) / put * 100 : null; o.sub = pp != null ? sPct(pp) : "";
+        o.count = eq == null ? "" : usd(eq) + " PAPER-saldo" + (pts.length ? " · " + pts.length + " punkter i kurvan" : "");
+        var lp = pts.length ? pts[pts.length - 1] : null; o.last = lp ? { text: "Saldo " + usd(lp.v), ts: lp.ts } : null;
+        var fresh = lp && isFinite(tsMs(lp.ts)) && Date.now() - tsMs(lp.ts) < 180000;
+        o.st = eq == null ? { s: "na", label: "saknas" } : fresh ? { s: "on", label: "uppdateras" } : { s: "off", label: "senast " + (lp ? ago(lp.ts) : "okänt") };
+      }
+      o.unit = o.money ? (eq == null ? "" : "PAPER-saldo" + (pts.length ? " · " + pts.length + " punkter i kurvan" : "")) : o.count.replace(/^\S+\s/, "");
+      out.push(o);
+    });
+    return out;
+  }
+  function pipeVal(o, exact) {
+    if (o.val == null) return { t: "saknas", s: true };
+    if (o.money) { var n = o.val; return { t: exact ? usd(n) : (n < 0 ? "-$" : "$") + Math.round(Math.abs(n)), s: false }; }
+    return { t: String(Math.round(o.val)), s: false };
+  }
+  function swapIn(host, build) {
+    var tmp = document.createElement("div"); build(tmp);
+    if (tmp.innerHTML === host.innerHTML) return;
+    host.innerHTML = ""; while (tmp.firstChild) host.appendChild(tmp.firstChild);
+  }
+  function renderPipeline(state) {
+    var m = pipeModel(state), host = document.createElement("div");
+    var ok = 0, known = 0;
+    m.forEach(function (o, i) {
+      var c = el("div", "pp " + (o.st ? o.st.s : "na")); c.setAttribute("role", "listitem");
+      c.appendChild(el("span", "nd", String(i + 1)));
+      var v = pipeVal(o); c.appendChild(el("b", v.s ? "s" : "", v.t));
+      c.appendChild(el("em", null, o.name));
+      c.appendChild(el("small", null, o.sub || ""));
+      host.appendChild(c);
+      if (o.st) { known++; if (o.st.s === "on") ok++; }
+    });
+    var pl = state.pipeline; var win = pl ? num(pl.window_min) : null;
+    swapIn($("pipe"), function (t) { while (host.firstChild) t.appendChild(host.firstChild); });
+    $("pipe-note").textContent = pl ? "Antal " + (win != null ? "senaste " + win + " min" : "") + " · " + ok + " av " + known + " steg rapporterar live" : "Pipeline-antal saknas i datan just nu";
+  }
+  function renderAgents(state) {
+    var m = pipeModel(state), host = document.createElement("div");
+    var on = 0;
+    m.forEach(function (o, i) {
+      var s = o.st ? o.st.s : "na"; if (s === "on") on++;
+      var a = el("article", "ag " + s); a.id = "ag-" + o.id;
+      a.appendChild(el("span", "nd", String(i + 1)));
+      var b = el("div", "bd"), t = el("div", "t"); t.appendChild(el("strong", null, o.name)); t.appendChild(el("span", "sp"));
+      t.appendChild(el("span", "stt " + s, o.st ? o.st.label : "saknas")); b.appendChild(t);
+      b.appendChild(el("div", "role", o.role));
+      var v = pipeVal(o, true), big = el("div", "big"); big.appendChild(el("b", v.s ? "s" : "", v.t));
+      big.appendChild(el("span", null, o.val == null ? "ingen räknare publicerad" : o.unit)); b.appendChild(big);
+      if (o.extra) b.appendChild(el("div", "ln", o.extra));
+      var ln = el("div", "ln"); ln.appendChild(el("i", null, "Senast"));
+      if (o.last && o.last.text) ln.appendChild(document.createTextNode(o.last.text + (o.last.ts ? " · " + (ago(o.last.ts) || hm(o.last.ts)) : "")));
+      else ln.appendChild(document.createTextNode(o.st && o.st.ts ? "puls " + (ago(o.st.ts) || "saknas") + " · beslut saknas" : "saknas"));
+      b.appendChild(ln);
+      a.appendChild(b); host.appendChild(a);
+    });
+    swapIn($("agents"), function (t) { while (host.firstChild) t.appendChild(host.firstChild); });
+    $("ag-tag").textContent = state.heartbeats || state.journal ? on + "/" + m.length + " live" : "saknas";
+  }
+
+  /* ---------- saldokurva: only real points from state.challenge.equity_points; never interpolated or invented ---------- */
+  function validPoints(box) {
+    var raw = (box && box.equity_points) || [];
+    return raw.map(function (p) { return p && { ts: p.ts, v: num(p.v) }; }).filter(function (p) { return p && p.v != null && isFinite(tsMs(p.ts)); });
+  }
+  var SVGNS = "http://www.w3.org/2000/svg";
+  function svgEl(n, at) { var e = document.createElementNS(SVGNS, n); for (var k in at) e.setAttribute(k, at[k]); return e; }
+  function renderCurve(box) {
+    var host = $("eq-pl"); host.innerHTML = "";
+    var pts = validPoints(box), put = num(box.put_in_usd != null ? box.put_in_usd : box.capital_usd), eq = num(box.equity_usd);
+    var note = $("eq-note"), L = $("eq-l"), R = $("eq-r");
+    var W = host.clientWidth || 306, H = host.clientHeight || 72, pad = 6;
+    var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, preserveAspectRatio: "none" }); host.appendChild(svg);
+    var flatVal = pts.length ? pts[pts.length - 1].v : (eq != null ? eq : put);
+    if (pts.length < 2) {
+      note.textContent = "Ingen historik än";
+      if (flatVal == null) { L.textContent = "saknas"; R.textContent = "saknas"; return; }
+      var y = H / 2;
+      svg.appendChild(svgEl("line", { x1: pad, x2: W - pad, y1: y, y2: y, stroke: "rgba(255,255,255,.75)", "stroke-width": 2, "stroke-dasharray": "2 6", "stroke-linecap": "round" }));
+      svg.appendChild(svgEl("circle", { cx: W - pad, cy: y, r: 4.5, fill: "#fff" }));
+      L.textContent = put != null ? "Start " + usd(put) : "start saknas"; R.textContent = usd(flatVal);
+      return;
+    }
+    var t0 = tsMs(pts[0].ts), t1 = tsMs(pts[pts.length - 1].ts), span = Math.max(1, t1 - t0);
+    var lo = Math.min.apply(null, pts.map(function (p) { return p.v; })), hi = Math.max.apply(null, pts.map(function (p) { return p.v; }));
+    if (put != null) { lo = Math.min(lo, put); hi = Math.max(hi, put); }
+    var flat = hi - lo < 0.005;
+    if (flat) { lo -= 0.5; hi += 0.5; } else { var pd = (hi - lo) * 0.12; lo -= pd; hi += pd; }
+    function X(p) { return pad + (tsMs(p.ts) - t0) / span * (W - 2 * pad); }
+    function Y(v) { return pad + (1 - (v - lo) / (hi - lo)) * (H - 2 * pad); }
+    if (put != null) svg.appendChild(svgEl("line", { x1: pad, x2: W - pad, y1: Y(put), y2: Y(put), stroke: "rgba(255,255,255,.35)", "stroke-width": 1, "stroke-dasharray": "3 4" }));
+    var d = pts.map(function (p, i) { return (i ? "L" : "M") + X(p).toFixed(1) + " " + Y(p.v).toFixed(1); }).join(" ");
+    var area = d + " L" + X(pts[pts.length - 1]).toFixed(1) + " " + (H - pad) + " L" + X(pts[0]).toFixed(1) + " " + (H - pad) + " Z";
+    var defs = svgEl("defs", {}), g = svgEl("linearGradient", { id: "eqg", x1: 0, y1: 0, x2: 0, y2: 1 });
+    g.appendChild(svgEl("stop", { offset: "0", "stop-color": "#fff", "stop-opacity": ".28" })); g.appendChild(svgEl("stop", { offset: "1", "stop-color": "#fff", "stop-opacity": "0" }));
+    defs.appendChild(g); svg.appendChild(defs);
+    svg.appendChild(svgEl("path", { d: area, fill: "url(#eqg)" }));
+    svg.appendChild(svgEl("path", { d: d, fill: "none", stroke: "#fff", "stroke-width": 2.2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+    var lp = pts[pts.length - 1]; svg.appendChild(svgEl("circle", { cx: X(lp), cy: Y(lp.v), r: 4.5, fill: "#fff" }));
+    note.textContent = flat ? "Oförändrad · " + pts.length + " punkter" : pts.length + " punkter";
+    L.textContent = dm(pts[0].ts); R.textContent = hm(lp.ts) + " · " + usd(lp.v);
+  }
+
+  /* ---------- Varför-ark: real fields only; what the desk does not publish per trade reads "saknas" ---------- */
+  var EXIT_SV = { take_profit: "Take profit", stop_loss: "Stop-loss", trail: "Trailing stop", trailing: "Trailing stop", stake_out: "Insats uttagen (2×)", ladder_5x: "Stege 5×", ladder_20x: "Stege 20×", timeout: "Tidsgräns", manual: "Manuell", expired: "Utmaningen slut" };
+  function exitSv(r) { if (!r) return null; var k = String(r).toLowerCase(); return EXIT_SV[k] || brand(String(r)); }
+  function nearest(list, key, ts) {
+    var t = tsMs(ts), best = null, bd = Infinity;
+    list.forEach(function (x) { var d = Math.abs(tsMs(x[key]) - t); if (!isFinite(d)) d = 1e15; if (d < bd) { bd = d; best = x; } });
+    return best;
+  }
+  function gatesFor(state, mint) {
+    var box = state.challenge || {}, lg = box.last_gates;
+    if (lg && lg.mint === mint && lg.checklist) return { g: lg.checklist, src: "senaste grindkontrollen", at: lg.ts };
+    var cards = (state.suggestions && state.suggestions.cards) || [];
+    for (var i = 0; i < cards.length; i++) if (cards[i].mint === mint && cards[i].gates) return { g: cards[i].gates, src: "aktuellt förslag", at: cards[i].rated_at };
+    return null;
+  }
+  function whyModel(state, ref) {
+    var box = state.challenge || {}, trades = box.trades || [], opens = box.open || [], evs = box.events || [];
+    var ev = null, pos = null, kind = "";
+    if (ref.ev != null) ev = evs.filter(function (e) { return String(e.id) === String(ref.ev); })[0] || null;
+    if (ref.pid != null) pos = opens.filter(function (p) { return String(p.id) === String(ref.pid); })[0] || null;
+    if (ev && !pos) {
+      var mint = ev.mint, cl = trades.filter(function (t) { return t.mint === mint; }), op = opens.filter(function (p) { return p.mint === mint; });
+      if (ev.action === "Köp") pos = nearest(cl.map(function (t) { return { t: t, k: t.opened_at }; }).concat(op.map(function (p) { return { t: p, k: p.opened_at }; })), "k", ev.ts);
+      else pos = nearest(cl.map(function (t) { return { t: t, k: t.closed_at }; }), "k", ev.ts);
+      if (pos) pos = pos.t; else if (op.length) pos = op[0];
+    }
+    var closed = !!(pos && pos.closed_at);
+    var mintK = (pos && pos.mint) || (ev && ev.mint), symb = (pos && pos.symbol) || (ev && ev.symbol);
+    var buyEv = evs.filter(function (e) { return e.action === "Köp" && e.mint === mintK; });
+    var be = pos && pos.opened_at ? nearest(buyEv, "ts", pos.opened_at) : buyEv[0];
+    var sellEv = ev && ev.action === "Sälj" ? ev : null;
+    return { ev: ev, pos: pos, closed: closed, mint: mintK, symbol: symb, buyEv: be, sellEv: sellEv, gates: gatesFor(state, mintK), box: box };
+  }
+  function kv(label, val, cls) { var r = el("div", "kvr"); r.appendChild(el("span", null, label)); r.appendChild(el("b", cls || (val === "saknas" ? "miss" : ""), val)); return r; }
+  function wy(title, tag) { var s = el("section", "wy"), h = el("h4", null, title); if (tag) h.appendChild(el("em", null, tag)); s.appendChild(h); return s; }
+  function openSheet(state, ref) {
+    var W = whyModel(state, ref), pos = W.pos, ev = W.ev, box = W.box;
+    if (!pos && !ev) return;
+    var body = $("sheet-body"); body.innerHTML = "";
+    var av = avatar({ symbol: W.symbol }); var avh = $("sheet-av"); avh.innerHTML = ""; avh.appendChild(av);
+    $("sheet-title").textContent = "Varför " + sym(W.symbol);
+    var status = W.closed ? "Stängd" : pos ? "Öppen" : (ev && ev.action === "Sälj" ? "Sälj" : "Köp");
+    $("sheet-sub").textContent = status + " · PAPER · simulerat" + (ev ? " · " + dm(ev.ts) : pos && pos.opened_at ? " · " + dm(pos.opened_at) : "");
+    /* 1 trigger */
+    var s1 = wy("Trigger", pos && pos.rating ? "betyg " + pos.rating : null);
+    var why = (pos && pos.entry_reason_sv) || (W.buyEv && W.buyEv.reason_sv) || null;
+    s1.appendChild(el("p", why ? "" : "miss", why ? brand(String(why)) : "saknas"));
+    body.appendChild(s1);
+    /* 2 rug */
+    var s2 = wy("Rugfilter", W.gates ? W.gates.src : null);
+    if (W.gates && W.gates.g && W.gates.g.gates && W.gates.g.gates.length) {
+      var gs = W.gates.g.gates, okN = gs.filter(function (x) { return x.ok; }).length;
+      s2.appendChild(el("p", "", okN + " av " + gs.length + " grindar klarade" + (W.gates.g.passed === false ? " · stoppad" : "")));
+      var gl = el("div", "gl");
+      gs.forEach(function (x) { var c = el("span", x.ok ? "" : x.status === "saknas" ? "na" : "no"); c.appendChild(el("i", null, x.ok ? "✓" : x.status === "saknas" ? "–" : "✕")); c.appendChild(el("span", null, brand(x.label_sv || x.code))); gl.appendChild(c); });
+      s2.appendChild(gl);
+    } else s2.appendChild(el("p", "miss", "saknas · rugkontroll per trade publiceras inte"));
+    body.appendChild(s2);
+    /* 3 size */
+    var s3 = wy("Storlek", null), init = pos ? num(pos.initial_stake_usd != null ? pos.initial_stake_usd : pos.size_usd) : (ev ? num(ev.amount_usd) : null), tk = num(box.ticket_usd);
+    s3.appendChild(kv("Insats", init == null ? "saknas" : usd(init)));
+    s3.appendChild(kv("Regel", tk == null ? "saknas" : (init != null && Math.abs(init - tk) < 0.01 ? "fast ticket " + usd(tk) : "ticket " + usd(tk))));
+    var eff = W.gates && W.gates.g ? num(W.gates.g.effective_ticket_usd) : null;
+    if (eff != null && tk != null && Math.abs(eff - tk) > 0.01) s3.appendChild(kv("Sizer justerade", usd(eff) + (W.gates.g.half_ticket ? " (halv ticket)" : "")));
+    var sl = pos ? num(pos.stop_price) : null;
+    s3.appendChild(kv("Stop-loss", sl == null ? "saknas" : "$" + sl.toPrecision(3) + (num(box.stop_loss_pct) != null ? " (−" + num(box.stop_loss_pct) + " %)" : "")));
+    s3.appendChild(kv("Varför just denna storlek", "saknas"));
+    body.appendChild(s3);
+    /* 4 fill */
+    var s4 = wy("Fill och slip", null), ep = pos ? num(pos.entry_price) : (ev ? num(ev.entry_price) : null);
+    s4.appendChild(kv("Inköpspris", ep == null ? "saknas" : "$" + ep.toPrecision(4)));
+    s4.appendChild(kv("Avgifter", pos && num(pos.fees_usd) != null ? usd(pos.fees_usd) : "saknas"));
+    s4.appendChild(kv("Slip mot quote", "saknas"));
+    body.appendChild(s4);
+    /* 5 exit */
+    var s5 = wy("Utgång", W.closed ? "stängd" : pos ? "öppen" : null);
+    if (W.closed) {
+      s5.appendChild(el("p", pos.exit_reason ? "" : "miss", pos.exit_reason ? exitSv(pos.exit_reason) : "saknas"));
+      s5.appendChild(kv("Utpris", num(pos.exit_price) == null ? "saknas" : "$" + num(pos.exit_price).toPrecision(4)));
+      var pn = num(pos.pnl_usd); s5.appendChild(kv("Resultat", sUsd(pn), pn == null ? "" : pn < 0 ? "down" : "up"));
+      if (pos.opened_at && pos.closed_at) { var mins = Math.round((tsMs(pos.closed_at) - tsMs(pos.opened_at)) / 60000); s5.appendChild(kv("Hålltid", isFinite(mins) ? (mins >= 90 ? Math.round(mins / 60) + " h" : mins + " min") : "saknas")); }
+    } else if (W.sellEv) {
+      s5.appendChild(el("p", W.sellEv.reason_sv ? "" : "miss", W.sellEv.reason_sv ? brand(String(W.sellEv.reason_sv)) : "saknas"));
+      var pe = num(W.sellEv.pnl_usd); s5.appendChild(kv("Resultat", sUsd(pe), pe == null ? "" : pe < 0 ? "down" : "up"));
+    } else {
+      s5.appendChild(el("p", "miss", "Ännu ingen utgång · positionen är öppen"));
+      var tp = pos ? num(pos.take_profit_price) : null, cu = pos ? num(pos.current_price) : null;
+      s5.appendChild(kv("Mål (take profit)", tp == null ? "saknas" : "$" + tp.toPrecision(3)));
+      s5.appendChild(kv("Nu", cu == null ? "saknas" : "$" + cu.toPrecision(4)));
+    }
+    body.appendChild(s5);
+    var sh = $("sheet"); sh.hidden = false; body.scrollTop = 0;
+    sheetOpener = document.activeElement;
+    $("sheet-x").focus();
+  }
+  var sheetOpener = null;
+  function closeSheet() { var sh = $("sheet"); if (sh.hidden) return; sh.hidden = true; if (sheetOpener && sheetOpener.focus) try { sheetOpener.focus(); } catch (e) {} }
+  document.addEventListener("click", function (e) {
+    var t = e.target; if (!t || !t.closest) return;
+    if (t.closest("#sheet-x") || t.id === "sheet-scrim") { closeSheet(); return; }
+    var row = t.closest(".row.tap"); if (row && last) { openSheet(last, { ev: row.dataset.ev, pid: row.dataset.pid }); return; }
+    if (t.closest("#pipe") || t.closest("#to-agenter")) showTab("agenter", { animate: true });
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closeSheet();
+    if ((e.key === "Enter" || e.key === " ") && e.target && e.target.classList && e.target.classList.contains("tap") && last) { e.preventDefault(); openSheet(last, { ev: e.target.dataset.ev, pid: e.target.dataset.pid }); }
+  });
+  window.addEventListener("resize", function () { if (last) renderCurve(last.challenge || {}); });
 
   var cdTimer = null;
     function render(state) {
@@ -323,12 +485,9 @@ function dayKey(iso) { var d = new Date(iso); if (!iso || isNaN(d)) return "okä
       var d = el("div"); d.appendChild(el("dt", null, x[0])); d.appendChild(el("dd", x[2], x[1])); sum.appendChild(d);
     });
 
-    /* app agents */
-    var n1 = chips($("ag-strip2"), hb);
-    var tot = APP_AGENTS.length, txt = Object.keys(hb).length ? n1 + "/" + tot + " live" : "saknas";
-    $("ag-tag2").textContent = txt;
-    renderTeam(state);
-    renderSuggestions(state);
+    renderPipeline(state);
+    renderCurve(box);
+    renderAgents(state);
 
     $("boot").hidden = true;
     if (fresh.length) {
@@ -367,7 +526,7 @@ function dayKey(iso) { var d = new Date(iso); if (!iso || isNaN(d)) return "okä
   setInterval(tickCountdown, 1000);
 
   /* ---------- tabs + horizontal swipe ---------- */
-  var TABS = ["home", "trades", "team", "forslag"];
+  var TABS = ["home", "trades", "agenter"];
   var tab = "home", tabIndex = 0;
   function reduceMotion() {
     return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -493,21 +652,20 @@ function dayKey(iso) { var d = new Date(iso); if (!iso || isNaN(d)) return "okä
       showTab(TABS[i], { keepScroll: true, animate: true });
     }
 
+    /* Touch listeners are bound to the touchstart target for the length of the gesture: a poll re-render may detach that
+       element mid-swipe, and a detached target's touchmove/touchend would otherwise never reach the pager (stuck half-way). */
     pager.addEventListener("touchstart", function (e) {
       if (e.touches.length !== 1) { dragging = false; return; }
       onStart(e.touches[0].clientX, e.touches[0].clientY, e);
-    }, { passive: true });
-    pager.addEventListener("touchmove", function (e) {
-      if (!e.touches.length) return;
-      onMove(e.touches[0].clientX, e.touches[0].clientY, e);
-    }, { passive: false });
-    pager.addEventListener("touchend", function (e) {
-      var t = e.changedTouches[0];
-      onEnd(t ? t.clientX : lastX, t ? t.clientY : lastY);
-    }, { passive: true });
-    pager.addEventListener("touchcancel", function () {
-      if (dragging && locked === "h") showTab(TABS[tabIndex], { keepScroll: true, animate: true });
-      dragging = false;
+      if (!dragging) return;
+      var tg = e.target;
+      function mv(ev) { if (ev.touches.length) onMove(ev.touches[0].clientX, ev.touches[0].clientY, ev); }
+      function done() { tg.removeEventListener("touchmove", mv); tg.removeEventListener("touchend", en); tg.removeEventListener("touchcancel", cn); }
+      function en(ev) { done(); var t = ev.changedTouches[0]; onEnd(t ? t.clientX : lastX, t ? t.clientY : lastY); }
+      function cn() { done(); if (dragging && locked === "h") showTab(TABS[tabIndex], { keepScroll: true, animate: true }); dragging = false; }
+      tg.addEventListener("touchmove", mv, { passive: false });
+      tg.addEventListener("touchend", en, { passive: true });
+      tg.addEventListener("touchcancel", cn, { passive: true });
     }, { passive: true });
 
     pager.addEventListener("pointerdown", function (e) {
@@ -557,7 +715,6 @@ function dayKey(iso) { var d = new Date(iso); if (!iso || isNaN(d)) return "okä
   function schedule(ms) { if (timer) clearInterval(timer); curMs = ms; timer = setInterval(poll, ms); }
   document.addEventListener("visibilitychange", function () { if (!document.hidden) poll(); });
 
-  paintStatic();
   bindPager();
   showTab("home", { animate: false, keepScroll: true });
   if (window.requestAnimationFrame) requestAnimationFrame(function () { placeInk("home", false); });
