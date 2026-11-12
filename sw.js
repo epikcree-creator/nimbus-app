@@ -1,25 +1,17 @@
 /* Shell cache. The product name comes from brand.js. */
 importScripts("./brand.js");
-var CACHE = "nimbus-shell-v71"; /* v71: kill-switch unlock button and lock banner removed (alert-only) */
+var CACHE = "nimbus-shell-v72"; /* v72: Mecha theme, lean layout, 3D operator (three.js) with SVG fallback */
 var SHELL = [
   "./",
   "./index.html",
-  "./app.css",
-  "./app.js",
+  "./paws.css",
+  "./paws.js",
+  "./mecha.js",
+  "./mecha3d.js",
+  "./mecha_art.js",
   "./brand.js",
-  "./settings.js",
-  "./discovery.js",
-  "./settings_catalog.json",
-  "./icons/mark.png",
-  "./chart.js",
-  "./live.js",
-  "./swipe.js",
-  "./swipe.css",
-  "./degen.js",
-  "./degen.css",
-  "./ocean.js",
-  "./ocean.css",
   "./manifest.json",
+  "./icons/mark.png",
   "./icons/favicon.png",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
