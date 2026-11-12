@@ -111,11 +111,11 @@
   function $(id) { return document.getElementById(id); }
   /* t170: product is Degen. Desk strings published before the 21:40 restart
      still say "Swipe Mode"; rename them on the client so every screen matches. */
-  function brandName() { return (window.NimbusBrand && NimbusBrand.name) || "Chairman"; }
+  function brandName() { return (window.NimbusBrand && NimbusBrand.name) || "PAWS"; }
   function brandText(v) {
     if (typeof v !== "string") return v;
-    /* t190/t193/t197: product renamed Degen -> Sora -> C.C -> Chairman; a running desk may still publish the older names until its next restart. */
-    return v.replace(/\bDegen\b/g, brandName()).replace(/\bSora\b/g, brandName()).replace(/\bSORA\b/g, brandName().toUpperCase()).replace(/\bDEGEN\b/g, brandName().toUpperCase()).replace(/\bC\.C\b/g, brandName()).replace(/Swipe Mode/g, brandName()).replace(/Swipe-kärnan/g, brandName() + "-kärnan").replace(/SWIPE-KÄRNAN/g, brandName().toUpperCase() + "-KÄRNAN");
+    /* t190/t193/t197/t301: Degen -> Sora -> C.C -> Chairman -> PAWS; a running desk may still publish the older names until its next restart. */
+    return v.replace(/\bDegen\b/g, brandName()).replace(/\bSora\b/g, brandName()).replace(/\bSORA\b/g, brandName().toUpperCase()).replace(/\bDEGEN\b/g, brandName().toUpperCase()).replace(/\bC\.C\b/g, brandName()).replace(/\bChairman\b/g, brandName()).replace(/\bCHAIRMAN\b/g, brandName().toUpperCase()).replace(/Swipe Mode/g, brandName()).replace(/Swipe-kärnan/g, brandName() + "-kärnan").replace(/SWIPE-KÄRNAN/g, brandName().toUpperCase() + "-KÄRNAN");
   }
   function brandDeep(o, depth) {
     if (depth > 12 || o == null) return o;
@@ -674,7 +674,7 @@
     });
     var note = $("account-write-note");
     if (note) {
-      note.textContent = "Filter hanteras av Chairman. Du kan inte ändra dem i appen.";
+      note.textContent = "Filter hanteras av " + brandName() + ". Du kan inte ändra dem i appen.";
     }
     var saveBtn = $("account-save");
     if (saveBtn) saveBtn.hidden = true;

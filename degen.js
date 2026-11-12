@@ -15,7 +15,7 @@
   function sym(r) { var s = (r && (r.symbol || (r.mint || "").slice(0, 6))) || "saknas"; return s.charAt(0) === "$" ? s : "$" + s; }
   function reduced() { return !!(g.matchMedia && g.matchMedia("(prefers-reduced-motion: reduce)").matches); }
   function hm(iso) { var d = new Date(iso); if (!iso || isNaN(d)) return "saknas"; return new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Stockholm", hour: "2-digit", minute: "2-digit" }).format(d); }
-  function brand() { return (g.NimbusBrand && g.NimbusBrand.name) || "Chairman"; }
+  function brand() { return (g.NimbusBrand && g.NimbusBrand.name) || "PAWS"; }
 
   /* Each real desk agent keeps one unique neon colour. */
   var AG = {
@@ -141,7 +141,7 @@
     var host = $("dg-toasts"); if (!host) return;
     var t = el("div", "dg-toast");
     var av = el("span", "dg-toast-av");
-    if (o.coin) av.appendChild(coin(o.coin, o.color)); else { var im = new Image(); im.src = "icons/icon-192.png"; im.alt = ""; av.appendChild(im); }
+    if (o.coin) av.appendChild(coin(o.coin, o.color)); else { var im = new Image(); im.src = "icons/mark.png"; im.alt = ""; av.appendChild(im); }
     t.appendChild(av);
     var mid = el("div", "dg-toast-mid");
     if (o.kicker) mid.appendChild(el("small", null, o.kicker));
@@ -320,7 +320,7 @@
     tiles.forEach(function (t) {
       var row = el("div", "dg-tok");
       if (t.coin) row.appendChild(coin(t.coin));
-      else { var ic = el("span", "dg-coin " + (t.cls || "")); if (t.ico === "logo") { var im = new Image(); im.src = "icons/icon-192.png"; im.alt = ""; ic.appendChild(im); } else ic.textContent = t.ico; row.appendChild(ic); }
+      else { var ic = el("span", "dg-coin " + (t.cls || "")); if (t.ico === "logo") { var im = new Image(); im.src = "icons/mark.png"; im.alt = ""; ic.appendChild(im); } else ic.textContent = t.ico; row.appendChild(ic); }
       var mid = el("div", "dg-tok-mid"); mid.appendChild(el("strong", null, t.name)); mid.appendChild(el("span", null, t.sub)); row.appendChild(mid);
       var r = el("div", "dg-tok-r"); r.appendChild(el("b", null, t.v)); r.appendChild(el("span", t.cls2 || "flat", t.d)); row.appendChild(r);
       host.appendChild(row);
