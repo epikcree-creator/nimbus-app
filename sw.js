@@ -1,6 +1,6 @@
 /* Shell cache. The product name comes from brand.js. */
 importScripts("./brand.js");
-var CACHE = "nimbus-shell-v78"; /* v78: v77 theme + swipe between Hem / Trades / Team */
+var CACHE = "nimbus-shell-v79"; /* v79: layout C "Ljus" (light), 4 pages incl. Förslag, bundled font */
 var SHELL = [
   "./",
   "./index.html",
@@ -8,8 +8,8 @@ var SHELL = [
   "./paws.js",
   "./brand.js",
   "./manifest.json",
-  "./bg-ring.webp",
-  "./bg-ring.jpg",
+  "./fonts/PlusJakartaSans-var.woff2",
+  "./icons/hydra.png",
   "./icons/mark.png",
   "./icons/favicon.png",
   "./icons/favicon.svg",

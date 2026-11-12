@@ -1,4 +1,4 @@
-/* PAWS v75 — lean app, clean aurora theme. Reads state.json exactly like v72/v71 (same storage keys, same fragment #d=..&t=.., same poll cadence).
+/* PAWS v79 — layout C "Ljus" on the v78 engine (same data contract, swipe pager, poll cadence). Originally v75: lean app. Reads state.json exactly like v72/v71 (same storage keys, same fragment #d=..&t=.., same poll cadence).
    Real desk data only; missing values read "saknas". PAPER only: there are no order buttons anywhere. */
 (function () {
   "use strict";
@@ -72,11 +72,24 @@
   }
 
   /* ---------- render ---------- */
-  function avatar(row, sell) {
-    var a = el("span", "av" + (sell ? " sell" : ""));
+var HUES = [["#7C5CF0","#B9A4FB"],["#5B6CF0","#9DB4FF"],["#9A5CF0","#E0A8F5"],["#6D5BD0","#A78BFA"],["#B05CD8","#F0A8D8"]];
+  function hueOf(s) { var n = 0; s = String(s || "?"); for (var i = 0; i < s.length; i++) n += s.charCodeAt(i); return HUES[n % HUES.length]; }
+  function avatar(row) {
+    var a = el("span", "av");
     var s = String(row.symbol || "?").replace(/^\$/, "");
     a.textContent = s.slice(0, 2).toUpperCase();
+    var h = hueOf(s); a.style.setProperty("--h1", h[0]); a.style.setProperty("--h2", h[1]);
     return a;
+  }
+  var ICONS = {
+    buy: "M12 5v14M5 12h14",
+    tp: "M7 17L17 7M8 7h9v9",
+    sl: "M7 7l10 10M17 8v9H8"
+  };
+  function iconTile(kind) {
+    var t = el("span", "av ic" + (kind === "tp" ? " tp" : kind === "sl" ? " sl" : ""));
+    t.innerHTML = '<svg viewBox="0 0 24 24"><path d="' + ICONS[kind] + '"/></svg>';
+    return t;
   }
   function openRow(p) {
     var row = el("div", "row"); row.dataset.mint = p.mint || ""; row.dataset.pid = p.id;
@@ -93,21 +106,24 @@
       var f = Math.max(0, Math.min(1, (cur - lo) / (hi - lo)));
       var g = el("div", "gauge"); g.title = "stopp → mål";
       var b = el("b"); b.style.width = (f * 100).toFixed(1) + "%"; g.appendChild(b);
-      var i = el("i"); i.style.left = "calc(" + (f * 100).toFixed(1) + "% - 1px)"; g.appendChild(i);
+      var i = el("i"); i.style.left = (f * 100).toFixed(1) + "%"; g.appendChild(i);
       row.appendChild(g);
     }
     return row;
   }
-  var KIND = { "köp": "KÖP" };
   function evRow(e, fresh) {
     var buy = e.action === "Köp";
+    var k = String(e.kind || "").toUpperCase();
+    var kind = buy ? "buy" : k === "SL" ? "sl" : "tp";
     var row = el("div", "row" + (fresh ? " fresh" : "")); row.dataset.ev = e.id; row.dataset.mint = e.mint || "";
-    row.appendChild(avatar(e, !buy));
-    var m = el("div", "row-m"), st = el("strong");
-    st.appendChild(el("span", "badge" + (buy ? "" : " s"), buy ? "KÖP" : (e.kind && e.kind !== "sälj" ? e.kind : "SÄLJ")));
-    st.appendChild(document.createTextNode(sym(e.symbol)));
-    m.appendChild(st);
-    m.appendChild(el("span", null, hm(e.ts) + " · " + (buy ? "PAPER-köp" : brand(e.reason_sv || "sälj"))));
+    row.appendChild(iconTile(kind));
+    var m = el("div", "row-m");
+    m.appendChild(el("strong", null, sym(e.symbol)));
+    var sp = el("span");
+    sp.appendChild(el("i", "badge" + (buy ? "" : kind === "sl" ? " sl" : " s"), buy ? "KÖP" : (e.kind && String(e.kind).toLowerCase() !== "sälj" ? String(e.kind).toUpperCase() : "SÄLJ")));
+    sp.lastChild.style.fontStyle = "normal";
+    sp.appendChild(document.createTextNode(hm(e.ts) + " · " + (buy ? "PAPER-köp" : brand(e.reason_sv || "sälj"))));
+    m.appendChild(sp);
     row.appendChild(m);
     var v;
     if (buy) { v = el("div", "row-v", usd(e.amount_usd)); }
@@ -115,7 +131,7 @@
     row.appendChild(v);
     return row;
   }
-  function fill(host, rows, emptyText) {
+    function fill(host, rows, emptyText) {
     host.innerHTML = "";
     if (!rows.length) { host.appendChild(el("div", "empty", emptyText)); return; }
     rows.forEach(function (r) { host.appendChild(r); });
@@ -131,17 +147,40 @@
     });
     return ok;
   }
+function dayKey(iso) { var d = new Date(iso); if (!iso || isNaN(d)) return "okänd"; return new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Stockholm", year: "numeric", month: "2-digit", day: "2-digit" }).format(d); }
+  function dayLabel(iso) {
+    var k = dayKey(iso); if (k === "okänd") return "Tid saknas";
+    var now = Date.now();
+    if (k === dayKey(new Date(now).toISOString())) return "Idag";
+    if (k === dayKey(new Date(now - 86400000).toISOString())) return "Igår";
+    return new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Stockholm", day: "numeric", month: "long" }).format(new Date(iso));
+  }
+  function fillGrouped(host, evs, emptyText) {
+    host.innerHTML = "";
+    if (!evs.length) { var l0 = el("div", "list"); l0.appendChild(el("div", "empty", emptyText)); host.appendChild(l0); return; }
+    var cur = null, list = null;
+    evs.forEach(function (e) {
+      var k = dayKey(e.ts);
+      if (k !== cur) { cur = k; host.appendChild(el("div", "dl", dayLabel(e.ts))); list = el("div", "list"); host.appendChild(list); }
+      list.appendChild(evRow(e, false));
+    });
+  }
   function paintStatic() {
     var boss = $("boss"); boss.innerHTML = "";
-    var av = el("span", "av"); var im = el("img"); im.src = "icons/mark.png"; im.alt = ""; av.appendChild(im); boss.appendChild(av);
-    var d = el("div"), h = el("h3", null, "PAWS"); h.appendChild(el("span", "decal", "Chef")); d.appendChild(h);
+    var im = el("img", "bimg"); im.src = "icons/hydra.png?v=79"; im.alt = ""; boss.appendChild(im);
+    var d = el("div"), h = el("h3", null, "PAWS"); h.appendChild(el("span", null, "CHEF")); d.appendChild(h);
     d.appendChild(el("p", null, "Leder teamet och tar de slutliga besluten.")); boss.appendChild(d);
     var host = $("roster"); host.innerHTML = "";
     TEAM.forEach(function (b) {
       var r = el("div", "bot"); r.id = "bot-" + b.id;
-      r.appendChild(el("span", "av", b.n.split(/\s+/).map(function (w) { return w[0]; }).join("").slice(0, 2).toUpperCase()));
-      var m = el("div"); m.appendChild(el("strong", null, b.n)); m.appendChild(el("span", "role", b.r)); r.appendChild(m);
-      var s = el("div", "st"); s.appendChild(el("b", null, "saknas")); s.appendChild(el("span", null, "senast: saknas")); r.appendChild(s);
+      var a = el("div", "a");
+      var av = el("span", "av", b.n.split(/\s+/).map(function (w) { return w[0]; }).join("").slice(0, 2).toUpperCase());
+      var h2 = hueOf(b.n); av.style.setProperty("--h1", h2[0]); av.style.setProperty("--h2", h2[1]);
+      a.appendChild(av);
+      var m = el("div"); m.appendChild(el("strong", null, b.n)); m.appendChild(el("div", "st", "saknas")); a.appendChild(m);
+      r.appendChild(a);
+      r.appendChild(el("span", "role", b.r));
+      var l = el("span", "last", ""); l.hidden = true; r.appendChild(l);
       host.appendChild(r);
     });
   }
@@ -149,16 +188,90 @@
     var team = (state && state.team) || {};
     TEAM.forEach(function (b) {
       var t = null; [b.id].concat(b.keys || []).forEach(function (k) { if (!t && team[k]) t = team[k]; });
-      var s = document.querySelector("#bot-" + b.id + " .st"); if (!s) return;
+      var s = document.querySelector("#bot-" + b.id + " .st"), l = document.querySelector("#bot-" + b.id + " .last"); if (!s) return;
       var status = t && (t.status_sv || t.status), act = t && (t.last_activity_sv || t.last_activity), at = t && (t.last_at || t.updated_at);
       s.className = "st" + (status && /^(ok|aktiv|igång|live)/i.test(String(status)) ? " ok" : "");
-      s.firstChild.textContent = status ? brand(String(status)).slice(0, 14) : "saknas";
-      s.lastChild.textContent = "senast: " + (act ? brand(String(act)).slice(0, 26) : at ? dm(at) : "saknas");
+      s.textContent = status ? brand(String(status)).slice(0, 18) : "saknas";
+      var lt = act ? brand(String(act)).slice(0, 30) : at ? dm(at) : "";
+      l.textContent = lt ? "senast: " + lt : ""; l.hidden = !lt;
     });
   }
 
+  /* ---------- Förslag: real state.suggestions.cards only. Nothing is invented; missing values read "saknas". ---------- */
+  var deckIdx = 0, deckKey = "";
+  function compactUsd(n) { var a = Math.abs(n); return (n < 0 ? "-$" : "$") + (a >= 1e6 ? (a / 1e6).toFixed(1) + "M" : a >= 1e3 ? (a / 1e3).toFixed(1) + "k" : a.toFixed(a >= 10 ? 0 : 2)); }
+  function scoreVal(p) {
+    var v = p && p.value;
+    if (v == null || v === "" || v === "saknas") return null;
+    if (typeof v === "number") { if (/pct/.test(p.key || "")) return v.toFixed(1) + " %"; if (/usd/.test(p.key || "")) return compactUsd(v); return String(v); }
+    return brand(String(v));
+  }
+  var CK = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>', CX = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>', CD = '<svg viewBox="0 0 24 24"><path d="M7 12h10"/></svg>';
+  function cardEl(c, i, n) {
+    var d = el("div", "dc");
+    var h = el("div", "h"); h.appendChild(avatar({ symbol: c.symbol || c.initials || "?" }));
+    var t = el("div"); t.appendChild(el("b", null, c.symbol ? sym(c.symbol) : "saknas")); t.appendChild(el("span", "n", c.name ? String(c.name) : "namn saknas")); h.appendChild(t);
+    var rating = c.rating ? String(c.rating) : null;
+    h.appendChild(el("span", "rt" + (rating === "Starkt" ? " ok" : rating === "Medel" ? " warn" : ""), rating || "betyg saknas"));
+    d.appendChild(h);
+    var parts = (c.score || []).filter(function (p) { return p && p.key !== "rating"; });
+    if (parts.length) {
+      var met = el("div", "met");
+      parts.slice(0, 4).forEach(function (p) {
+        var x = el("div"); x.appendChild(el("span", null, brand(p.label_sv || p.key || "")));
+        var v = scoreVal(p); x.appendChild(el("b", v == null ? "miss" : "", v == null ? "saknas" : v)); met.appendChild(x);
+      });
+      d.appendChild(met);
+    }
+    var gates = c.gates && c.gates.gates;
+    if (gates && gates.length) {
+      gates.forEach(function (g) {
+        var na = g.status === "saknas", ok = !!g.ok;
+        var row = el("div", "ck " + (ok ? "" : na ? "na" : "no")); var ic = el("i"); ic.innerHTML = ok ? CK : na ? CD : CX; row.appendChild(ic);
+        row.appendChild(el("span", null, brand(g.label_sv || g.code || "saknas")));
+        var dt = g.detail_sv && g.detail_sv !== "saknas" ? String(g.detail_sv) : null;
+        row.appendChild(el("b", dt ? "" : "miss", dt || "saknas")); d.appendChild(row);
+      });
+    } else { d.appendChild(el("p", "fnote", "Rug-filter: saknas")); }
+    var note = c.notes_missing ? null : c.notes; if (note) d.appendChild(el("p", "fnote", brand(String(note))));
+    if (c.rated_at) d.appendChild(el("p", "fnote", "Bedömd " + hm(c.rated_at)));
+    var acts = el("div", "acts");
+    if (n > 1) { var nx = el("button", "btn", "Nästa förslag"); nx.type = "button"; nx.dataset.next = "1"; acts.appendChild(nx); }
+    /* The app has no PAPER-buy path for proposals (state.json is read-only). The button is shown disabled; nothing is sent. */
+    var buy = el("button", "btn pri two"); buy.type = "button"; buy.disabled = true; buy.appendChild(document.createTextNode("Paper-köp")); buy.appendChild(el("small", null, "saknas"));
+    acts.appendChild(buy); d.appendChild(acts);
+    return d;
+  }
+  function renderSuggestions(state) {
+    var sg = state && state.suggestions, cards = (sg && sg.cards) || [], host = $("deck"), sub = $("fs-sub");
+    sub.textContent = sg && sg.note_sv ? brand(String(sg.note_sv)) : "saknas";
+    var key = cards.map(function (c) { return c.mint; }).join(",");
+    if (key !== deckKey) { deckKey = key; deckIdx = 0; }
+    if (deckIdx >= cards.length) deckIdx = 0;
+    host.innerHTML = "";
+    if (!cards.length) {
+      var e = el("div", "empty-card"); var lc = el("span", "logo-chip big"); var im = el("img"); im.src = "icons/hydra.png?v=79"; im.alt = ""; lc.appendChild(im); e.appendChild(lc);
+      e.appendChild(el("h3", null, sg ? "Inga förslag just nu" : "Förslag saknas"));
+      e.appendChild(el("p", null, sg && sg.note_sv ? brand(String(sg.note_sv)) : "Desken publicerar inga förslag."));
+      host.appendChild(e); return;
+    }
+    var deck = el("div", "deck");
+    var left = cards.length - 1;
+    if (left >= 2) deck.appendChild(el("div", "ghost g2"));
+    if (left >= 1) deck.appendChild(el("div", "ghost g1"));
+    deck.appendChild(cardEl(cards[deckIdx], deckIdx, cards.length));
+    host.appendChild(deck);
+    if (cards.length > 1) {
+      var dots = el("div", "dots");
+      cards.forEach(function (c, i) { dots.appendChild(el("i", i === deckIdx ? "on" : "")); });
+      host.appendChild(dots);
+    }
+    var nx = host.querySelector("[data-next]");
+    if (nx) nx.addEventListener("click", function () { deckIdx = (deckIdx + 1) % cards.length; renderSuggestions(last); });
+  }
+
   var cdTimer = null;
-  function render(state) {
+    function render(state) {
     if (!state) return;
     last = state;
     var box = state.challenge || {}, hb = state.heartbeats || {};
@@ -189,7 +302,6 @@
     var pill = $("ch-pill"), stt = box.status;
     pill.className = "pill " + (stt === "running" ? "on" : stt === "paused" ? "pause" : "done");
     pill.lastChild.textContent = box.status_sv || (stt ? stt : "saknas");
-    $("ch-tag").textContent = stt === "running" ? "pågår" : stt === "finished" || stt === "aborted" ? "klar" : stt ? stt : "saknas";
     var cd = $("ch-count"); cd.dataset.ends = box.ends_at || ""; cd.dataset.started = box.started_at || ""; cd.dataset.run = stt === "running" || stt === "aborting" || stt === "paused" ? "1" : "";
     tickCountdown();
     $("ch-span").textContent = box.started_at && box.ends_at ? dm(box.started_at) + " → " + dm(box.ends_at) : "tid saknas";
@@ -204,18 +316,19 @@
     fill($("open-list"), open.map(openRow), "Inga öppna positioner just nu");
     var evs = (box.events || []).filter(function (e) { return e && (e.action === "Köp" || e.action === "Sälj"); });
     fill($("recent-list"), evs.slice(0, 4).map(function (e) { return evRow(e, !!freshIds[e.id]); }), "Inga PAPER-trades än");
-    fill($("trades-list"), evs.slice(0, 40).map(function (e) { return evRow(e, false); }), "Inga PAPER-trades än");
-    $("tr-tag").textContent = String(evs.length);
+    fillGrouped($("trades-list"), evs.slice(0, 40), "Inga PAPER-trades än");
+    $("tr-sub").textContent = evs.length + (evs.length === 1 ? " händelse" : " händelser") + " · allt simulerat i PAPER";
     var sum = $("tr-sum"); sum.innerHTML = "";
     [["Stängda", closed == null ? "saknas" : String(closed), ""], ["Vinster", wins == null ? "saknas" : String(wins), ""], ["Realiserat", sUsd(rp), rp == null ? "" : rp < 0 ? "down" : "up"]].forEach(function (x) {
       var d = el("div"); d.appendChild(el("dt", null, x[0])); d.appendChild(el("dd", x[2], x[1])); sum.appendChild(d);
     });
 
     /* app agents */
-    var n1 = chips($("ag-strip"), hb); chips($("ag-strip2"), hb);
+    var n1 = chips($("ag-strip2"), hb);
     var tot = APP_AGENTS.length, txt = Object.keys(hb).length ? n1 + "/" + tot + " live" : "saknas";
-    $("ag-tag").textContent = txt; $("ag-tag2").textContent = txt;
+    $("ag-tag2").textContent = txt;
     renderTeam(state);
+    renderSuggestions(state);
 
     $("boot").hidden = true;
     if (fresh.length) {
@@ -233,18 +346,28 @@
   }
 
   function tickCountdown() {
-    var cd = $("ch-count"), bar = $("ch-bar"); if (!cd) return;
+    var cd = $("ch-count"), ring = $("ch-ring"), dayEl = $("ch-day"); if (!cd) return;
     var ends = Date.parse(cd.dataset.ends || ""), st = Date.parse(cd.dataset.started || "");
-    if (!isFinite(ends) || !cd.dataset.run) { cd.textContent = cd.dataset.ends ? "klar" : "--:--:--"; if (cd.dataset.ends && isFinite(st)) bar.style.width = "100%"; return; }
-    var sec = Math.max(0, Math.floor((ends - Date.now()) / 1000));
-    var dd = Math.floor(sec / 86400), h = Math.floor(sec % 86400 / 3600), m = Math.floor(sec % 3600 / 60), r = sec % 60, p = function (n) { return String(n).padStart(2, "0"); };
-    cd.textContent = (dd ? dd + "d " : "") + p(h) + ":" + p(m) + ":" + p(r);
-    if (isFinite(st) && ends > st) bar.style.width = Math.min(100, Math.max(0, (Date.now() - st) / (ends - st) * 100)).toFixed(1) + "%";
+    var C = 251.33, frac = null;
+    if (isFinite(st) && isFinite(ends) && ends > st) {
+      var total = Math.max(1, Math.round((ends - st) / 86400000));
+      var elapsed = Math.min(1, Math.max(0, (Date.now() - st) / (ends - st)));
+      frac = elapsed; dayEl.textContent = Math.min(total, Math.floor(elapsed * (ends - st) / 86400000) + 1) + "/" + total;
+    } else { dayEl.textContent = "–"; }
+    if (!isFinite(ends) || !cd.dataset.run) {
+      cd.textContent = cd.dataset.ends ? "klar" : "--:--:--";
+      if (cd.dataset.ends && frac != null) frac = 1;
+    } else {
+      var sec = Math.max(0, Math.floor((ends - Date.now()) / 1000));
+      var dd = Math.floor(sec / 86400), h = Math.floor(sec % 86400 / 3600), m = Math.floor(sec % 3600 / 60), r = sec % 60, p = function (n) { return String(n).padStart(2, "0"); };
+      cd.textContent = (dd ? dd + "d " : "") + p(h) + ":" + p(m) + ":" + p(r);
+    }
+    ring.style.strokeDashoffset = String(C * (1 - (frac == null ? 0 : Math.max(frac, 0.015))));
   }
   setInterval(tickCountdown, 1000);
 
   /* ---------- tabs + horizontal swipe ---------- */
-  var TABS = ["home", "trades", "team"];
+  var TABS = ["home", "trades", "team", "forslag"];
   var tab = "home", tabIndex = 0;
   function reduceMotion() {
     return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
