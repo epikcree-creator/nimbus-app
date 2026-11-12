@@ -2166,16 +2166,6 @@
   }
 
 
-  function renderKillBanner(state) {
-    var banner = $("kill-banner");
-    var reason = $("kill-banner-reason");
-    if (!banner) return;
-    var kill = (state && state.kill_switch) || {};
-    var on = !!(kill.locked || kill.buys_locked);
-    banner.hidden = !on;
-    if (reason) reason.textContent = kill.reason_sv || (on ? "Köp är låsta." : "");
-  }
-
   function renderJournal(state) {
     var host = $("journal-list");
     var note = $("journal-note");
@@ -2261,38 +2251,6 @@
       host.appendChild(el);
     });
   }
-
-  function bindKillUnlock() {
-    var btn = $("kill-unlock");
-    var dialog = $("kill-unlock-dialog");
-    var form = $("kill-unlock-form");
-    var input = $("kill-unlock-input");
-    if (!btn || !dialog || btn.__bound) return;
-    btn.__bound = true;
-    btn.addEventListener("click", function () {
-      if (typeof dialog.showModal === "function") dialog.showModal();
-      else dialog.setAttribute("open", "open");
-      if (input) { input.value = ""; input.focus(); }
-    });
-    if (form) form.addEventListener("submit", function (ev) {
-      var val = (ev.submitter && ev.submitter.value) || "cancel";
-      if (val === "ok") {
-        var phrase = input ? String(input.value || "").trim() : "";
-        queueDeskWrite("kill_switch_unlock", phrase);
-        var st = window.__nimbusLastState || {};
-        if (!st.kill_switch) st.kill_switch = {};
-        // optimistic only when phrase matches; desk is source of truth
-        if (phrase.toLowerCase() === "låsa upp") {
-          st.kill_switch.locked = false;
-          st.kill_switch.buys_locked = false;
-          st.kill_switch.reason_sv = "";
-          renderKillBanner(st);
-          renderSuggestions(st);
-        }
-      }
-    });
-  }
-
 
   var WATCH_KEY = "sniper_grok_watchlist_v1";
 
@@ -2907,8 +2865,6 @@
     renderHeader(state);
     bindCashActions();
     syncCashActions(state);
-    renderKillBanner(state);
-    bindKillUnlock();
     renderSuggestions(state);
     renderChallenge(state);
     renderStoppade(state);

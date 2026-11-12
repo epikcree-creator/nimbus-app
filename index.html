@@ -188,14 +188,6 @@
 
   </div>
   <p id="demo-banner" class="demo-banner" hidden>DEMO / SIMULERING · inte live-resultat</p>
-  <div id="kill-banner" class="kill-banner compact" hidden role="alert">
-    <div class="kill-banner-body">
-      <strong>Köp låsta</strong>
-      <p id="kill-banner-reason">—</p>
-    </div>
-    <button type="button" id="kill-unlock" class="kill-unlock">Lås upp…</button>
-  </div>
-
   <div id="sw-notice" class="sw-notice" hidden role="status" aria-live="polite">
     <img src="icons/mark.png" alt="" width="36" height="36" />
     <div><strong id="sw-notice-title"></strong><span id="sw-notice-body"></span></div>
@@ -225,18 +217,6 @@
       <div class="cash-sheet-actions">
         <button type="submit" value="cancel" class="ghost">Avbryt</button>
         <button type="submit" value="ok" id="cash-confirm" hidden>Bekräfta</button>
-      </div>
-    </form>
-  </dialog>
-
-  <dialog id="kill-unlock-dialog" class="kill-dialog">
-    <form method="dialog" id="kill-unlock-form">
-      <h3>Lås upp köp</h3>
-      <p>Skriv <code>låsa upp</code> för att bekräfta. Kill switch låses inte upp automatiskt.</p>
-      <input id="kill-unlock-input" type="text" autocomplete="off" placeholder="låsa upp" />
-      <div class="kill-dialog-actions">
-        <button type="submit" value="cancel" class="ghost">Avbryt</button>
-        <button type="submit" value="ok" id="kill-unlock-confirm">Bekräfta</button>
       </div>
     </form>
   </dialog>

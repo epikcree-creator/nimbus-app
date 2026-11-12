@@ -1,6 +1,6 @@
 /* Shell cache. The product name comes from brand.js. */
 importScripts("./brand.js");
-var CACHE = "nimbus-shell-v70"; /* v70: green aurora, traced leopard, organic mountains */
+var CACHE = "nimbus-shell-v71"; /* v71: kill-switch unlock button and lock banner removed (alert-only) */
 var SHELL = [
   "./",
   "./index.html",
