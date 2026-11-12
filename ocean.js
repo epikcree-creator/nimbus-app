@@ -87,7 +87,7 @@
     if (!rows.length) { host.appendChild(el("p", "oc-empty", "Inga händelser än")); return; }
     rows.forEach(function (r) {
       var row = el("div", "oc-row" + (fresh[r.id] ? " in" : ""));
-      var ic = el("span", "oc-row-ico"); ic.style.setProperty("--c", COLOR[r.agent] || "#43DAF6");
+      var ic = el("span", "oc-row-ico"); ic.style.setProperty("--c", COLOR[r.agent] || "#7EC8E8");
       ic.appendChild(el("i")); row.appendChild(ic);
       var mid = el("div", "oc-row-mid"); mid.appendChild(el("strong", null, r.title)); mid.appendChild(el("span", null, r.sub)); row.appendChild(mid);
       if (r.v) row.appendChild(el("b", "oc-row-v " + r.cls, r.v));
@@ -215,28 +215,29 @@
       /* The existing PAPER withdraw sheet (slide to confirm). No real order exists here. */
       if (g.NimbusCash) g.NimbusCash.open("withdraw");
     });
-    /* Bubbles: 18 dots, 5–15 px, 30–50 % opacity, none when reduced motion is on. */
+    /* Snow: 26 flakes, 3–9 px, soft drift, none when reduced motion is on. */
     var sea = $("oc-bubbles");
     if (sea && !reducedMotion()) {
-      for (var i = 0; i < 18; i++) {
-        var b = el("i"); var s = 5 + (i * 7 % 11);
-        b.style.cssText = "left:" + ((i * 37) % 100) + "%;width:" + s + "px;height:" + s + "px;--o:" + (0.3 + (i % 6) * 0.033).toFixed(2) + ";animation-delay:-" + ((i * 1.7) % 14).toFixed(1) + "s;animation-duration:" + (10 + (i * 3) % 9) + "s";
+      for (var i = 0; i < 26; i++) {
+        var b = el("i"); var s = 3 + (i * 5 % 7);
+        var drift = (i % 2 === 0 ? 1 : -1) * (8 + (i * 5) % 22);
+        b.style.cssText = "left:" + ((i * 37) % 100) + "%;width:" + s + "px;height:" + s + "px;--o:" + (0.35 + (i % 6) * 0.07).toFixed(2) + ";--drift:" + drift + ";animation-delay:-" + ((i * 1.3) % 16).toFixed(1) + "s;animation-duration:" + (11 + (i * 3) % 10) + "s";
         sea.appendChild(b);
       }
     }
     bootFish();
   }
 
-  /* ---------- t274 fish: decorative unless a real closed PAPER trade is supplied ---------- */
+  /* ---------- t274/t304 birds: decorative unless a real closed PAPER trade is supplied ---------- */
   var WHALE = [
-    { fill: "#3BA3FF", mid: "#1E88E5" },
-    { fill: "#26C6C0", mid: "#00897B" },
-    { fill: "#A98BFF", mid: "#7E57C2" },
-    { fill: "#FF7AB6", mid: "#EC407A" },
-    { fill: "#FF9A3C", mid: "#FB8C00" },
-    { fill: "#FFD23F", mid: "#F9A825", scale: 1.5 }
+    { fill: "#E8EEF4", mid: "#B8C4D0" },
+    { fill: "#8AA0B4", mid: "#5C7388" },
+    { fill: "#C4A882", mid: "#8A6E4E" },
+    { fill: "#B8C4D4", mid: "#7A8A9A" },
+    { fill: "#D4C4B0", mid: "#9A8A78" },
+    { fill: "#F2F5F8", mid: "#A8B4C0", scale: 1.4 }
   ];
-  var MAX_FISH = 3, SWIM_MS = 2500;
+  var MAX_FISH = 3, SWIM_MS = 3200;
   var fishHost = null, liveFish = [], fishRaf = 0, spawnTimer = 0;
   var seenTrade = {}, tradeQueue = [], colorIx = 0, fishPaused = false, pauseAt = 0, fishWired = false;
 
@@ -244,27 +245,26 @@
     return !!(g.matchMedia && g.matchMedia("(prefers-reduced-motion: reduce)").matches);
   }
   function whaleSvg(c) {
-    return '<svg class="oc-critter oc-whale" viewBox="0 0 140 70">' +
-      '<path fill="' + c.mid + '" d="M28 35 C 10 20 0 12 6 6 C 16 18 26 26 36 32"/>' +
-      '<path fill="' + c.mid + '" d="M28 35 C 10 50 0 58 6 64 C 16 52 26 44 36 38"/>' +
-      '<path fill="' + c.fill + '" d="M32 35 C 36 16 62 8 92 12 C 116 16 132 24 134 34 C 132 50 112 60 84 60 C 54 60 36 50 32 35 Z"/>' +
-      '<ellipse cx="88" cy="44" rx="30" ry="10" fill="#fff" opacity=".25"/>' +
-      '<path fill="' + c.mid + '" d="M70 50 Q 66 66 86 58 Z"/>' +
-      '<path fill="' + c.mid + '" d="M78 16 Q 84 6 94 14" />' +
-      '<circle cx="114" cy="30" r="3.3" fill="#0A1630"/>' +
-      '<circle cx="115.2" cy="29" r="1.15" fill="#fff"/>' +
-      '<path d="M122 38 Q 126 42 116 42" fill="none" stroke="#0A1630" stroke-width="1.4" stroke-linecap="round"/>' +
+    return '<svg class="oc-critter oc-bird" viewBox="0 0 140 70">' +
+      '<path class="oc-bird-wing" fill="' + c.mid + '" d="M64 34 C 42 6, 16 6, 6 20 C 28 12, 50 26, 68 38"/>' +
+      '<path fill="' + c.fill + '" d="M46 38 C 56 24, 86 20, 114 30 C 128 36, 134 42, 126 46 C 108 54, 76 54, 54 46 C 46 42, 44 40, 46 38 Z"/>' +
+      '<path fill="' + c.mid + '" d="M48 36 C 30 32, 14 36, 4 28 C 16 40, 34 44, 52 40"/>' +
+      '<ellipse cx="116" cy="32" rx="10" ry="8" fill="' + c.fill + '"/>' +
+      '<path d="M124 32 L140 30 L126 38 Z" fill="' + c.mid + '"/>' +
+      '<circle cx="118" cy="30" r="2.3" fill="#0A1630"/>' +
+      '<circle cx="118.8" cy="29.3" r="0.8" fill="#fff"/>' +
+      '<ellipse cx="90" cy="42" rx="16" ry="5" fill="#fff" opacity=".22"/>' +
       "</svg>";
   }
   function sharkSvg() {
-    return '<svg class="oc-critter oc-shark" viewBox="0 0 150 70">' +
-      '<path class="oc-shark-body" fill="#4A5568" d="M20 35 L 48 20 Q 90 8 124 30 L 148 35 L 124 40 Q 90 62 48 50 Z"/>' +
-      '<path class="oc-shark-fin" fill="#3A4454" d="M74 18 L 88 2 L 98 20 Z"/>' +
-      '<path class="oc-shark-tail" fill="#3A4454" d="M24 35 L 2 8 L 14 35 L 2 62 Z"/>' +
-      '<path class="oc-shark-pec" fill="#3A4454" d="M70 46 L 58 66 L 86 52 Z"/>' +
-      '<polygon fill="#F5F5F5" points="118,34 122,40 124,34 128,40 130,34 134,40 136,34"/>' +
-      '<circle cx="116" cy="28" r="2.6" fill="#0A0A0A"/>' +
-      '<path d="M98 30 Q 98 38 92 38" fill="none" stroke="#2A3340" stroke-width="1.5"/>' +
+    return '<svg class="oc-critter oc-raven" viewBox="0 0 150 70">' +
+      '<path class="oc-raven-wing" fill="#1A1A22" d="M70 34 C 48 4, 20 6, 8 20 C 30 12, 54 26, 74 38"/>' +
+      '<path class="oc-raven-body" fill="#2A2A34" d="M50 36 C 62 20, 92 16, 122 28 C 138 34, 146 40, 138 46 C 118 56, 80 56, 56 46 C 48 42, 46 38, 50 36 Z"/>' +
+      '<path class="oc-raven-tail" fill="#1A1A22" d="M52 36 C 34 32, 16 36, 4 28 C 18 40, 36 46, 54 42"/>' +
+      '<ellipse cx="120" cy="32" rx="11" ry="8" fill="#2A2A34"/>' +
+      '<path d="M128 32 L148 28 L130 38 Z" fill="#1A1A22"/>' +
+      '<circle cx="124" cy="30" r="2.4" fill="#0A0A0A"/>' +
+      '<circle cx="124.8" cy="29.2" r="0.7" fill="#fff"/>' +
       "</svg>";
   }
   function riderHtml() {
@@ -328,7 +328,7 @@
     var kind = ev ? (ev.win ? "whale" : "shark") : (Math.random() < 0.78 ? "whale" : "shark");
     var color = WHALE[colorIx++ % WHALE.length];
     var dir = Math.random() < 0.5 ? 1 : -1;
-    var y = Math.random() < 0.5 ? (0.20 + Math.random() * 0.10) : (0.52 + Math.random() * 0.12);
+    var y = Math.random() < 0.5 ? (0.12 + Math.random() * 0.12) : (0.28 + Math.random() * 0.14);
     var scale = kind === "whale" ? (color.scale || 1) : 1;
     var w = (kind === "whale" ? 118 : 126) * scale;
     var wrap = el("div", "oc-swimmer " + kind + (ev ? " ev" : " deco"));
