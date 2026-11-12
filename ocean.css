@@ -230,7 +230,7 @@ body.oc .kill-banner { background: rgba(80, 10, 40, .92) !important; border: 1px
 body.oc .kill-unlock { background: #FE4A4A !important; color: #fff !important; }
 body.oc .state-badge { background: rgba(255,255,255,.14) !important; color: #FFFFFF !important; border-color: rgba(255,255,255,.22) !important; }
 body.oc .state-badge.on { background: rgba(46,230,160,.16) !important; color: #2EE6A0 !important; }
-body.oc .boot-empty { background: transparent !important; color: #fff !important; }
+body.oc .boot-empty { background: linear-gradient(180deg, #3D5A7A, #1A2744) !important; color: #fff !important; }
 body.oc .boot-empty h1 { color: #fff !important; } body.oc .boot-empty p { color: rgba(255,255,255,.8) !important; }
 
 /* Sheets and dialogs stay light, like the video's white bottom sheet. */
