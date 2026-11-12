@@ -95,26 +95,22 @@
     }
 
     var LAYERS = [
-      /* back violet */
-      { y: 0.16, h: 0.42, a1: 22, a2: 12, a3: 6, f1: 0.011, f2: 0.023, f3: 0.041,
-        s1: 0.22, s2: 0.13, s3: 0.31, p: 0.4, fold: 10,
-        c0: "rgba(160, 90, 255, 0.00)", c1: "rgba(170, 95, 255, 0.14)", c2: "rgba(120, 70, 220, 0.03)" },
-      /* magenta edge */
-      { y: 0.10, h: 0.32, a1: 16, a2: 10, a3: 5, f1: 0.009, f2: 0.019, f3: 0.037,
-        s1: 0.16, s2: 0.21, s3: 0.11, p: 1.8, fold: 8,
-        c0: "rgba(255, 110, 190, 0.00)", c1: "rgba(232, 110, 210, 0.08)", c2: "rgba(180, 70, 160, 0.02)" },
-      /* teal */
-      { y: 0.20, h: 0.40, a1: 26, a2: 14, a3: 7, f1: 0.008, f2: 0.017, f3: 0.033,
-        s1: 0.19, s2: 0.27, s3: 0.14, p: 2.6, fold: 12,
-        c0: "rgba(60, 230, 210, 0.00)", c1: "rgba(70, 230, 210, 0.16)", c2: "rgba(40, 160, 170, 0.03)" },
-      /* green core */
-      { y: 0.18, h: 0.38, a1: 24, a2: 13, a3: 7, f1: 0.010, f2: 0.021, f3: 0.039,
+      /* thin upper violet fringe only */
+      { y: 0.07, h: 0.16, a1: 12, a2: 7, a3: 4, f1: 0.009, f2: 0.019, f3: 0.036,
+        s1: 0.16, s2: 0.20, s3: 0.12, p: 1.6, fold: 6,
+        c0: "rgba(170, 120, 255, 0.00)", c1: "rgba(168, 120, 255, 0.11)", c2: "rgba(120, 80, 210, 0.02)" },
+      /* vivid green core — #3DFF8F */
+      { y: 0.14, h: 0.40, a1: 24, a2: 13, a3: 7, f1: 0.010, f2: 0.021, f3: 0.039,
         s1: 0.17, s2: 0.23, s3: 0.29, p: 0.2, fold: 14,
-        c0: "rgba(61, 255, 176, 0.00)", c1: "rgba(80, 255, 190, 0.22)", c2: "rgba(40, 180, 130, 0.04)" },
-      /* lower soft green veil */
-      { y: 0.28, h: 0.30, a1: 18, a2: 9, a3: 5, f1: 0.007, f2: 0.016, f3: 0.029,
-        s1: 0.14, s2: 0.18, s3: 0.22, p: 3.4, fold: 9,
-        c0: "rgba(90, 255, 200, 0.00)", c1: "rgba(90, 255, 200, 0.10)", c2: "rgba(40, 160, 140, 0.03)" }
+        c0: "rgba(61, 255, 143, 0.00)", c1: "rgba(61, 255, 143, 0.30)", c2: "rgba(30, 190, 110, 0.05)" },
+      /* second core — #2EF5A0, slightly lower */
+      { y: 0.18, h: 0.36, a1: 22, a2: 12, a3: 6, f1: 0.008, f2: 0.017, f3: 0.033,
+        s1: 0.19, s2: 0.27, s3: 0.14, p: 2.4, fold: 12,
+        c0: "rgba(46, 245, 160, 0.00)", c1: "rgba(46, 245, 160, 0.24)", c2: "rgba(28, 180, 120, 0.04)" },
+      /* lower soft green veil, modest so typography stays crisp */
+      { y: 0.26, h: 0.28, a1: 16, a2: 8, a3: 4, f1: 0.007, f2: 0.016, f3: 0.029,
+        s1: 0.14, s2: 0.18, s3: 0.22, p: 3.4, fold: 8,
+        c0: "rgba(80, 255, 170, 0.00)", c1: "rgba(61, 255, 143, 0.10)", c2: "rgba(30, 160, 100, 0.025)" }
     ];
 
     function softGlow(x, y, rx, ry, color) {
@@ -137,13 +133,12 @@
       /* Soft volumes first, so ribbons sit in a glow rather than hard bands. */
       var gx = bw * (0.42 + Math.sin(t * 0.11) * 0.06);
       var gy = bh * (0.22 + Math.cos(t * 0.09) * 0.03);
-      softGlow(gx, gy, bw * 0.55, bh * 0.32, "rgba(70, 230, 190, 0.20)");
-      softGlow(gx + bw * 0.18, gy - bh * 0.04, bw * 0.40, bh * 0.24, "rgba(80, 255, 200, 0.16)");
-      softGlow(bw * (0.28 + Math.sin(t * 0.08 + 1) * 0.05), bh * 0.16,
-        bw * 0.38, bh * 0.22, "rgba(160, 90, 255, 0.16)");
-      softGlow(bw * (0.62 + Math.cos(t * 0.07) * 0.05), bh * 0.13,
-        bw * 0.34, bh * 0.20, "rgba(230, 110, 200, 0.10)");
-      softGlow(bw * 0.55, bh * 0.30, bw * 0.36, bh * 0.18, "rgba(50, 200, 210, 0.10)");
+      softGlow(gx, gy, bw * 0.58, bh * 0.34, "rgba(61, 255, 143, 0.26)");
+      softGlow(gx + bw * 0.16, gy - bh * 0.02, bw * 0.42, bh * 0.26, "rgba(46, 245, 160, 0.20)");
+      softGlow(gx - bw * 0.12, gy + bh * 0.04, bw * 0.36, bh * 0.22, "rgba(80, 255, 170, 0.10)");
+      /* thin upper violet fringe — keep small and high */
+      softGlow(bw * (0.48 + Math.sin(t * 0.07) * 0.04), bh * 0.10,
+        bw * 0.32, bh * 0.13, "rgba(168, 120, 255, 0.10)");
       var step = 3;
       for (var li = 0; li < LAYERS.length; li++) {
         var L = LAYERS[li];

@@ -20,14 +20,15 @@ body.dg.oc {
 /* ---------- night sky + mountains ---------- */
 .oc-sea { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
   background:
-    radial-gradient(ellipse 80% 40% at 50% 8%, rgba(90, 60, 160, .22) 0%, transparent 60%),
-    radial-gradient(ellipse 70% 35% at 30% 22%, rgba(40, 180, 150, .10) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 26% at 52% 5%, rgba(150, 105, 220, .10) 0%, transparent 62%),
+    radial-gradient(ellipse 80% 42% at 38% 20%, rgba(61, 255, 143, .16) 0%, transparent 58%),
+    radial-gradient(ellipse 62% 30% at 64% 16%, rgba(46, 245, 160, .12) 0%, transparent 52%),
     linear-gradient(180deg, #05060E 0%, #070B16 28%, #0A1020 52%, #10182C 72%, #0C141C 100%); }
 body:not(.oc) .oc-sea, body:not(.oc) .oc-tabs { display: none; }
 body.oc[data-page]:not([data-page="hav"]) .oc-sea {
   background:
-    radial-gradient(ellipse 80% 42% at 58% 10%, rgba(110, 70, 180, .20) 0%, transparent 60%),
-    radial-gradient(ellipse 70% 34% at 28% 24%, rgba(40, 160, 150, .08) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 28% at 58% 8%, rgba(150, 105, 220, .08) 0%, transparent 62%),
+    radial-gradient(ellipse 74% 36% at 36% 22%, rgba(61, 255, 143, .12) 0%, transparent 58%),
     linear-gradient(180deg, #05060E 0%, #070B16 28%, #0A1020 52%, #10182C 72%, #0C141C 100%); }
 .oc-sea { transition: background .6s; }
 .oc-aurora { position: absolute; inset: 0; z-index: 0; pointer-events: none; display: block; }
@@ -205,7 +206,7 @@ body.oc .kill-banner { background: rgba(80, 10, 40, .92) !important; border: 1px
 body.oc .kill-unlock { background: #FE4A4A !important; color: #fff !important; }
 body.oc .state-badge { background: rgba(255,255,255,.14) !important; color: #FFFFFF !important; border-color: rgba(255,255,255,.22) !important; }
 body.oc .state-badge.on { background: rgba(46,230,160,.16) !important; color: #2EE6A0 !important; }
-body.oc .boot-empty { background: radial-gradient(ellipse 80% 40% at 50% 18%, rgba(80, 200, 170, .16), transparent 60%), radial-gradient(ellipse 60% 30% at 60% 8%, rgba(140, 80, 220, .14), transparent 55%), linear-gradient(180deg, #0A1020, #05060E) !important; color: #fff !important; }
+body.oc .boot-empty { background: radial-gradient(ellipse 80% 42% at 48% 18%, rgba(61, 255, 143, .16), transparent 60%), radial-gradient(ellipse 50% 24% at 60% 6%, rgba(150, 105, 220, .08), transparent 55%), linear-gradient(180deg, #0A1020, #05060E) !important; color: #fff !important; }
 body.oc .boot-empty h1 { color: #fff !important; } body.oc .boot-empty p { color: rgba(255,255,255,.8) !important; }
 
 /* Sheets and dialogs stay light, like the video's white bottom sheet. */
