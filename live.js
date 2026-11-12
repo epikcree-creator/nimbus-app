@@ -452,8 +452,10 @@
     var host = $("swipe-core");
     if (!host) return;
     var list = (agentsBox && agentsBox.agents) || [];
-    var coreName = (agentsBox && agentsBox.core_sv) || "Chairman-kärnan";
-    var title = (agentsBox && agentsBox.core_title_sv) || "5 agenter → Chairman-kärnan";
+    var _bn = (window.NimbusBrand && NimbusBrand.name) || "PAWS";
+    var _bt = window.NimbusBrandText || function (v) { return v; };
+    var coreName = _bt((agentsBox && agentsBox.core_sv) || (_bn + "-kärnan"));
+    var title = _bt((agentsBox && agentsBox.core_title_sv) || ("5 agenter → " + _bn + "-kärnan"));
     var cap = $("core-title");
     if (cap) cap.textContent = title;
     if (__coreBuilt && host.querySelector("svg.core-svg")) {
@@ -550,13 +552,13 @@
     var core = document.createElement("div");
     core.className = "core-hub";
     var logo = document.createElement("img");
-    logo.src = "icons/icon-192.png";
+    logo.src = "icons/mark.png";
     logo.alt = "";
     logo.width = 36;
     logo.height = 36;
     var name = document.createElement("div");
     name.className = "core-hub-name";
-    name.textContent = "CHAIRMAN-KÄRNAN";
+    name.textContent = (coreName || (_bn + "-kärnan")).toUpperCase();
     core.appendChild(logo);
     core.appendChild(name);
     host.appendChild(core);

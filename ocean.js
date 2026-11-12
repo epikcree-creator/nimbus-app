@@ -268,7 +268,7 @@
       "</svg>";
   }
   function riderHtml() {
-    return '<span class="oc-rider"><span class="oc-rider-av"><img src="icons/icon-192.png" alt="" width="28" height="28" /></span>' +
+    return '<span class="oc-rider"><span class="oc-rider-av"><img src="icons/mark.png" alt="" width="28" height="28" /></span>' +
       '<span class="oc-rider-face"><i class="l"></i><i class="r"></i><b>^</b><b>^</b></span></span>';
   }
   /* Only closed challenge trades with a real symbol and a finite PnL. Nothing is invented. */

@@ -529,7 +529,7 @@
     if (!host) return;
     var list = (crew && crew.agents) || [];
     var title = $("core-title");
-    if (title) title.textContent = list.length + " agenter → " + ((global.NimbusBrand && NimbusBrand.name) || "Chairman") + "-kärnan";
+    if (title) title.textContent = list.length + " agenter → " + ((global.NimbusBrand && NimbusBrand.name) || "PAWS") + "-kärnan";
     if (__coreN === list.length && host.querySelector("svg")) {
       list.forEach(function (a, i) {
         var n = host.querySelector('.core-node[data-i="' + i + '"]');
@@ -572,9 +572,9 @@
     });
     host.appendChild(arc);
     var hub = el("div", "core-hub");
-    var img = new Image(); img.src = "icons/icon-192.png"; img.alt = ""; img.width = 40; img.height = 40;
+    var img = new Image(); img.src = "icons/mark.png"; img.alt = ""; img.width = 40; img.height = 40;
     hub.appendChild(img);
-    hub.appendChild(el("div", "core-hub-name", (((global.NimbusBrand && NimbusBrand.name) || "Chairman").toUpperCase()) + "-KÄRNAN"));
+    hub.appendChild(el("div", "core-hub-name", (((global.NimbusBrand && NimbusBrand.name) || "PAWS").toUpperCase()) + "-KÄRNAN"));
     host.appendChild(hub);
     __coreN = list.length;
     syncMotion();
@@ -629,7 +629,7 @@
       ].forEach(function (a) {
         var row = el("div", "asset");
         var ic = el("span", "asset-ico" + (a.ico === "logo" ? " logo" : ""));
-        if (a.ico === "logo") { var im = new Image(); im.src = "icons/icon-192.png"; im.alt = ""; ic.appendChild(im); } else ic.textContent = a.ico;
+        if (a.ico === "logo") { var im = new Image(); im.src = "icons/mark.png"; im.alt = ""; ic.appendChild(im); } else ic.textContent = a.ico;
         row.appendChild(ic);
         var mid = el("div", "asset-mid");
         mid.appendChild(el("strong", null, a.name));
