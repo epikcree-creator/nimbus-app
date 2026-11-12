@@ -1,4 +1,4 @@
-/* PAWS v72 — lean app. Reads state.json exactly like v71 (same storage keys, same fragment #d=..&t=.., same poll cadence).
+/* PAWS v75 — lean app, clean aurora theme. Reads state.json exactly like v72/v71 (same storage keys, same fragment #d=..&t=.., same poll cadence).
    Real desk data only; missing values read "saknas". PAPER only: there are no order buttons anywhere. */
 (function () {
   "use strict";
@@ -218,7 +218,18 @@
     renderTeam(state);
 
     $("boot").hidden = true;
-    if (fresh.length) listeners.forEach(function (fn) { try { fn(fresh); } catch (e) { if (window.console) console.error(e); } });
+    if (fresh.length) {
+      listeners.forEach(function (fn) { try { fn(fresh); } catch (e) { if (window.console) console.error(e); } });
+      fresh.forEach(function (e) {
+        var nodes = [];
+        if (e.id != null) document.querySelectorAll('.row[data-ev="' + e.id + '"]').forEach(function (n) { nodes.push(n); });
+        if (e.mint) document.querySelectorAll('.row[data-mint="' + e.mint + '"]').forEach(function (n) { if (nodes.indexOf(n) < 0) nodes.push(n); });
+        nodes.forEach(function (row) {
+          row.classList.add("hit");
+          setTimeout(function () { row.classList.remove("hit"); }, 3600);
+        });
+      });
+    }
   }
 
   function tickCountdown() {
@@ -232,16 +243,173 @@
   }
   setInterval(tickCountdown, 1000);
 
-  /* ---------- tabs ---------- */
-  var tab = "home";
-  function showTab(t) {
-    tab = t;
-    document.querySelectorAll(".page").forEach(function (p) { p.hidden = p.dataset.page !== t; });
+  /* ---------- tabs + horizontal swipe ---------- */
+  var TABS = ["home", "trades", "team"];
+  var tab = "home", tabIndex = 0;
+  function reduceMotion() {
+    return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+  function pageWidth() {
+    var p = $("pager");
+    return (p && p.clientWidth) || window.innerWidth || 1;
+  }
+  function indexX(i) { return -i * pageWidth(); }
+  function closestIndex(x) {
+    return Math.max(0, Math.min(TABS.length - 1, Math.round(-x / pageWidth())));
+  }
+  function setTrack(x, animate) {
+    var track = $("pager-track");
+    if (!track) return;
+    var go = !!animate && !reduceMotion();
+    track.classList.toggle("anim", go);
+    track.style.transform = "translate3d(" + x + "px,0,0)";
+  }
+  function tabInkRect(i) {
+    var b = document.querySelector('.tab[data-tab="' + TABS[i] + '"]');
+    var nav = document.querySelector(".tabs");
+    if (!b || !nav) return { left: 0, width: 0 };
+    var br = b.getBoundingClientRect(), nr = nav.getBoundingClientRect();
+    return { left: br.left - nr.left + br.width * 0.30, width: br.width * 0.40 };
+  }
+  function setInk(left, width, animate) {
+    var ink = $("tabs-ink");
+    if (!ink) return;
+    ink.style.transition = (animate && !reduceMotion()) ? "left .32s cubic-bezier(.22,.8,.3,1),width .32s cubic-bezier(.22,.8,.3,1)" : "none";
+    ink.style.left = left + "px";
+    ink.style.width = width + "px";
+  }
+  function interpolateInk(i0, i1, f) {
+    var a = tabInkRect(i0), b = tabInkRect(i1);
+    setInk(a.left + (b.left - a.left) * f, a.width + (b.width - a.width) * f, false);
+  }
+  function placeInk(t, animate) {
+    var i = TABS.indexOf(t);
+    if (i < 0) i = 0;
+    var r = tabInkRect(i);
+    setInk(r.left, r.width, animate !== false);
+  }
+  function markPages(t) {
+    document.querySelectorAll(".page").forEach(function (p) {
+      var on = p.dataset.page === t;
+      p.setAttribute("aria-hidden", on ? "false" : "true");
+      try { p.inert = !on; } catch (e) {}
+    });
     document.querySelectorAll(".tab").forEach(function (b) { b.classList.toggle("on", b.dataset.tab === t); });
-    window.scrollTo(0, 0);
+  }
+  function showTab(t, opts) {
+    opts = opts || {};
+    var i = TABS.indexOf(t);
+    if (i < 0) return;
+    tab = t;
+    tabIndex = i;
+    setTrack(indexX(i), opts.animate !== false);
+    markPages(t);
+    placeInk(t, opts.animate !== false);
+    if (!opts.keepScroll) {
+      var page = document.querySelector('.page[data-page="' + t + '"]');
+      if (page) page.scrollTop = 0;
+    }
     document.dispatchEvent(new CustomEvent("paws:tab", { detail: t }));
   }
-  document.querySelectorAll(".tab").forEach(function (b) { b.addEventListener("click", function () { showTab(b.dataset.tab); }); });
+  function ignoreSwipe(el) {
+    return !!(el && el.closest && el.closest("button, a, input, select, textarea, .bar, .gauge, .tabs, [data-no-swipe]"));
+  }
+  function bindPager() {
+    var pager = $("pager"), track = $("pager-track");
+    if (!pager || !track) return;
+    var startX = 0, startY = 0, startT = 0, baseX = 0, locked = null, dragging = false, lastX = 0, lastY = 0;
+    var THRESH = 10;
+
+    function rubber(dx) {
+      var raw = baseX + dx, min = indexX(TABS.length - 1), max = 0;
+      if (raw > max) return max + (raw - max) * 0.32;
+      if (raw < min) return min + (raw - min) * 0.32;
+      return raw;
+    }
+    function follow(tx) {
+      setTrack(tx, false);
+      var w = pageWidth(), pos = -tx / w;
+      if (pos < 0) pos = 0;
+      if (pos > TABS.length - 1) pos = TABS.length - 1;
+      var i0 = Math.floor(pos), i1 = Math.ceil(pos), f = pos - i0;
+      interpolateInk(i0, i1, f);
+      var closest = closestIndex(tx);
+      document.querySelectorAll(".tab").forEach(function (b) { b.classList.toggle("on", b.dataset.tab === TABS[closest]); });
+    }
+    function onStart(x, y, ev) {
+      if (ignoreSwipe(ev.target)) { dragging = false; return; }
+      startX = lastX = x; startY = lastY = y; startT = Date.now();
+      baseX = indexX(tabIndex);
+      locked = null;
+      dragging = true;
+      track.classList.remove("anim");
+    }
+    function onMove(x, y, ev) {
+      if (!dragging || locked === "v") return;
+      lastX = x; lastY = y;
+      var dx = x - startX, dy = y - startY;
+      if (!locked) {
+        if (Math.abs(dx) < THRESH && Math.abs(dy) < THRESH) return;
+        locked = (Math.abs(dx) > Math.abs(dy)) ? "h" : "v";
+        if (locked === "v") return;
+      }
+      if (locked === "h") {
+        if (ev.cancelable) ev.preventDefault();
+        follow(rubber(dx));
+      }
+    }
+    function onEnd(x, y) {
+      if (!dragging) return;
+      dragging = false;
+      if (locked !== "h") return;
+      var dx = x - startX, dt = Math.max(1, Date.now() - startT), v = dx / dt, w = pageWidth();
+      var tx = rubber(dx), i = closestIndex(tx);
+      if (Math.abs(v) > 0.35 || (Math.abs(dx) > w * 0.18 && Math.abs(v) > 0.15)) {
+        i = dx < 0 ? Math.min(TABS.length - 1, tabIndex + 1) : Math.max(0, tabIndex - 1);
+      }
+      showTab(TABS[i], { keepScroll: true, animate: true });
+    }
+
+    pager.addEventListener("touchstart", function (e) {
+      if (e.touches.length !== 1) { dragging = false; return; }
+      onStart(e.touches[0].clientX, e.touches[0].clientY, e);
+    }, { passive: true });
+    pager.addEventListener("touchmove", function (e) {
+      if (!e.touches.length) return;
+      onMove(e.touches[0].clientX, e.touches[0].clientY, e);
+    }, { passive: false });
+    pager.addEventListener("touchend", function (e) {
+      var t = e.changedTouches[0];
+      onEnd(t ? t.clientX : lastX, t ? t.clientY : lastY);
+    }, { passive: true });
+    pager.addEventListener("touchcancel", function () {
+      if (dragging && locked === "h") showTab(TABS[tabIndex], { keepScroll: true, animate: true });
+      dragging = false;
+    }, { passive: true });
+
+    pager.addEventListener("pointerdown", function (e) {
+      if (e.pointerType === "touch") return;
+      if (e.button !== 0) return;
+      onStart(e.clientX, e.clientY, e);
+    });
+    window.addEventListener("pointermove", function (e) {
+      if (e.pointerType === "touch") return;
+      if (!dragging) return;
+      onMove(e.clientX, e.clientY, e);
+    });
+    window.addEventListener("pointerup", function (e) {
+      if (e.pointerType === "touch") return;
+      if (!dragging) return;
+      onEnd(e.clientX, e.clientY);
+    });
+    window.addEventListener("resize", function () {
+      setTrack(indexX(tabIndex), false);
+      placeInk(tab, false);
+    });
+  }
+  document.querySelectorAll(".tab").forEach(function (b) {
+    b.addEventListener("click", function () { showTab(b.dataset.tab); });
+  });
   $("to-trades").addEventListener("click", function () { showTab("trades"); });
 
   /* ---------- polling (same endpoint and cadence as v71) ---------- */
@@ -267,6 +435,9 @@
   document.addEventListener("visibilitychange", function () { if (!document.hidden) poll(); });
 
   paintStatic();
+  bindPager();
+  showTab("home", { animate: false, keepScroll: true });
+  if (window.requestAnimationFrame) requestAnimationFrame(function () { placeInk("home", false); });
   if ("serviceWorker" in navigator && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) navigator.serviceWorker.register("./sw.js").catch(function () {});
   window.Paws = {
     onNewTrade: function (fn) { listeners.push(fn); },

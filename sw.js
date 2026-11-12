@@ -1,18 +1,20 @@
 /* Shell cache. The product name comes from brand.js. */
 importScripts("./brand.js");
-var CACHE = "nimbus-shell-v72"; /* v72: Mecha theme, lean layout, 3D operator (three.js) with SVG fallback */
+var CACHE = "nimbus-shell-v78"; /* v78: v77 theme + swipe between Hem / Trades / Team */
 var SHELL = [
   "./",
   "./index.html",
   "./paws.css",
   "./paws.js",
-  "./mecha.js",
-  "./mecha3d.js",
-  "./mecha_art.js",
   "./brand.js",
   "./manifest.json",
+  "./bg-ring.webp",
+  "./bg-ring.jpg",
   "./icons/mark.png",
   "./icons/favicon.png",
+  "./icons/favicon.svg",
+  "./icons/favicon.ico",
+  "./icons/mark.svg",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-192-maskable.png",
@@ -57,7 +59,6 @@ self.addEventListener("fetch", function (e) {
     return;
   }
   // t170: network first so a new deploy shows on the next open; cache only offline.
-  // Before v44 the shell was cache-first, so index.html could stay one version behind.
   e.respondWith(
     fetch(req).then(function (res) {
       if (res && res.ok && new URL(req.url).origin === self.location.origin) {
