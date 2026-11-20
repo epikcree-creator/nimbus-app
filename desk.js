@@ -118,20 +118,20 @@
     var all = chartData.pts, span = RANGE_MS[range], last = all.length ? all[all.length - 1].t : Date.now();
     var pts = span === Infinity ? all : all.filter(function (p) { return p.t >= last - span; });
     if (pts.length < 2 && all.length >= 2) pts = all.slice(-2);
-    if (pts.length < 2) { $("eq-note").textContent = all.length ? "1 punkt" : "inga punkter ännu"; g.strokeStyle = "rgba(255,255,255,.35)"; g.setLineDash([3, 4]); g.beginPath(); g.moveTo(0, H / 2); g.lineTo(W, H / 2); g.stroke(); return; }
+    if (pts.length < 2) { $("eq-note").textContent = all.length ? "1 punkt" : "inga punkter ännu"; g.strokeStyle = "rgba(180,190,210,.35)"; g.setLineDash([3, 4]); g.beginPath(); g.moveTo(0, H / 2); g.lineTo(W, H / 2); g.stroke(); return; }
     var lo = Infinity, hi = -Infinity; pts.forEach(function (p) { lo = Math.min(lo, p.v); hi = Math.max(hi, p.v); });
     var st = chartData.start; if (st != null) { lo = Math.min(lo, st); hi = Math.max(hi, st); }
     if (hi - lo < 1e-9) { hi += 1; lo -= 1; }
     var t0 = pts[0].t, t1 = pts[pts.length - 1].t, pad = 6;
     function X(t) { return pad + (t1 === t0 ? 0 : (t - t0) / (t1 - t0)) * (W - 2 * pad); }
     function Y(v) { return pad + (1 - (v - lo) / (hi - lo)) * (H - 2 * pad); }
-    if (st != null) { g.save(); g.setLineDash([4, 5]); g.strokeStyle = "rgba(255,255,255,.4)"; g.lineWidth = 1; g.beginPath(); g.moveTo(0, Y(st)); g.lineTo(W, Y(st)); g.stroke(); g.restore(); }
-    var grad = g.createLinearGradient(0, 0, 0, H); grad.addColorStop(0, "rgba(156,245,198,.38)"); grad.addColorStop(1, "rgba(156,245,198,0)");
+    if (st != null) { g.save(); g.setLineDash([4, 5]); g.strokeStyle = "rgba(180,190,210,.35)"; g.lineWidth = 1; g.beginPath(); g.moveTo(0, Y(st)); g.lineTo(W, Y(st)); g.stroke(); g.restore(); }
+    var grad = g.createLinearGradient(0, 0, 0, H); grad.addColorStop(0, "rgba(78,240,248,.40)"); grad.addColorStop(0.65, "rgba(30,140,170,.14)"); grad.addColorStop(1, "rgba(18,22,34,0)");
     g.beginPath(); pts.forEach(function (p, i) { if (i) g.lineTo(X(p.t), Y(p.v)); else g.moveTo(X(p.t), Y(p.v)); });
     g.lineTo(X(t1), H); g.lineTo(X(t0), H); g.closePath(); g.fillStyle = grad; g.fill();
     g.beginPath(); pts.forEach(function (p, i) { if (i) g.lineTo(X(p.t), Y(p.v)); else g.moveTo(X(p.t), Y(p.v)); });
-    g.strokeStyle = "#9CF5C6"; g.lineWidth = 2.2; g.lineJoin = "round"; g.stroke();
-    var lp = pts[pts.length - 1]; g.fillStyle = "#fff"; g.beginPath(); g.arc(X(lp.t), Y(lp.v), 4, 0, 7); g.fill();
+    g.save(); g.shadowColor = "rgba(80,240,255,.75)"; g.shadowBlur = 10; g.strokeStyle = "#4EF0F8"; g.lineWidth = 2.4; g.lineJoin = "round"; g.lineCap = "round"; g.stroke(); g.restore();
+    var lp = pts[pts.length - 1]; g.save(); g.shadowColor = "rgba(80,240,255,.9)"; g.shadowBlur = 12; g.fillStyle = "#9EFDFF"; g.beginPath(); g.arc(X(lp.t), Y(lp.v), 4.5, 0, 7); g.fill(); g.restore();
     $("eq-note").textContent = pts.length + " punkter · " + hm(lp.t);
     var rows = [];
     chartData.marks.filter(function (m) { return m.t >= t0 && m.t <= t1; }).forEach(function (m) {
@@ -161,7 +161,7 @@
   }
   function ring(score) {
     var s = num(score), NS = "http://www.w3.org/2000/svg", svg = document.createElementNS(NS, "svg"); svg.setAttribute("viewBox", "0 0 48 48"); svg.setAttribute("class", "ring2");
-    var c1 = document.createElementNS(NS, "circle"); c1.setAttribute("cx", 24); c1.setAttribute("cy", 24); c1.setAttribute("r", 19); c1.setAttribute("fill", "none"); c1.setAttribute("stroke", "#FFDDE3"); c1.setAttribute("stroke-width", 6); svg.appendChild(c1);
+    var c1 = document.createElementNS(NS, "circle"); c1.setAttribute("cx", 24); c1.setAttribute("cy", 24); c1.setAttribute("r", 19); c1.setAttribute("fill", "none"); c1.setAttribute("stroke", "#1A2232"); c1.setAttribute("stroke-width", 6); svg.appendChild(c1);
     if (s != null) { var c2 = document.createElementNS(NS, "circle"); c2.setAttribute("cx", 24); c2.setAttribute("cy", 24); c2.setAttribute("r", 19); c2.setAttribute("fill", "none"); c2.setAttribute("stroke", s >= 70 ? "#2FD28A" : "#ff6b81"); c2.setAttribute("stroke-width", 6); c2.setAttribute("stroke-linecap", "round"); c2.setAttribute("stroke-dasharray", (119.4 * Math.max(0, Math.min(100, s)) / 100) + " 200"); c2.setAttribute("transform", "rotate(-90 24 24)"); svg.appendChild(c2); }
     var t = document.createElementNS(NS, "text"); t.setAttribute("x", 24); t.setAttribute("y", 29); t.setAttribute("text-anchor", "middle"); t.setAttribute("style", "font:800 14px var(--f);fill:#3B1228"); t.textContent = s == null ? "–" : String(Math.round(s)); svg.appendChild(t);
     return svg;

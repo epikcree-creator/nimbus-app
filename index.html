@@ -3,25 +3,33 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-  <meta name="theme-color" content="#FFECF0" />
+  <meta name="theme-color" content="#060C1A" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="PAWS" />
   <meta name="referrer" content="no-referrer" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="64x64" href="icons/favicon.png" />
   <link rel="preload" href="fonts/PlusJakartaSans-var.woff2?v=79" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="paws.css?v=81f" />
-  <link rel="stylesheet" href="desk.css?v=81f" />
-  <script src="brand.js?v=81f"></script>
+  <link rel="stylesheet" href="paws.css?v=82" />
+  <link rel="stylesheet" href="desk.css?v=82" />
+  <script src="brand.js?v=82"></script>
   <title>PAWS</title>
 </head>
 <body>
+  <svg width="0" height="0" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+    <defs>
+      <linearGradient id="navGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#5EEAF4"/>
+        <stop offset="100%" stop-color="#B4A0FF"/>
+      </linearGradient>
+    </defs>
+  </svg>
   <div class="app" id="app">
     <header class="top">
-      <span class="logo-chip"><img src="icons/paw.png?v=80c" alt="" width="26" height="26" /></span>
+      <span class="logo-chip"><img src="icons/paw.png?v=82" alt="" width="38" height="38" /></span>
       <span class="top-name">PAWS</span>
       <span class="top-sp"></span>
       <span class="live-chip" id="live-chip"><i></i><b id="live-txt">Ansluter</b></span>
@@ -35,7 +43,7 @@
       <!-- HEM -->
       <section class="page" data-page="home" aria-label="Hem">
         <div class="hero" id="hero">
-          <img class="wm" src="icons/paw-lg.png?v=80c" alt="" aria-hidden="true" />
+          <img class="wm" src="icons/paw-lg.png?v=82" alt="" aria-hidden="true" />
           <div class="hl-row"><span class="hl">PAPER-saldo</span><span class="ppill" id="paper-pill">PAPER</span></div>
           <div class="bal" id="bal"><span class="sk w60"></span></div>
           <div class="hero-pills"><span class="pnl" id="today">idag saknas</span><span class="mult" id="mult" hidden></span></div>
@@ -113,7 +121,7 @@
 
       </div></div>
       <section class="boot" id="boot" hidden>
-        <span class="logo-chip big"><img src="icons/paw.png?v=80c" alt="" width="46" height="46" /></span>
+        <span class="logo-chip big"><img src="icons/paw.png?v=82" alt="" width="72" height="72" /></span>
         <h3 id="boot-h">Ansluter…</h3>
         <p id="boot-p">Hämtar desken.</p>
         <div class="pairbox">
@@ -149,7 +157,7 @@
       <button class="tab" data-tab="konto" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>Konto</span></button>
     </nav>
   </div>
-  <script src="pair.js?v=81f"></script>
-  <script src="desk.js?v=81f"></script>
+  <script src="pair.js?v=82"></script>
+  <script src="desk.js?v=82"></script>
 </body>
 </html>
