@@ -1,6 +1,6 @@
 /* Shell cache. The product name comes from brand.js. */
 importScripts("./brand.js");
-var CACHE = "nimbus-shell-v81f"; /* v81d: Overnight Desk inside PAWS (desk.js/desk.css); v80c UI kept as classic.html */
+var CACHE = "nimbus-shell-v82"; /* v82: dark-navy / teal-neon theme; v80c UI kept as classic.html */
 var SHELL = [
   "./",
   "./index.html",
@@ -13,6 +13,7 @@ var SHELL = [
   "./fonts/PlusJakartaSans-var.woff2",
   "./icons/paw.png",
   "./icons/paw-lg.png",
+  "./icons/paw.svg",
   "./icons/mark.png",
   "./icons/favicon.png",
   "./icons/favicon.svg",

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="384" height="384">
+  <defs>
+    <linearGradient id="pg" x1="18%" y1="8%" x2="88%" y2="100%">
+      <stop offset="0%" stop-color="#96FAFF"/>
+      <stop offset="40%" stop-color="#5EEAF5"/>
+      <stop offset="70%" stop-color="#7EC8F0"/>
+      <stop offset="100%" stop-color="#C4B0FF"/>
+    </linearGradient>
+  <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="2.2" result="b"/>
+    <feColorMatrix in="b" type="matrix" values="0 0 0 0 0.32  0 0 0 0 0.88  0 0 0 0 0.96  0 0 0 0.65 0" result="c"/>
+    <feMerge><feMergeNode in="c"/><feMergeNode in="c"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  </defs>
+  
+  <g fill="url(#pg)" filter="url(#glow)" transform="translate(11 11) scale(0.7800)">
+    <ellipse cx="0" cy="0" rx="8.30" ry="12.80" transform="translate(19.60 39.20) rotate(-26.0)"/>
+<ellipse cx="0" cy="0" rx="8.90" ry="14.20" transform="translate(38.40 24.60) rotate(-6.0)"/>
+<ellipse cx="0" cy="0" rx="8.90" ry="14.20" transform="translate(61.60 24.60) rotate(6.0)"/>
+<ellipse cx="0" cy="0" rx="8.30" ry="12.80" transform="translate(80.40 39.20) rotate(26.0)"/>
+<ellipse cx="50.00" cy="66.80" rx="27.20" ry="18.60"/>
+<ellipse cx="0" cy="0" rx="16.00" ry="13.00" transform="translate(34.20 75.80) rotate(-10.0)"/>
+<ellipse cx="0" cy="0" rx="16.00" ry="13.00" transform="translate(65.80 75.80) rotate(10.0)"/>
+<ellipse cx="50.00" cy="74.00" rx="18.00" ry="14.00"/>
+  </g>
+</svg>
