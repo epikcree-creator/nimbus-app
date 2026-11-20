@@ -104,7 +104,7 @@
 .row-v small{white-space:nowrap}
 .row-m strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pairbox{margin:22px auto 0;max-width:360px;text-align:left}
-.pairbox input{width:100%;height:48px;border-radius:16px;border:1px solid var(--line);background:#fff;padding:0 14px;font:600 14px var(--f);color:var(--ink)}
+.pairbox textarea{width:100%;min-height:76px;resize:none;border-radius:16px;border:1px solid var(--line);background:#fff;padding:12px 14px;font:600 14px var(--f);color:var(--ink)}
 .pair-btns{display:flex;gap:8px;margin-top:10px}
 .btn.ghost2{background:var(--chip);color:var(--vi)}
 .pair-msg{margin-top:8px;font-size:12.5px;font-weight:600;color:var(--down);min-height:1em}
