@@ -1,11 +1,12 @@
 /* Shell cache. The product name comes from brand.js. */
 importScripts("./brand.js");
-var CACHE = "nimbus-shell-v80c"; /* v80c: rose paw theme + logo; pipeline row, saldokurva, Varför-ark, Agenter-flik; Förslag-fliken borttagen */
+var CACHE = "nimbus-shell-v81d"; /* v81d: Overnight Desk inside PAWS (desk.js/desk.css); v80c UI kept as classic.html */
 var SHELL = [
   "./",
   "./index.html",
   "./paws.css",
-  "./paws.js",
+  "./desk.css",
+  "./desk.js",
   "./brand.js",
   "./manifest.json",
   "./fonts/PlusJakartaSans-var.woff2",
