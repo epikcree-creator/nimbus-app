@@ -47,11 +47,7 @@
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { if (v == null) return; localStorage.setItem(k, v); } catch (e) {} }
   function validBase(u) { if (typeof u !== "string") return null; u = u.trim(); if (u.length < 12 || u.length > 300 || /\s/.test(u)) return null; try { var x = new URL(u); if (x.protocol !== "https:" || x.username || x.password) return null; } catch (e) { return null; } return u.replace(/\/+$/, ""); }
-  function parsePair(raw) {
-    raw = String(raw || "").trim(); var i = raw.indexOf("#"), q = raw.indexOf("?"), part = i >= 0 ? raw.slice(i + 1) : (/^nimbus:\/\/pair/i.test(raw) && q >= 0 ? raw.slice(q + 1) : raw.replace(/^#/, ""));
-    var frag = {}; part.split("&").forEach(function (p) { var j = p.indexOf("="); if (j > 0) { try { frag[decodeURIComponent(p.slice(0, j))] = decodeURIComponent(p.slice(j + 1)); } catch (e) {} } });
-    var d = validBase(frag.d); return d ? { d: d, t: frag.t || "" } : null;
-  }
+  function parsePair(raw) { var r = window.PawsPair ? window.PawsPair.parse(raw) : null; return r && validBase(r.d) ? { d: validBase(r.d), t: r.t || "" } : null; }
   function loadConfig() {
     var pr = location.hash ? parsePair(location.hash) : null;
     if (pr) { lsSet(LS_BASE, pr.d); if (pr.t) lsSet(LS_TOKEN, pr.t); }
@@ -379,11 +375,12 @@
     lsSet(LS_GOOD, pairBase); var t = lsGet(LS_TOKEN); if (t) lsSet(LS_GOOD_T, t);
     try { localStorage.setItem(LS_SNAP, JSON.stringify({ at: Date.now(), pair: pairBase, state: snap.s, activity: snap.a, chart: snap.c })); } catch (e) {}
   }
+  function toApk(url) { if (typeof window.__APK_NAV__ === "function") window.__APK_NAV__(url); else location.href = url; }
   function healApk(goodBase) {
     // The APK's own prefs still hold a dead pairing: hand it the working one through its own nimbus:// handler (once per session).
     if (!inApk) return; try { if (sessionStorage.getItem("paws_healed")) return; sessionStorage.setItem("paws_healed", "1"); } catch (e) { return; }
     var t = lsGet(LS_GOOD_T) || lsGet(LS_TOKEN) || "paper";
-    location.href = "nimbus://pair?d=" + encodeURIComponent(goodBase) + "&t=" + encodeURIComponent(t);
+    toApk("nimbus://pair?d=" + encodeURIComponent(goodBase) + "&t=" + encodeURIComponent(t));
   }
   var inflight = false;
   function poll() {
@@ -417,16 +414,23 @@
   }
   function applyPaste(raw) {
     var pr = parsePair(raw);
-    if (!pr) { $("boot-msg").textContent = "Det där ser inte ut som en kopplingslänk."; return; }
+    if (!pr) { $("boot-msg").textContent = "Hittade ingen hel kopplingslänk i texten. Kopiera hela Telegram-meddelandet med länken och klistra in igen."; return; }
     lsSet(LS_BASE, pr.d); if (pr.t) lsSet(LS_TOKEN, pr.t);
-    if (inApk) { location.href = "nimbus://pair?d=" + encodeURIComponent(pr.d) + "&t=" + encodeURIComponent(pr.t || "paper"); return; } // APK saves it in its prefs
+    if (inApk) { $("boot-msg").textContent = "Sparar länken i appen…"; toApk("nimbus://pair?d=" + encodeURIComponent(pr.d) + "&t=" + encodeURIComponent(pr.t || "paper")); return; } // APK saves it in its prefs
     cfg = { base: pr.d, fresh: true }; $("boot-msg").textContent = "Kopplar…"; poll();
   }
   $("boot-go").addEventListener("click", function () { applyPaste($("boot-in").value); });
+  // Android WebView denies navigator.clipboard.readText (no permission prompt in the APK), so in the app the
+  // button is hidden and a long-press paste into the box connects by itself.
+  if (inApk || !(navigator.clipboard && navigator.clipboard.readText)) $("boot-paste").hidden = true;
   $("boot-paste").addEventListener("click", function () {
-    if (navigator.clipboard && navigator.clipboard.readText) navigator.clipboard.readText().then(function (t) { $("boot-in").value = t; applyPaste(t); }, function () { $("boot-msg").textContent = "Håll inne i rutan och välj Klistra in."; });
-    else $("boot-msg").textContent = "Håll inne i rutan och välj Klistra in.";
+    navigator.clipboard.readText().then(function (t) { $("boot-in").value = t; applyPaste(t); }, function () { $("boot-paste").hidden = true; $("boot-msg").textContent = "Håll inne i rutan och välj Klistra in."; });
   });
+  $("boot-in").addEventListener("paste", function (e) {
+    var t = (e.clipboardData || window.clipboardData) ? (e.clipboardData || window.clipboardData).getData("text") : "";
+    if (t) { e.preventDefault(); $("boot-in").value = t; applyPaste(t); }
+  });
+  $("boot-in").addEventListener("input", function () { var v = $("boot-in").value; if (v.length > 30 && parsePair(v)) applyPaste(v); });
   window.addEventListener("hashchange", function () {
     // the APK pushes a new pairing into the open page with loadUrl(HOME#d=..&t=..) — no reload happens
     var pr = parsePair(location.hash); if (!pr) return;

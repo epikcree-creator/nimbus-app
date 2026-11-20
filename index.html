@@ -13,9 +13,9 @@
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="64x64" href="icons/favicon.png" />
   <link rel="preload" href="fonts/PlusJakartaSans-var.woff2?v=79" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="paws.css?v=81e" />
-  <link rel="stylesheet" href="desk.css?v=81e" />
-  <script src="brand.js?v=81e"></script>
+  <link rel="stylesheet" href="paws.css?v=81f" />
+  <link rel="stylesheet" href="desk.css?v=81f" />
+  <script src="brand.js?v=81f"></script>
   <title>PAWS</title>
 </head>
 <body>
@@ -117,7 +117,7 @@
         <h3 id="boot-h">Ansluter…</h3>
         <p id="boot-p">Hämtar desken.</p>
         <div class="pairbox">
-          <input id="boot-in" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Klistra in kopplingslänken" />
+          <textarea id="boot-in" rows="3" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Håll inne här → Klistra in kopplingslänken (hela meddelandet går bra)"></textarea>
           <div class="pair-btns"><button class="btn ghost2" id="boot-paste" type="button">Klistra in</button><button class="btn" id="boot-go" type="button">Koppla</button></div>
           <p class="pair-msg" id="boot-msg"></p>
         </div>
@@ -149,6 +149,7 @@
       <button class="tab" data-tab="konto" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>Konto</span></button>
     </nav>
   </div>
-  <script src="desk.js?v=81e"></script>
+  <script src="pair.js?v=81f"></script>
+  <script src="desk.js?v=81f"></script>
 </body>
 </html>
