@@ -36,19 +36,32 @@
   function swap(host, tmp) { if (tmp.innerHTML === host.innerHTML) return; host.innerHTML = ""; while (tmp.firstChild) host.appendChild(tmp.firstChild); }
   var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  /* ---------- pairing ---------- */
+  /* ---------- pairing ----------
+     The APK reloads HOME#d=..&t=.. from its own prefs on every launch, and when a new link is pasted/shared it
+     calls loadUrl(HOME#new) on the already-open page (a same-document hash change, no reload).
+     Rules: a hash pairing always replaces the current one (also on hashchange); nothing is ever deleted on a
+     fetch error; the last base that actually answered is kept as LS_GOOD and used if the current one is dead;
+     the last good snapshot is kept in LS_SNAP and painted at once on open. d may also be a pointer file
+     (…/*.json -> {"base":"https://…"}) so a desk rotation only has to rewrite the pointer. */
+  var LS_GOOD = "paws_desk_good_base", LS_GOOD_T = "paws_desk_good_token", LS_SNAP = "paws_desk_snapshot", LS_PTR = "paws_desk_ptr_base";
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { if (v == null) return; localStorage.setItem(k, v); } catch (e) {} }
+  function validBase(u) { if (typeof u !== "string") return null; u = u.trim(); if (u.length < 12 || u.length > 300 || /\s/.test(u)) return null; try { var x = new URL(u); if (x.protocol !== "https:" || x.username || x.password) return null; } catch (e) { return null; } return u.replace(/\/+$/, ""); }
+  function parsePair(raw) {
+    raw = String(raw || "").trim(); var i = raw.indexOf("#"), q = raw.indexOf("?"), part = i >= 0 ? raw.slice(i + 1) : (/^nimbus:\/\/pair/i.test(raw) && q >= 0 ? raw.slice(q + 1) : raw.replace(/^#/, ""));
+    var frag = {}; part.split("&").forEach(function (p) { var j = p.indexOf("="); if (j > 0) { try { frag[decodeURIComponent(p.slice(0, j))] = decodeURIComponent(p.slice(j + 1)); } catch (e) {} } });
+    var d = validBase(frag.d); return d ? { d: d, t: frag.t || "" } : null;
+  }
   function loadConfig() {
-    var hash = (location.hash || "").replace(/^#/, ""), frag = {};
-    if (hash) hash.split("&").forEach(function (p) { var i = p.indexOf("="); if (i > 0) { try { frag[decodeURIComponent(p.slice(0, i))] = decodeURIComponent(p.slice(i + 1)); } catch (e) {} } });
-    if (frag.d) { try { localStorage.setItem(LS_BASE, frag.d); } catch (e) {} }
-    if (frag.t) { try { localStorage.setItem(LS_TOKEN, frag.t); } catch (e) {} }
-    if (frag.d || frag.t) { try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {} }
-    var base = null; try { base = localStorage.getItem(LS_BASE); } catch (e) {}
+    var pr = location.hash ? parsePair(location.hash) : null;
+    if (pr) { lsSet(LS_BASE, pr.d); if (pr.t) lsSet(LS_TOKEN, pr.t); }
+    if (location.hash) { try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {} }
+    var base = validBase(lsGet(LS_BASE));
     if (window.__DESK_DATA_BASE__) base = window.__DESK_DATA_BASE__;
-    if (base && !/^https:\/\//i.test(base) && !window.__DESK_DATA_BASE__) base = null;
-    return { base: base ? base.replace(/\/+$/, "") : null };
+    return { base: base, fresh: !!pr };
   }
   var cfg = loadConfig();
+  function isPointer(u) { return /\.json(\?.*)?$/i.test(u || ""); }
 
   /* ---------- tabs + swipe ---------- */
   var TABS = ["home", "agenter", "trades", "konto"], tabIndex = 0;
@@ -201,7 +214,7 @@
   /* ---------- live screen ---------- */
   var frontA = true, lastShotKey = null, lastScreenOkTs = null;
   function refreshScreen(state) {
-    if (!cfg.base) return;
+    if (!dataBase) return updateLiveLabels(state);
     var sts = pick(state, "screen_ts", "frame_ts");
     var key = sts || Math.floor(Date.now() / POLL_MS);
     if (key === lastShotKey) return updateLiveLabels(state);
@@ -209,7 +222,7 @@
     var img = new Image();
     img.onload = function () { next.src = img.src; next.classList.add("show"); cur.classList.remove("show"); frontA = !frontA; lastShotKey = key; lastScreenOkTs = sts || new Date().toISOString(); $("live-empty").hidden = true; $("fs-img").src = img.src; updateLiveLabels(state); };
     img.onerror = function () { updateLiveLabels(state); };
-    img.src = cfg.base + "/screen.jpg?k=" + encodeURIComponent(String(key));
+    img.src = dataBase + "/screen.jpg?k=" + encodeURIComponent(String(key));
   }
   function updateLiveLabels(state) {
     var l = $("lv-l"), fresh = lastScreenOkTs && ageS(lastScreenOkTs) < 30;
@@ -329,43 +342,102 @@
       Object.keys(S).forEach(function (grp) { var v = S[grp], g = el("div", "setg"); g.appendChild(el("h4", null, grp)); if (v && typeof v === "object") Object.keys(v).forEach(function (k) { var r = el("div"); r.appendChild(el("span", null, k)); r.appendChild(el("b", null, String(v[k]))); g.appendChild(r); }); else { var r = el("div"); r.appendChild(el("span", null, grp)); r.appendChild(el("b", null, String(v))); g.appendChild(r); } sg.appendChild(g); });
     } else { var e = el("div", "setg"); e.appendChild(el("div", null, "Desken publicerar inga inställningar ännu")); sg.appendChild(e); }
     swap($("settings"), sg);
-    var cn = el("div"); var host = "saknas"; try { host = new URL(cfg.base).host; } catch (e) {}
+    var cn = el("div"); var host = "saknas"; try { host = new URL(dataBase || cfg.base).host; } catch (e) {}
     [["Desk", host], ["Senaste data", pick(state, "ts") ? hms(state.ts) : "saknas"], ["Uppdatering", "var 15:e sekund"], ["Läge", String(state.mode || "PAPER")]].forEach(function (x) { var r = el("div", "row"); var m = el("div", "row-m"); m.appendChild(el("strong", null, x[0])); m.style.flex = "none"; r.appendChild(m); var vv = el("div", "row-v", x[1]); vv.style.flex = "1"; vv.style.minWidth = "0"; vv.style.fontSize = "14px"; vv.style.overflow = "hidden"; vv.style.textOverflow = "ellipsis"; vv.style.whiteSpace = "nowrap"; r.appendChild(vv); cn.appendChild(r); });
     swap($("conn"), cn);
   }
 
   /* ---------- polling ---------- */
-  var timer = null, retryAt = 0, failing = false;
-  function fetchJson(name, optional) {
-    return fetch(cfg.base + "/" + name, { cache: "no-store", credentials: "omit", referrerPolicy: "no-referrer" }).then(function (r) {
-      if (!r.ok) { if (optional) return null; throw new Error(name + " http " + r.status); }
+  var timer = null, retryAt = 0, failing = false, dataBase = null, inApk = /NimbusApp/.test(navigator.userAgent || "");
+  function get(url, optional) {
+    return fetch(url, { cache: "no-store", credentials: "omit", referrerPolicy: "no-referrer" }).then(function (r) {
+      if (!r.ok) { if (optional) return null; throw new Error("http " + r.status); }
       return r.json();
     }).catch(function (e) { if (optional) return null; throw e; });
   }
+  function resolve(base) {
+    if (!isPointer(base)) return Promise.resolve(base);
+    return get(base + (base.indexOf("?") < 0 ? "?" : "&") + "k=" + Date.now()).then(function (p) {
+      var b = validBase(p && (p.base || p.d)); if (!b || isPointer(b)) throw new Error("bad pointer"); lsSet(LS_PTR, b); return b;
+    }).catch(function (e) { var c = validBase(lsGet(LS_PTR)); if (c) return c; throw e; });
+  }
   function isOldContract(s) { return s && (s.challenge != null || s.pipeline != null || s.journal != null) && !(s.heartbeats && s.heartbeats.brain) && s.hosting !== "B"; }
   function setChip(cls, txt) { $("live-chip").className = "live-chip " + cls; $("live-txt").textContent = txt; }
-  function poll() {
-    if (window.__DESK_MOCK__) { var M = window.__DESK_MOCK__; render(M.state, (M.activity || {}).items || [], M.chart); setChip("warn", "DEMO-data"); return; }
-    if (!cfg.base) { $("boot").hidden = false; setChip("off", "Ej kopplad"); return; }
-    if (document.hidden) return;
-    Promise.all([fetchJson("state.json"), fetchJson("activity.json", true), fetchJson("chart.json", true)]).then(function (r) {
-      var s = r[0] || {};
-      if (isOldContract(s)) { location.replace("classic.html"); return; }
-      var act = r[1] ? (r[1].items || r[1].rows || (Array.isArray(r[1]) ? r[1] : [])) : null;
-      failing = false; $("err").hidden = true; lastOkAt = Date.now(); $("boot").hidden = true;
-      render(s, act, r[2]);
-      var age = ageS(s.ts);
-      if (age < 60) setChip("on", "Live"); else setChip("warn", "Senast " + hm(s.ts));
-    }).catch(function (e) {
-      failing = true; retryAt = Date.now() + POLL_MS; setChip("off", "Offline");
-      if (!lastState) $("boot").hidden = false;
-      tickErr(); if (window.console) console.warn("desk poll failed", e && e.message);
+  function chipFor(s) { if (ageS(s && s.ts) < 60) setChip("on", "Live"); else setChip("warn", "Senast " + hm(s && s.ts)); }
+  function actItems(a) { return a ? (a.items || a.rows || (Array.isArray(a) ? a : [])) : null; }
+  function fetchFrom(base) {
+    // state first: paint as soon as it lands, then activity + chart
+    return get(base + "/state.json").then(function (s) {
+      s = s || {}; if (isOldContract(s)) { location.replace("classic.html"); return null; }
+      dataBase = base; ok(); render(s, null, null); chipFor(s);
+      return Promise.all([get(base + "/activity.json", true), get(base + "/chart.json", true)]).then(function (r) {
+        render(s, actItems(r[0]), r[1]); return { s: s, a: r[0], c: r[1] };
+      });
     });
   }
+  function saveGood(pairBase, snap) {
+    lsSet(LS_GOOD, pairBase); var t = lsGet(LS_TOKEN); if (t) lsSet(LS_GOOD_T, t);
+    try { localStorage.setItem(LS_SNAP, JSON.stringify({ at: Date.now(), pair: pairBase, state: snap.s, activity: snap.a, chart: snap.c })); } catch (e) {}
+  }
+  function healApk(goodBase) {
+    // The APK's own prefs still hold a dead pairing: hand it the working one through its own nimbus:// handler (once per session).
+    if (!inApk) return; try { if (sessionStorage.getItem("paws_healed")) return; sessionStorage.setItem("paws_healed", "1"); } catch (e) { return; }
+    var t = lsGet(LS_GOOD_T) || lsGet(LS_TOKEN) || "paper";
+    location.href = "nimbus://pair?d=" + encodeURIComponent(goodBase) + "&t=" + encodeURIComponent(t);
+  }
+  var inflight = false;
+  function poll() {
+    if (window.__DESK_MOCK__) { var M = window.__DESK_MOCK__; render(M.state, (M.activity || {}).items || [], M.chart); setChip("warn", "DEMO-data"); return; }
+    if (!cfg.base) { showBoot("none"); setChip("off", "Ej kopplad"); return; }
+    if (document.hidden || inflight) return;
+    inflight = true;
+    var pairBase = cfg.base;
+    resolve(pairBase).then(fetchFrom).then(function (snap) {
+      if (!snap) return; ok(); saveGood(pairBase, snap);
+    }).catch(function (e) {
+      var good = validBase(lsGet(LS_GOOD));
+      if (good && good !== pairBase && /http 4\d\d|bad pointer/.test(String(e && e.message))) {
+        // current pairing is dead (e.g. a rotated path) but an earlier one still answers: use it, never delete anything
+        return resolve(good).then(fetchFrom).then(function (snap) { if (!snap) return; ok(); saveGood(good, snap); lsSet(LS_BASE, good); cfg.base = good; healApk(good); }).catch(function () { fail(e); });
+      }
+      fail(e);
+    }).then(function () { inflight = false; }, function () { inflight = false; });
+  }
+  function ok() { failing = false; $("err").hidden = true; lastOkAt = Date.now(); $("boot").hidden = true; }
+  function fail(e) {
+    failing = true; retryAt = Date.now() + POLL_MS;
+    setChip("off", lastState ? "Offline · senast " + hm(lastState.ts) : "Offline");
+    if (!lastState) showBoot("dead");
+    tickErr(); if (window.console) console.warn("desk poll failed", e && e.message);
+  }
+  function showBoot(kind) {
+    $("boot").hidden = false;
+    $("boot-h").textContent = kind === "none" ? "Ingen kopplingslänk" : "Desken svarar inte på den sparade länken";
+    $("boot-p").textContent = kind === "none" ? "Klistra in din kopplingslänk från Telegram nedan." : "Länken kan ha bytts ut. Klistra in den nya kopplingslänken från Telegram, så sparas den i appen.";
+  }
+  function applyPaste(raw) {
+    var pr = parsePair(raw);
+    if (!pr) { $("boot-msg").textContent = "Det där ser inte ut som en kopplingslänk."; return; }
+    lsSet(LS_BASE, pr.d); if (pr.t) lsSet(LS_TOKEN, pr.t);
+    if (inApk) { location.href = "nimbus://pair?d=" + encodeURIComponent(pr.d) + "&t=" + encodeURIComponent(pr.t || "paper"); return; } // APK saves it in its prefs
+    cfg = { base: pr.d, fresh: true }; $("boot-msg").textContent = "Kopplar…"; poll();
+  }
+  $("boot-go").addEventListener("click", function () { applyPaste($("boot-in").value); });
+  $("boot-paste").addEventListener("click", function () {
+    if (navigator.clipboard && navigator.clipboard.readText) navigator.clipboard.readText().then(function (t) { $("boot-in").value = t; applyPaste(t); }, function () { $("boot-msg").textContent = "Håll inne i rutan och välj Klistra in."; });
+    else $("boot-msg").textContent = "Håll inne i rutan och välj Klistra in.";
+  });
+  window.addEventListener("hashchange", function () {
+    // the APK pushes a new pairing into the open page with loadUrl(HOME#d=..&t=..) — no reload happens
+    var pr = parsePair(location.hash); if (!pr) return;
+    lsSet(LS_BASE, pr.d); if (pr.t) lsSet(LS_TOKEN, pr.t);
+    try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+    cfg = { base: pr.d, fresh: true }; lastShotKey = null; poll();
+  });
   function tickErr() {
     if (!failing) return;
     var n = Math.max(0, Math.round((retryAt - Date.now()) / 1000));
-    $("err").hidden = false; $("err").textContent = "Desk offline · försöker igen om " + n + " s · senast uppdaterad " + (lastOkAt ? hms(new Date(lastOkAt).toISOString()) : "aldrig");
+    $("err").hidden = false; $("err").textContent = "Desk offline · försöker igen om " + n + " s · senast uppdaterad " + (lastOkAt ? hms(new Date(lastOkAt).toISOString()) : lastState && lastState.ts ? hms(lastState.ts) : "aldrig");
   }
   setInterval(tickErr, 1000);
   document.addEventListener("visibilitychange", function () { if (!document.hidden) poll(); });
@@ -373,6 +445,12 @@
   // loading skeletons
   ["open-list", "recent"].forEach(function (id) { $(id).appendChild(el("div", "skc")); });
   showTab("home");
+  (function paintSnapshot() {
+    if (window.__DESK_MOCK__) return;
+    var snap = null; try { snap = JSON.parse(lsGet(LS_SNAP) || "null"); } catch (e) {}
+    if (!snap || !snap.state) return;
+    render(snap.state, actItems(snap.activity) || [], snap.chart); setChip("warn", "Senast " + hm(snap.state.ts)); $("boot").hidden = true;
+  })();
   window.PawsDesk = { render: render, showTab: showTab, poll: poll };
   poll(); timer = setInterval(poll, POLL_MS);
 })();
